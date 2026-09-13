@@ -1,9 +1,9 @@
 version: 1
 layout: repo
-lastReviewedAt: 2026-09-13
-lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
+lastReviewedAt: "2026-09-13"
+lastReviewedCommit: "ca8afde63208ed3219dede761767914e1e67dee1"
 reviewNote: "Reviewed for Next Docs #197: four locale Foundry fingerprints and all23 catalogue entries bind Skills0a33; CI locks task examples to the exact published-parser-qualified specimen and rejects drift. Stale pre-release claims are replaced by actual source/integration boundaries. Owner parser four positive/nine negative cases, lint/types and full build pass; no dependency or runtime behavior change."
-lastReviewedNote: "Reviewed for docs #199: canonical repository identity moves to tiangong-lca/docs; active Skills install/issue/clone links move to tiangong-lca/agent-skills and tiangong-lca/cli across all four locales; the reconcile Context7 refresh binds the registered service key /linancn/tiangong-lca-next-docs (overridable via vars.CONTEXT7_LIBRARY_NAME) instead of deriving from GITHUB_REPOSITORY. Pinned 0a33db1 references, historical release/tutorial versions, EdgeOne source links and the Context7 registration file are unchanged."
+lastReviewedNote: "Reviewed for docs #201: the production Context7 API explicitly rejects the old moved-repository key, while the canonical /tiangong-lca/docs library is present and processing. Refresh default and registration URL now use that verified key; validated override, public_key, main-only production boundary and existing site contracts are preserved."
 
 catalog:
   repos:

@@ -243,10 +243,10 @@ jobs:
             exit 0
           fi
           # The Context7 library key is an external publication-index identity registered
-          # with the provider; it does not follow GitHub repository renames. The default
-          # is the currently registered service key; repo vars.CONTEXT7_LIBRARY_NAME may
-          # select a future verified key after a provider-side registration.
-          library="${CONTEXT7_LIBRARY_NAME:-/linancn/tiangong-lca-next-docs}"
+          # with the provider. Its redirect error and public library page verify the
+          # canonical migrated key below; vars.CONTEXT7_LIBRARY_NAME may select a
+          # different provider-verified key without changing the GitHub identity.
+          library="${CONTEXT7_LIBRARY_NAME:-/tiangong-lca/docs}"
           valid_library='^/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'
           if ! [[ "$library" =~ $valid_library ]]; then
             echo "::error::Context7 library name must be a two-segment /owner/repo path."

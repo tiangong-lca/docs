@@ -131,20 +131,20 @@ describe(
       }
     }
 
-    it('defaults to the registered service key when no override is set', () => {
+    it('defaults to the verified migrated service key when no override is set', () => {
       const { result, curlEntries } = runStep(undefined);
       assert.equal(result.status, 0, result.stderr);
-      assert.match(curlEntries, /linancn\/tiangong-lca-next-docs/u);
+      assert.doesNotMatch(curlEntries, /linancn\/tiangong-lca-next-docs/u);
       assert.match(
         curlEntries,
-        /"libraryName":"\/linancn\/tiangong-lca-next-docs"/u,
+        /"libraryName":"\/tiangong-lca\/docs"/u,
       );
     });
 
     it('accepts a valid vars.CONTEXT7_LIBRARY_NAME override', () => {
-      const { result, curlEntries } = runStep('/tiangong-lca/docs');
+      const { result, curlEntries } = runStep('/verified-owner/other-docs');
       assert.equal(result.status, 0, result.stderr);
-      assert.match(curlEntries, /"libraryName":"\/tiangong-lca\/docs"/u);
+      assert.match(curlEntries, /"libraryName":"\/verified-owner\/other-docs"/u);
     });
 
     for (const [label, value] of [
