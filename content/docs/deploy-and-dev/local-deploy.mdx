@@ -17,8 +17,8 @@ title: "私有部署"
 ### 1. 克隆仓库
 
 ```bash
-TODO: 将仓库 URL 替换为你自己的
-git clone https://github.com/linancn/tiangong-lca-next.git
+# 将下方仓库 URL 替换为你自己的 fork
+git clone https://github.com/tiangong-lca/platform.git tiangong-lca-next
 cd tiangong-lca-next
 ```
 
@@ -223,7 +223,7 @@ APP_LOGIN_SUBTITLE_EN_US="World's Largest Open LCA Data Platform"
 mkdir -p temp_repo
 
 # 克隆 Edge Functions 仓库
-git clone --depth 1 https://github.com/linancn/tiangong-lca-edge-functions.git temp_repo
+git clone --depth 1 https://github.com/tiangong-lca/edge-functions.git temp_repo
 
 # 将 Edge Functions 复制到 Docker 数据卷目录
 mkdir -p docker/volumes/functions
@@ -424,7 +424,7 @@ docker compose logs -f auth
 
 ## 附加资源
 
-- [TianGong LCA Next 项目](https://github.com/linancn/tiangong-lca-next)
+- [TianGong LCA Next 项目](https://github.com/tiangong-lca/platform)
 - [TianGong LCA 平台网站](https://lca.tiangong.earth/welcome)
 - [Supabase 文档](https://supabase.com/docs)
 - [Docker 文档](https://docs.docker.com/)

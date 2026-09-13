@@ -27,7 +27,7 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.13 tiangong-lca auth doctor-auth --json
 
 ## 更新时保留可追溯记录
 
-安装器版本和 Skill 内容版本是两回事：`skills@1.5.23` 固定的是安装器，`tiangong-lca/skills` 内容可能随上游更新。保留 `skills-lock.json`、当前技能文件和已验证的结果；更新前确认有无本地修改，并把需要保留的修改保存到版本控制或备份中。
+安装器版本和 Skill 内容版本是两回事：`skills@1.5.23` 固定的是安装器，`tiangong-lca/agent-skills` 内容可能随上游更新。保留 `skills-lock.json`、当前技能文件和已验证的结果；更新前确认有无本地修改，并把需要保留的修改保存到版本控制或备份中。
 
 ```bash
 pnpm dlx skills@1.5.23 update flow-hybrid-search --project --yes
@@ -45,4 +45,4 @@ pnpm dlx skills@1.5.23 remove flow-hybrid-search --agent codex --yes
 
 ## 提交问题时带什么
 
-提供客户端、操作系统、Node/pnpm/CLI/安装器版本、技能名、脱敏命令、退出码和错误码，以及不含敏感数据的最小请求。不要附上会话文件、授权码、token、完整邮箱或私有数据包。可在 [Skills 问题页](https://github.com/tiangong-lca/skills/issues)反馈技能问题；CLI 运行问题可在 [CLI 问题页](https://github.com/tiangong-lca/tiangong-cli/issues)反馈。
+提供客户端、操作系统、Node/pnpm/CLI/安装器版本、技能名、脱敏命令、退出码和错误码，以及不含敏感数据的最小请求。不要附上会话文件、授权码、token、完整邮箱或私有数据包。可在 [Skills 问题页](https://github.com/tiangong-lca/agent-skills/issues)反馈技能问题；CLI 运行问题可在 [CLI 问题页](https://github.com/tiangong-lca/cli/issues)反馈。

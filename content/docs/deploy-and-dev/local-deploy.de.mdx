@@ -17,8 +17,8 @@ Dieses Dokument beschreibt die Eigenbereitstellung (Self-Hosting) der Tiangong-L
 ### 1. Repository klonen
 
 ```bash
-TODO: change the repo url to your own
-git clone https://github.com/linancn/tiangong-lca-next.git
+# Replace the repository URL with your own fork
+git clone https://github.com/tiangong-lca/platform.git tiangong-lca-next
 cd tiangong-lca-next
 ```
 
@@ -225,7 +225,7 @@ So synchronisieren Sie Edge Functions aus einem externen Repository:
 mkdir -p temp_repo
 
 # Clone the edge functions repository
-git clone --depth 1 https://github.com/linancn/tiangong-lca-edge-functions.git temp_repo
+git clone --depth 1 https://github.com/tiangong-lca/edge-functions.git temp_repo
 
 # Copy edge functions to the Docker volumes directory
 mkdir -p docker/volumes/functions
@@ -426,7 +426,7 @@ Erwägen Sie für Produktivbereitstellungen folgende Sicherheitsmaßnahmen:
 
 ## Weitere Ressourcen
 
-- [TianGong-LCA-Next-Projekt](https://github.com/linancn/tiangong-lca-next)
+- [TianGong-LCA-Next-Projekt](https://github.com/tiangong-lca/platform)
 - [TianGong-LCA-Plattform-Website](https://lca.tiangong.earth/welcome)
 - [Supabase-Dokumentation](https://supabase.com/docs)
 - [Docker-Dokumentation](https://docs.docker.com/)

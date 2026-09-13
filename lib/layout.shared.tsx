@@ -91,7 +91,7 @@ export function baseOptions(locale: string): BaseLayoutProps {
       url: `/${locale}`,
       transparentMode: 'top',
     },
-    githubUrl: 'https://github.com/linancn/tiangong-lca-next-docs',
+    githubUrl: 'https://github.com/tiangong-lca/docs',
     links: [
       {
         type: 'main',

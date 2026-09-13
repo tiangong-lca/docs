@@ -27,7 +27,7 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.13 tiangong-lca auth doctor-auth --json
 
 ## Garder une trace des mises à jour
 
-Version d’installateur et contenu du Skill sont distincts : `skills@1.5.23` fixe l’installateur, mais `tiangong-lca/skills` peut évoluer. Conservez `skills-lock.json`, fichiers actuels et résultats vérifiés. Avant mise à jour, examinez les modifications locales et sauvegardez celles à conserver dans le contrôle de versions ou une copie de sécurité.
+Version d’installateur et contenu du Skill sont distincts : `skills@1.5.23` fixe l’installateur, mais `tiangong-lca/agent-skills` peut évoluer. Conservez `skills-lock.json`, fichiers actuels et résultats vérifiés. Avant mise à jour, examinez les modifications locales et sauvegardez celles à conserver dans le contrôle de versions ou une copie de sécurité.
 
 ```bash
 pnpm dlx skills@1.5.23 update flow-hybrid-search --project --yes
@@ -45,4 +45,4 @@ pnpm dlx skills@1.5.23 remove flow-hybrid-search --agent codex --yes
 
 ## Préparer un signalement
 
-Indiquez client, système, versions Node/pnpm/CLI/installateur, nom du Skill, commande expurgée, codes de sortie/erreur et requête minimale non sensible. Ne joignez ni session, code, jeton, e-mail complet ou paquet privé. Signalez les problèmes Skills dans [Skills Issues](https://github.com/tiangong-lca/skills/issues), ceux du CLI dans [CLI Issues](https://github.com/tiangong-lca/tiangong-cli/issues).
+Indiquez client, système, versions Node/pnpm/CLI/installateur, nom du Skill, commande expurgée, codes de sortie/erreur et requête minimale non sensible. Ne joignez ni session, code, jeton, e-mail complet ou paquet privé. Signalez les problèmes Skills dans [Skills Issues](https://github.com/tiangong-lca/agent-skills/issues), ceux du CLI dans [CLI Issues](https://github.com/tiangong-lca/cli/issues).

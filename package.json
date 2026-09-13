@@ -15,7 +15,7 @@
     "verify:out": "node scripts/verify-out.mjs",
     "check:links": "node scripts/check-links.mjs",
     "check:screenshots": "node scripts/check-screenshots.mjs",
-    "test": "node --test scripts/check-env.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs",
+    "test": "node --test scripts/check-env.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs scripts/context7-refresh.test.mjs",
     "test:env": "node --test scripts/check-env.test.mjs",
     "test:links": "node --test scripts/check-links.test.mjs",
     "test:screenshots": "node --test scripts/check-screenshots.test.mjs",

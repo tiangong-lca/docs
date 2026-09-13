@@ -234,6 +234,7 @@ jobs:
         id: context7
         env:
           CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
+          CONTEXT7_LIBRARY_NAME: ${{ vars.CONTEXT7_LIBRARY_NAME }}
         run: |
           set -euo pipefail
           if [ -z "${CONTEXT7_API_KEY:-}" ]; then
@@ -241,7 +242,16 @@ jobs:
             echo "::warning::Context7 refresh pending: CONTEXT7_API_KEY not configured"
             exit 0
           fi
-          library="${CONTEXT7_LIBRARY_NAME:-/${GITHUB_REPOSITORY}}"
+          # The Context7 library key is an external publication-index identity registered
+          # with the provider; it does not follow GitHub repository renames. The default
+          # is the currently registered service key; repo vars.CONTEXT7_LIBRARY_NAME may
+          # select a future verified key after a provider-side registration.
+          library="${CONTEXT7_LIBRARY_NAME:-/linancn/tiangong-lca-next-docs}"
+          valid_library='^/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'
+          if ! [[ "$library" =~ $valid_library ]]; then
+            echo "::error::Context7 library name must be a two-segment /owner/repo path."
+            exit 1
+          fi
           status_code="$(curl -sS -o /tmp/context7-response.json -w '%{http_code}' \
             -X POST 'https://context7.com/api/v1/refresh' \
             -H "Authorization: Bearer ${CONTEXT7_API_KEY}" \

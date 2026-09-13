@@ -25,13 +25,13 @@ git --version
 Codex：
 
 ```bash
-pnpm dlx skills@1.5.23 add tiangong-lca/skills --skill flow-hybrid-search --agent codex --copy --yes
+pnpm dlx skills@1.5.23 add tiangong-lca/agent-skills --skill flow-hybrid-search --agent codex --copy --yes
 ```
 
 OpenClaw：
 
 ```bash
-pnpm dlx skills@1.5.23 add tiangong-lca/skills --skill flow-hybrid-search --agent openclaw --copy --yes
+pnpm dlx skills@1.5.23 add tiangong-lca/agent-skills --skill flow-hybrid-search --agent openclaw --copy --yes
 ```
 
 只有同时需要两个客户端时才分别安装。`--skill` 明确选择技能，`--agent` 指定客户端，`--copy` 复制运行所需文件。这里没有启用全局安装；`--yes` 跳过安装器确认，因此执行前先核对命令中的来源和技能名。

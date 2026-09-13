@@ -7,10 +7,10 @@ TianGong Foundry 的普通入口是 `foundry-tidas-import`。它编排外部数�
 
 ## 1. 准备独立目录
 
-当前验证组合为 [Foundry 0.1.7](https://github.com/tiangong-lca/data-foundry/releases/tag/foundry-runtime-v0.1.7)、CLI 0.1.13、Node 24.19.0 和 TIDAS 0.3.0，由 [Skills 0a33db1](https://github.com/tiangong-lca/skills/commit/0a33db1df81f9bd3ce52d356178fa35adc40b67c) 的完整入口分发。通过客户端的 Skills 安装功能选择 `tiangong-lca/skills` 中的 `foundry-tidas-import`。若已有 Node/pnpm/Git 并使用命令行安装器，可执行：
+当前验证组合为 [Foundry 0.1.7](https://github.com/tiangong-lca/data-foundry/releases/tag/foundry-runtime-v0.1.7)、CLI 0.1.13、Node 24.19.0 和 TIDAS 0.3.0，由 [Skills 0a33db1](https://github.com/tiangong-lca/skills/commit/0a33db1df81f9bd3ce52d356178fa35adc40b67c) 的完整入口分发。通过客户端的 Skills 安装功能选择 `tiangong-lca/agent-skills` 中的 `foundry-tidas-import`。若已有 Node/pnpm/Git 并使用命令行安装器，可执行：
 
 ```bash
-pnpm dlx skills@1.5.23 add tiangong-lca/skills --skill foundry-tidas-import --agent codex --copy --yes
+pnpm dlx skills@1.5.23 add tiangong-lca/agent-skills --skill foundry-tidas-import --agent codex --copy --yes
 ```
 
 安装后，在项目的 `skills-lock.json` 中检查 `skills.foundry-tidas-import.computedHash`，应与下值一致。这是已核对安装内容的指纹，不是签名。仓库可能继续更新；若值不同或缺失，先停止执行 bootstrap，核对新的来源、完整 lock 和资格证据。不要把哈希改成预期值来绕过检查。

@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-09-03
-lastReviewedCommit: e529ffacfd81ad4ed17ca0ea0cce811f6194b662
-lastReviewedNote: "Reviewed for Issue #186: explicit four-locale Knowledge Base MCP documentation retirement moves only the affected routes and exclusive media into negative checks; retained guides, shared assets, source-derived indexes, runtime ownership, and production-only publication boundaries remain intact."
+lastReviewedAt: 2026-09-13
+lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
+lastReviewedNote: "Reviewed for docs #199: canonical repository identity moves to tiangong-lca/docs; active Skills install/issue/clone links move to tiangong-lca/agent-skills and tiangong-lca/cli across all four locales; the reconcile Context7 refresh binds the registered service key /linancn/tiangong-lca-next-docs (overridable via vars.CONTEXT7_LIBRARY_NAME) instead of deriving from GITHUB_REPOSITORY. Pinned 0a33db1 references, historical release/tutorial versions, EdgeOne source links and the Context7 registration file are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
