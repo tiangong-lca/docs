@@ -18,8 +18,8 @@ checkPaths:
   - components/**
   - lib/**
 lastReviewedAt: 2026-09-13
-lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
-lastReviewedNote: "Reviewed for docs #199: canonical repository identity and active Skills/CLI links migrated across all four locales; the Context7 refresh binds the registered service key. No new content gaps introduced; existing backlog items unchanged."
+lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
+lastReviewedNote: "Reviewed for docs #201: the concrete Context7 redirect failure is owned by the tracked issue; canonical service binding changes do not alter reader-facing content or introduce an untracked product/documentation gap."
 related:
   - AGENTS.md
   - README.md

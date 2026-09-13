@@ -32,8 +32,8 @@ checkPaths:
   - .github/workflows/**
   - .githooks/**
 lastReviewedAt: 2026-09-13
-lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
-lastReviewedNote: "Reviewed for docs #199: canonical repository identity moves to tiangong-lca/docs; active Skills install/issue/clone links move to tiangong-lca/agent-skills and tiangong-lca/cli across all four locales; the reconcile Context7 refresh binds the registered service key /linancn/tiangong-lca-next-docs (overridable via vars.CONTEXT7_LIBRARY_NAME) instead of deriving from GITHUB_REPOSITORY. Pinned 0a33db1 references, historical release/tutorial versions, EdgeOne source links and the Context7 registration file are unchanged."
+lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
+lastReviewedNote: "Reviewed for docs #201: the production Context7 API explicitly rejects the old moved-repository key, while the canonical /tiangong-lca/docs library is present and processing. Refresh default and registration URL now use that verified key; validated override, public_key, main-only production boundary and existing site contracts are preserved."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -97,6 +97,8 @@ Foundry guide CI checks all four localized navigation entries and requires every
 
 The managed Foundry guide binds released Foundry 0.1.7 with CLI 0.1.13, Node 24.19.0, TIDAS 0.3.0 and merged Skills 0a33db1. Skills-specific login examples use CLI 0.1.13 and the independently installed current package fingerprint; the separate standalone CLI 0.1.8 and TIDAS 0.2.1 tutorials retain their existing owned baseline. Migration remains conservative for sealed/attempted/unclassified tasks, and task runtime binding can reject older readers even when workspace read compatibility is valid.
 
-## Context7 service key vs source repository identity (docs #199)
+## Context7 service key and source repository identity
 
-The Context7 refresh in `reconcile-docs.yml` posts `libraryName` to the provider refresh API. The registered service key is `/linancn/tiangong-lca-next-docs` (verified through actual provider resolution and the public library page); it is an external publication-index identity and does not follow GitHub repository renames. The workflow defaults to that key, rejects values outside the two-segment `/owner/repo` form before the JSON request is built, and honors `vars.CONTEXT7_LIBRARY_NAME` when a future provider-verified key is selected. Repository identity (`tiangong-lca/docs`) governs git admission and Docpact; the service key and the source repository are separate identities and must not be conflated. Production refresh runs only in the `production` environment on `main`-derived reconciliation; preview runs never write.
+The Context7 refresh in `reconcile-docs.yml` posts `libraryName` to the provider refresh API. The verified migrated service key is `/tiangong-lca/docs`, matching the public library's canonical GitHub source. Production recovery for docs #201 confirmed that the old key returns HTTP 400 with an explicit repository-moved response; an old library remaining discoverable does not prove it can still be refreshed. Both the workflow default and `context7.json` registration URL use the verified new key. The public ownership key remains unchanged.
+
+The workflow rejects values outside the two-segment `/owner/repo` form before building the request and honors `vars.CONTEXT7_LIBRARY_NAME` for another provider-verified key. Repository identity governs Git admission and Docpact independently of that override. Production refresh runs only in the `production` environment on `main`-derived reconciliation; preview runs never write. A queued refresh or rate-limit response is recorded as such and does not by itself prove ingestion of the latest source.

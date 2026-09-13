@@ -31,6 +31,6 @@
     "Treat unsuffixed MDX as the Chinese source and .en.mdx, .de.mdx, and .fr.mdx as maintained translations of the same logical page.",
     "Prefer stable user-facing pages, OpenAPI guides, MCP and CLI guides, deployment documentation, FAQ, and changelog entries for answers."
   ],
-  "url": "https://context7.com/linancn/tiangong-lca-next-docs",
+  "url": "https://context7.com/tiangong-lca/docs",
   "public_key": "pk_PLfrQ8NexLhqPMtpyCSO2"
 }

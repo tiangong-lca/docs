@@ -37,8 +37,8 @@ checkPaths:
   - .github/workflows/**
   - .githooks/**
 lastReviewedAt: 2026-09-13
-lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
-lastReviewedNote: "Reviewed for docs #199: canonical repository identity moves to tiangong-lca/docs; active Skills install/issue/clone links move to tiangong-lca/agent-skills and tiangong-lca/cli across all four locales; the reconcile Context7 refresh binds the registered service key /linancn/tiangong-lca-next-docs (overridable via vars.CONTEXT7_LIBRARY_NAME) instead of deriving from GITHUB_REPOSITORY. Pinned 0a33db1 references, historical release/tutorial versions, EdgeOne source links and the Context7 registration file are unchanged."
+lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
+lastReviewedNote: "Reviewed for docs #201: the production Context7 API explicitly rejects the old moved-repository key, while the canonical /tiangong-lca/docs library is present and processing. Refresh default and registration URL now use that verified key; validated override, public_key, main-only production boundary and existing site contracts are preserved."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
