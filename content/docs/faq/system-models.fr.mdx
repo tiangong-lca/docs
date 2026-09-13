@@ -18,6 +18,22 @@ rebind the reference process, then try again. », le modèle courant ne dispose 
 nœud utilisé comme processus de référence existe toujours, puis redéfinissez le processus de
 référence et la quantité du flux de référence avant d'enregistrer.
 
+## Que signifie le signalement de plusieurs fournisseurs pour une entrée lors de l'enregistrement d'un modèle ?
+
+L'éditeur de modèles vérifie les connexions explicites du canevas. Si le même flux d'entrée d'un
+processus est relié à plusieurs processus amont distincts, le calcul local de l'éditeur signale
+plusieurs fournisseurs et s'arrête.
+
+Vérifiez les connexions amont du flux d'entrée indiqué. Corrigez les connexions en double ou erronées
+selon les relations d'approvisionnement réelles afin que l'entrée ait un seul processus fournisseur,
+puis réessayez. Si le scénario réel nécessite plusieurs fournisseurs, déterminez d'abord comment
+modéliser cette structure d'approvisionnement. Ne supprimez pas de relations réelles uniquement pour
+réussir la validation.
+
+Cette vérification concerne les connexions explicites dans l'éditeur. Le mix régional implicite
+décrit ci-dessous concerne le choix des fournisseurs dans l'instantané du solveur ; il ne signifie
+pas que l'éditeur prend en charge plusieurs connexions explicites de fournisseurs pour un flux d'entrée.
+
 ## Comment la plateforme choisit-elle les fournisseurs pour les entrées de produits ?
 
 Lorsqu'un échange d'entrée de produit n'est pas explicitement lié à un fournisseur, TianGong LCA
