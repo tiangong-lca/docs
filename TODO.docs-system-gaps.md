@@ -17,9 +17,9 @@ checkPaths:
   - app/**
   - components/**
   - lib/**
-lastReviewedAt: 2026-09-03
-lastReviewedCommit: e529ffacfd81ad4ed17ca0ea0cce811f6194b662
-lastReviewedNote: "Reviewed for Issue #186: explicit four-locale Knowledge Base MCP documentation retirement moves only the affected routes and exclusive media into negative checks; retained guides, shared assets, source-derived indexes, runtime ownership, and production-only publication boundaries remain intact."
+lastReviewedAt: 2026-09-13
+lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
+lastReviewedNote: "Reviewed for docs #199: canonical repository identity and active Skills/CLI links migrated across all four locales; the Context7 refresh binds the registered service key. No new content gaps introduced; existing backlog items unchanged."
 related:
   - AGENTS.md
   - README.md

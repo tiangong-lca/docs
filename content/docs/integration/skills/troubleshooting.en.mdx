@@ -27,7 +27,7 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.13 tiangong-lca auth doctor-auth --json
 
 ## Keep an update record
 
-Installer and Skill versions differ: `skills@1.5.23` pins the installer, while `tiangong-lca/skills` can change upstream. Keep `skills-lock.json`, current files, and verified results. Before updating, check for local modifications and preserve needed changes in version control or a backup.
+Installer and Skill versions differ: `skills@1.5.23` pins the installer, while `tiangong-lca/agent-skills` can change upstream. Keep `skills-lock.json`, current files, and verified results. Before updating, check for local modifications and preserve needed changes in version control or a backup.
 
 ```bash
 pnpm dlx skills@1.5.23 update flow-hybrid-search --project --yes
@@ -45,4 +45,4 @@ pnpm dlx skills@1.5.23 remove flow-hybrid-search --agent codex --yes
 
 ## What to include in a bug report
 
-Include client, OS, Node/pnpm/CLI/installer versions, skill name, redacted command, exit/error codes, and a minimal nonsensitive request. Do not attach sessions, codes, tokens, full emails, or private packages. Report skill problems in [Skills issues](https://github.com/tiangong-lca/skills/issues) and CLI runtime problems in [CLI issues](https://github.com/tiangong-lca/tiangong-cli/issues).
+Include client, OS, Node/pnpm/CLI/installer versions, skill name, redacted command, exit/error codes, and a minimal nonsensitive request. Do not attach sessions, codes, tokens, full emails, or private packages. Report skill problems in [Skills issues](https://github.com/tiangong-lca/agent-skills/issues) and CLI runtime problems in [CLI issues](https://github.com/tiangong-lca/cli/issues).

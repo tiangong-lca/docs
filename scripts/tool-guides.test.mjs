@@ -52,7 +52,7 @@ test('CLI first task uses a published login and bounded read with explicit modif
 test('Skills introduction installs one proven package and distinguishes Codex/OpenClaw paths', () => {
   for (const locale of locales) {
     const setup = read(page('skills', 'getting-started', locale.suffix));
-    assert.match(setup, /skills@1\.5\.23 add tiangong-lca\/skills --skill flow-hybrid-search --agent codex --copy --yes/u);
+    assert.match(setup, /skills@1\.5\.23 add tiangong-lca\/agent-skills --skill flow-hybrid-search --agent codex --copy --yes/u);
     assert.match(setup, /--agent openclaw --copy --yes/u);
     assert.match(setup, /\.agents\/skills\/flow-hybrid-search/u);
     assert.match(setup, /skills\/flow-hybrid-search/u);

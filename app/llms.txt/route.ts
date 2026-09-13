@@ -25,7 +25,7 @@ export function GET() {
     'Public documentation index for TianGong LCA users, integrators, and AI retrieval systems.',
     '',
     `Source site: ${ORIGIN}`,
-    'Source repository: https://github.com/linancn/tiangong-lca-next-docs',
+    'Source repository: https://github.com/tiangong-lca/docs',
     `Source commit: ${commit}`,
     'Publication scope: public docs only (complete zh/en/de/fr pages); internal agent, plan, incident, TODO, and governance execution records are excluded.',
   ];

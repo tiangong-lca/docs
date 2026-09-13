@@ -7,10 +7,10 @@ The ordinary TianGong Foundry entry is `foundry-tidas-import`. It orchestrates e
 
 ## 1. Prepare a separate directory
 
-The verified combination is [Foundry 0.1.7](https://github.com/tiangong-lca/data-foundry/releases/tag/foundry-runtime-v0.1.7), CLI 0.1.13, Node 24.19.0 and TIDAS 0.3.0, distributed by the complete entry at [Skills 0a33db1](https://github.com/tiangong-lca/skills/commit/0a33db1df81f9bd3ce52d356178fa35adc40b67c). Select `foundry-tidas-import` from `tiangong-lca/skills` through your client’s Skills installer. If Node/pnpm/Git are already available and you use the command-line installer:
+The verified combination is [Foundry 0.1.7](https://github.com/tiangong-lca/data-foundry/releases/tag/foundry-runtime-v0.1.7), CLI 0.1.13, Node 24.19.0 and TIDAS 0.3.0, distributed by the complete entry at [Skills 0a33db1](https://github.com/tiangong-lca/skills/commit/0a33db1df81f9bd3ce52d356178fa35adc40b67c). Select `foundry-tidas-import` from `tiangong-lca/agent-skills` through your client’s Skills installer. If Node/pnpm/Git are already available and you use the command-line installer:
 
 ```bash
-pnpm dlx skills@1.5.23 add tiangong-lca/skills --skill foundry-tidas-import --agent codex --copy --yes
+pnpm dlx skills@1.5.23 add tiangong-lca/agent-skills --skill foundry-tidas-import --agent codex --copy --yes
 ```
 
 After installation, check `skills.foundry-tidas-import.computedHash` in the project’s `skills-lock.json` against the value below. This is the reviewed installation fingerprint, not a signature. The repository can advance; if the value differs or is missing, stop before running the bootstrap and review the new source, complete lock and qualification evidence. Never edit the hash to make the check pass.

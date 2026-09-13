@@ -31,9 +31,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-10
-lastReviewedCommit: cfa82ac04c49840f9656fffe41764ed922f0e4b3
-lastReviewedNote: "Reviewed for Next Docs #197: four locale Foundry fingerprints and all23 catalogue entries bind Skills0a33; CI locks task examples to the exact published-parser-qualified specimen and rejects drift. Stale pre-release claims are replaced by actual source/integration boundaries. Owner parser four positive/nine negative cases, lint/types and full build pass; no dependency or runtime behavior change."
+lastReviewedAt: 2026-09-13
+lastReviewedCommit: c3eb31049b1d91dc9bb218d47bf133968003e74d
+lastReviewedNote: "Reviewed for docs #199: canonical repository identity moves to tiangong-lca/docs; active Skills install/issue/clone links move to tiangong-lca/agent-skills and tiangong-lca/cli across all four locales; the reconcile Context7 refresh binds the registered service key /linancn/tiangong-lca-next-docs (overridable via vars.CONTEXT7_LIBRARY_NAME) instead of deriving from GITHUB_REPOSITORY. Pinned 0a33db1 references, historical release/tutorial versions, EdgeOne source links and the Context7 registration file are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -96,3 +96,7 @@ The hook runs strict configuration validation and enforced documentation-governa
 Foundry guide CI checks all four localized navigation entries and requires every task-start example to equal the exact qualified public specimen. Maintainer qualification parses that specimen through the published Foundry 0.1.7 public parseFoundryTaskStartSpec export; changing the specimen requires repeating that owner-parser check. CI rejects any locale or field drift without copying the runtime validator. The full build must include the new routes in static output, links, search/llms and sitemap. Rendered preparation pages, actual F1/C1/Skills installation, official login and bounded end-to-end task evidence are recorded in #193 and workspace #980; new changes rerun affected checks.
 
 The managed Foundry guide binds released Foundry 0.1.7 with CLI 0.1.13, Node 24.19.0, TIDAS 0.3.0 and merged Skills 0a33db1. Skills-specific login examples use CLI 0.1.13 and the independently installed current package fingerprint; the separate standalone CLI 0.1.8 and TIDAS 0.2.1 tutorials retain their existing owned baseline. Migration remains conservative for sealed/attempted/unclassified tasks, and task runtime binding can reject older readers even when workspace read compatibility is valid.
+
+## Context7 service key vs source repository identity (docs #199)
+
+The Context7 refresh in `reconcile-docs.yml` posts `libraryName` to the provider refresh API. The registered service key is `/linancn/tiangong-lca-next-docs` (verified through actual provider resolution and the public library page); it is an external publication-index identity and does not follow GitHub repository renames. The workflow defaults to that key, rejects values outside the two-segment `/owner/repo` form before the JSON request is built, and honors `vars.CONTEXT7_LIBRARY_NAME` when a future provider-verified key is selected. Repository identity (`tiangong-lca/docs`) governs git admission and Docpact; the service key and the source repository are separate identities and must not be conflated. Production refresh runs only in the `production` environment on `main`-derived reconciliation; preview runs never write.
