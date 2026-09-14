@@ -18,6 +18,22 @@ reference process, then try again.", verfügt das aktuelle Modell über kein nut
 dass der als Referenzprozess genutzte Knoten noch existiert, und setzen Sie Referenzprozess und
 Referenzflussmenge erneut, bevor Sie speichern.
 
+## Was bedeutet die Meldung über mehrere Anbieter für eine Eingabe beim Speichern eines Modells?
+
+Der Modelleditor prüft die expliziten Verbindungen auf der Arbeitsfläche. Ist derselbe Eingabefluss
+eines Prozesses mit mehreren unterschiedlichen vorgelagerten Prozessen verbunden, meldet die lokale
+Berechnung des Editors mehrere Anbieter und bricht ab.
+
+Prüfen Sie die vorgelagerten Verbindungen des angegebenen Eingabeflusses. Korrigieren Sie doppelte
+oder fehlerhafte Verbindungen entsprechend den tatsächlichen Versorgungsbeziehungen, sodass die
+Eingabe einen liefernden Prozess hat, und versuchen Sie es erneut. Benötigt das reale Szenario mehrere
+Anbieter, klären Sie zunächst die Modellierung dieser Versorgungsstruktur. Entfernen Sie keine realen
+Versorgungsbeziehungen nur, um die Prüfung zu bestehen.
+
+Diese Prüfung gilt für explizite Verbindungen im Editor. Der nachfolgend beschriebene implizite
+regionale Versorgungsmix betrifft die Anbieterwahl im Solver-Snapshot. Daraus folgt nicht, dass der
+Editor mehrere explizite Anbieter-Verbindungen für einen Eingabefluss unterstützt.
+
 ## Wie wählt die Plattform Anbieter für Produkteingaben?
 
 Wenn ein Produkteingabe-Austausch nicht ausdrücklich mit einem Anbieter verknüpft ist, nutzt

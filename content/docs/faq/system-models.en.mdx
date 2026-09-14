@@ -18,6 +18,21 @@ reference process, then try again.”, the current model does not have a usable
 reference process still exists, then set the reference process and reference flow quantity again
 before saving.
 
+## What does it mean when saving a model reports multiple providers for one input?
+
+The model editor checks explicit connections on the canvas. If the same input flow of one process
+is connected to several distinct upstream processes, the editor's local calculation reports a
+multiple-provider issue and stops.
+
+Inspect the upstream connections of the indicated input flow. Correct duplicate or incorrect
+connections according to the actual supply relationships so that the input has one supplying
+process, then try again. If the real scenario needs several suppliers, first establish how to
+represent that supply structure; do not remove real supply relationships merely to pass validation.
+
+This check applies to explicit connections in the editor. The implicit regional supply mix below
+describes provider selection in a solver snapshot; it does not mean the editor supports several
+explicit provider connections for one input flow.
+
 ## How does the platform choose providers for product inputs?
 
 When a product input exchange is not explicitly linked to one provider, TianGong

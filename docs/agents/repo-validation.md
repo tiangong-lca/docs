@@ -31,9 +31,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-13
-lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
-lastReviewedNote: "Reviewed for docs #201: the production Context7 API explicitly rejects the old moved-repository key, while the canonical /tiangong-lca/docs library is present and processing. Refresh default and registration URL now use that verified key; validated override, public_key, main-only production boundary and existing site contracts are preserved."
+lastReviewedAt: 2026-09-14
+lastReviewedCommit: 8b7e7f75bdd17f3c5f52eef8666f26f6d3967208
+lastReviewedNote: "Reviewed for docs #203 / workspace #1154: four-language FAQ and review-queue search explanations follow exact Platform PR1054 source. Existing solver-snapshot provider semantics, status imagery, routes and runtime remain unchanged. Lint, typecheck,13 screenshot-validator tests and full static build pass; public merge awaits Database642 Main qualification."
 related:
   - AGENTS.md
   - .docpact/config.yaml
