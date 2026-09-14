@@ -4,7 +4,9 @@
     {
       "name": "docs-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["-C", "/Users/davidli/projects/workspace/tiangong-lca-next-docs", "dev"],
+      "runtimeArgs": [
+        "dev"
+      ],
       "port": 3000
     }
   ]
