@@ -1,9 +1,9 @@
 version: 1
 layout: repo
 lastReviewedAt: "2026-09-14"
-lastReviewedCommit: "8b7e7f75bdd17f3c5f52eef8666f26f6d3967208"
+lastReviewedCommit: "7b8490ac905238e6f5455b67940bb06104385749"
 reviewNote: "Reviewed for Next Docs #197: four locale Foundry fingerprints and all23 catalogue entries bind Skills0a33; CI locks task examples to the exact published-parser-qualified specimen and rejects drift. Stale pre-release claims are replaced by actual source/integration boundaries. Owner parser four positive/nine negative cases, lint/types and full build pass; no dependency or runtime behavior change."
-lastReviewedNote: "Reviewed for docs #203 / workspace #1154: four-language FAQ and review-queue search explanations follow exact Platform PR1054 source. Existing solver-snapshot provider semantics, status imagery, routes and runtime remain unchanged. Lint, typecheck,13 screenshot-validator tests and full static build pass; public merge awaits Database642 Main qualification."
+lastReviewedNote: "Reviewed for docs #205: contributor product-sync guidance in AGENTS.md, the current TODO, and all four locales of docs-product-sync now point at the canonical ../platform product directory, and the tracked .claude/launch.json drops its user-specific absolute pnpm -C path for portable runtimeArgs so local preview stays rooted in the selected repository. User-facing product claims, screenshots, publication and source receipts are unchanged."
 
 catalog:
   repos:

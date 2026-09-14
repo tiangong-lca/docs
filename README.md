@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-09-13
-lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
-lastReviewedNote: "Reviewed for docs #201: the production Context7 API explicitly rejects the old moved-repository key, while the canonical /tiangong-lca/docs library is present and processing. Refresh default and registration URL now use that verified key; validated override, public_key, main-only production boundary and existing site contracts are preserved."
+lastReviewedAt: 2026-09-14
+lastReviewedCommit: 7b8490ac905238e6f5455b67940bb06104385749
+lastReviewedNote: "Reviewed for docs #205: contributor product-sync guidance in AGENTS.md, the current TODO, and all four locales of docs-product-sync now point at the canonical ../platform product directory, and the tracked .claude/launch.json drops its user-specific absolute pnpm -C path for portable runtimeArgs so local preview stays rooted in the selected repository. User-facing product claims, screenshots, publication and source receipts are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml

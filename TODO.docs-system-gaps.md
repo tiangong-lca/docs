@@ -31,7 +31,7 @@ related:
 This is the durable repository-local backlog for differences between:
 
 - public documentation in `tiangong-lca-next-docs`;
-- shipped product behavior in `../tiangong-lca-next`.
+- shipped product behavior in `../platform`.
 
 GitHub issues and pull requests own tracked delivery. This file is for newly discovered product/documentation drift that is not yet represented by an executable issue.
 

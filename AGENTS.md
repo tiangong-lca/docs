@@ -71,7 +71,7 @@ This repository owns:
 - `scripts/build.mjs`, `scripts/verify-out.mjs`, `scripts/check-links.mjs`, and `scripts/check-screenshots.mjs` for static output, link, and screenshot-evidence contracts;
 - `TODO.docs-system-gaps.md` for durable product/documentation drift.
 
-This repository does not own shipped product behavior, route truth, API semantics, or root integration state. Verify ambiguous behavior in `../tiangong-lca-next`; integrate the resulting child commit in `lca-workspace` separately.
+This repository does not own shipped product behavior, route truth, API semantics, or root integration state. Verify ambiguous behavior in `../platform`; integrate the resulting child commit in `lca-workspace` separately.
 
 ## Runtime facts
 
