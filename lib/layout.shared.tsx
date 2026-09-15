@@ -84,6 +84,13 @@ const docsLabel: Record<string, string> = {
   fr: 'Documentation',
 };
 
+const pcrLabel: Record<string, string> = {
+  zh: 'PCR 文档',
+  en: 'PCR documentation',
+  de: 'PCR (Englisch)',
+  fr: 'PCR (anglais)',
+};
+
 export function baseOptions(locale: string): BaseLayoutProps {
   return {
     nav: {
@@ -97,6 +104,12 @@ export function baseOptions(locale: string): BaseLayoutProps {
         type: 'main',
         text: docsLabel[locale] ?? docsLabel.en,
         url: `/${locale}/docs`,
+      },
+      {
+        type: 'main',
+        text: pcrLabel[locale] ?? pcrLabel.en,
+        url: locale === 'zh' ? 'https://pcr.tiangong.earth/' : 'https://pcr.tiangong.earth/en/',
+        external: true,
       },
     ],
   };

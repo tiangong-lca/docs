@@ -1,9 +1,9 @@
 version: 1
 layout: repo
-lastReviewedAt: "2026-09-14"
-lastReviewedCommit: "7b8490ac905238e6f5455b67940bb06104385749"
+lastReviewedAt: "2026-09-15"
+lastReviewedCommit: "e94e1e591ec6679e878af136d6cd9f47574db9e1"
 reviewNote: "Reviewed for Next Docs #197: four locale Foundry fingerprints and all23 catalogue entries bind Skills0a33; CI locks task examples to the exact published-parser-qualified specimen and rejects drift. Stale pre-release claims are replaced by actual source/integration boundaries. Owner parser four positive/nine negative cases, lint/types and full build pass; no dependency or runtime behavior change."
-lastReviewedNote: "Reviewed for docs #205: contributor product-sync guidance in AGENTS.md, the current TODO, and all four locales of docs-product-sync now point at the canonical ../platform product directory, and the tracked .claude/launch.json drops its user-specific absolute pnpm -C path for portable runtimeArgs so local preview stays rooted in the selected repository. User-facing product claims, screenshots, publication and source receipts are unchanged."
+lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
 
 catalog:
   repos:

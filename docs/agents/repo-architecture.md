@@ -33,9 +33,9 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-09-14
-lastReviewedCommit: 7b8490ac905238e6f5455b67940bb06104385749
-lastReviewedNote: "Reviewed for docs #205: contributor product-sync guidance in AGENTS.md, the current TODO, and all four locales of docs-product-sync now point at the canonical ../platform product directory, and the tracked .claude/launch.json drops its user-specific absolute pnpm -C path for portable runtimeArgs so local preview stays rooted in the selected repository. User-facing product claims, screenshots, publication and source receipts are unchanged."
+lastReviewedAt: 2026-09-15
+lastReviewedCommit: e94e1e591ec6679e878af136d6cd9f47574db9e1
+lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -131,3 +131,9 @@ EdgeOne Makers builds and deploys from Git. The managed Node runtime supplies pn
 The four `integration/skills/foundry*.mdx` pages add a separate Foundry task-preparation route while preserving the original search tutorial. They describe the shipped-skill bootstrap boundary and public task inputs/status/recovery. Actual installation, catalogue provenance, official OAuth and released-runtime qualification are recorded under #193 and workspace #980. The final reviewed installation is checked by its skill fingerprint; a local preparation stopping point does not prove complete import. Exact source integration and external deployment/search refresh remain separate states.
 
 The managed Foundry guide binds released Foundry 0.1.7 with CLI 0.1.13, Node 24.19.0, TIDAS 0.3.0 and merged Skills 0a33db1. Skills-specific login examples use CLI 0.1.13 and the independently installed current package fingerprint; the separate standalone CLI 0.1.8 and TIDAS 0.2.1 tutorials retain their existing owned baseline. Migration remains conservative for sealed/attempted/unclassified tasks, and task runtime binding can reject older readers even when workspace read compatibility is valid.
+
+The shared navigation includes the independently owned PCR documentation library.
+Chinese uses its default Chinese entry; English, German and French use the actual
+English PCR entry, with the language identified for German/French readers. This
+cross-site link does not create translated PCR routes or change this site's own
+four-language content contract. PCR source and production remain owned by `pcr`.
