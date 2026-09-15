@@ -36,9 +36,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-14
-lastReviewedCommit: 8b7e7f75bdd17f3c5f52eef8666f26f6d3967208
-lastReviewedNote: "Reviewed for docs #203 / workspace #1154: four-language FAQ and review-queue search explanations follow exact Platform PR1054 source. Existing solver-snapshot provider semantics, status imagery, routes and runtime remain unchanged. Lint, typecheck,13 screenshot-validator tests and full static build pass; public merge awaits Database642 Main qualification."
+lastReviewedAt: 2026-09-15
+lastReviewedCommit: e94e1e591ec6679e878af136d6cd9f47574db9e1
+lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
