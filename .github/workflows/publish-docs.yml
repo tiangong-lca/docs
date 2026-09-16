@@ -57,6 +57,21 @@ jobs:
           SOURCE_COMMIT: ${{ github.sha }}
         run: pnpm build
 
+      - name: Check published SEO output
+        uses: tiangong-lca/workspace/.github/actions/seo-check@dff8180d00f5fbff8155be85ee354e522eb3c554
+        with:
+          origin: http://localhost:3000
+          artifact-root: out
+          artifact-indexing: disabled
+          report: seo-report.json
+
+      - name: Upload SEO report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: seo-report
+          path: seo-report.json
+
   post-deploy-evidence:
     name: Post-deploy evidence (EdgeOne Makers owns build+deploy)
     if: github.event_name == 'push'

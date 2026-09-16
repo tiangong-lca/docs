@@ -11,6 +11,7 @@ import {
   maximumPageDescriptionLength,
   pageDescription,
   siteDescription,
+  siteVerificationMetadata,
 } from '../lib/seo-policy.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -130,4 +131,17 @@ test('truncation counts Unicode characters, keeps astral characters whole and ma
   assert.ok(Array.from(unbroken.description).length <= maximumPageDescriptionLength);
   assert.equal(unbroken.description.endsWith('…'), true);
   assert.equal(unbroken.description.endsWith(' …'), false);
+});
+
+test('provider verification metadata is exact when configured and absent when not', () => {
+  assert.deepEqual(siteVerificationMetadata({}), {});
+  assert.deepEqual(siteVerificationMetadata({ BAIDU_SITE_VERIFICATION: '   ' }), {});
+  assert.deepEqual(siteVerificationMetadata({ BAIDU_SITE_VERIFICATION: 'codeva-test-code' }), {
+    verification: { other: { 'baidu-site-verification': 'codeva-test-code' } },
+  });
+  assert.equal(
+    'verification' in siteVerificationMetadata({ BAIDU_SITE_VERIFICATION: '' }),
+    false,
+    'an empty environment must not publish a verification marker',
+  );
 });

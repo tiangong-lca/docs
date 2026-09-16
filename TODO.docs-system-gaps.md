@@ -17,9 +17,9 @@ checkPaths:
   - app/**
   - components/**
   - lib/**
-lastReviewedAt: 2026-09-13
-lastReviewedCommit: ca8afde63208ed3219dede761767914e1e67dee1
-lastReviewedNote: "Reviewed for docs #201: the concrete Context7 redirect failure is owned by the tracked issue; canonical service binding changes do not alter reader-facing content or introduce an untracked product/documentation gap."
+lastReviewedAt: 2026-09-16
+lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
+lastReviewedNote: "Reviewed for docs #210: the maintenance baseline now records the canonical Chinese home with its single `/zh/` redirect alias, the build-gated canonical/hreflang/sitemap metadata with omitted `lastmod` and reported content debt, and the environment-supplied provider verification marker. No new product/documentation drift is known; the EdgeOne-layer redirect proof and production samples remain delivery items rather than product drift."
 related:
   - AGENTS.md
   - README.md
@@ -50,7 +50,9 @@ No active repository-local documentation drift is known after Issue #182. The to
 ## Current maintenance baseline
 
 - Four complete locales: Chinese source plus English, German, and French translations.
-- Root `/` renders the full default-language home without redirect compatibility.
+- Root `/` renders the full default-language home; `/zh/` is a permanent provider redirect to it and no other redirect compatibility exists, while retired paths keep their 404s.
+- Canonicals, hreflang, the sitemap and Open Graph metadata are build-gated: each canonical URL is listed once with reciprocal alternates, `lastmod` is omitted rather than faked from one build epoch, and pages without a page-specific description are reported as editorial content debt instead of being filled with a site-level default.
+- Provider ownership verification is environment-supplied and gated exactly: a configured code is published verbatim and an unset environment must publish no marker.
 - Generated routes, public endpoints, search records, AI index, metadata, local links, fragments, and assets are build-gated.
 - Docs-impact screenshots are gated as shared content-addressed assets with complete four-locale MDX bindings and safe add/replace/reuse semantics.
 - Visual changes require real-browser inspection at mobile, desktop, ultra-wide, light, and dark states.

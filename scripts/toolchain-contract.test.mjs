@@ -17,6 +17,8 @@ const expectedActions = new Map([
   ['actions/checkout', '3d3c42e5aac5ba805825da76410c181273ba90b1'],
   ['dtolnay/rust-toolchain', '4360b52568e2003a75bf9bc1d59f33a8e3fc893c'],
   ['pnpm/setup', '84cb39b217b10273981911c288cd62326dc7c6d2'],
+  ['tiangong-lca/workspace/.github/actions/seo-check', 'dff8180d00f5fbff8155be85ee354e522eb3c554'],
+  ['actions/upload-artifact', '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'],
 ]);
 
 test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', () => {
@@ -81,7 +83,8 @@ test('pins every external action to a reviewed executable commit', () => {
       const actionRef = match[1];
       if (actionRef.startsWith('./')) continue;
 
-      assert.match(actionRef, /^[a-z0-9_.-]+\/[a-z0-9_.-]+@[a-f0-9]{40}$/iu, fileName);
+      // `owner/repo[/path/to/action]@<40-hex>`; a subdirectory action is still pinned to a commit.
+      assert.match(actionRef, /^[a-z0-9_.-]+\/[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)*@[a-f0-9]{40}$/iu, fileName);
       const separator = actionRef.lastIndexOf('@');
       const action = actionRef.slice(0, separator);
       const commit = actionRef.slice(separator + 1);

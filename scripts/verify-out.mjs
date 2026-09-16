@@ -382,6 +382,35 @@ passed.push(
   `page descriptions measured: ${descriptionDebt.authored.length} authored / ${descriptionDebt.derived.length} derived / ${unresolvedDescriptions.length} unresolved (advisory)`,
 );
 
+// --- provider ownership verification (exact when configured, absent when not) ---
+// The code comes from the deployment environment and is never committed, so a build without it must
+// publish no marker at all rather than a placeholder or a stale code.
+const baiduCode = (process.env.BAIDU_SITE_VERIFICATION ?? '').trim();
+const baiduMeta = /<meta name="baidu-site-verification" content="([^"]*)"/u;
+const baiduSample = [
+  'index.html',
+  'zh/index.html',
+  'en/index.html',
+  'de/index.html',
+  'fr/index.html',
+  ...publicLocales.map((lang) => `${lang}/docs/quick-start/first-login/index.html`),
+];
+for (const page of baiduSample) {
+  const found = baiduMeta.exec(read(page))?.[1];
+  if (baiduCode) {
+    if (found !== baiduCode) {
+      errors.push(`${page} baidu-site-verification = ${found ?? '<missing>'}, expected the configured code`);
+    }
+  } else if (found !== undefined) {
+    errors.push(`${page} publishes baidu-site-verification (${found}) although none is configured`);
+  }
+}
+passed.push(
+  baiduCode
+    ? `baidu-site-verification published exactly on ${baiduSample.length} sampled pages`
+    : 'baidu-site-verification absent on all sampled pages (not configured)',
+);
+
 // --- summary ---
 console.log(`\n[verify-out] ${passed.length} checks passed:`);
 for (const p of passed) console.log(`  ✓ ${p}`);

@@ -5,6 +5,7 @@ export {
   maximumPageDescriptionLength,
   pageDescription,
   siteOrigin,
+  siteVerificationMetadata,
   withTrailingSlash,
 } from '@/lib/seo-policy.mjs';
 

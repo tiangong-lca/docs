@@ -3,7 +3,7 @@ import { i18nProvider } from 'fumadocs-ui/i18n';
 import { Provider } from '@/components/provider';
 import { translations } from '@/lib/layout.shared';
 import { i18n, toHtmlLang } from '@/lib/i18n';
-import { homePath, languageAlternates, localeMetadata, pageImagePath, siteOrigin } from '@/lib/metadata';
+import { homePath, languageAlternates, localeMetadata, pageImagePath, siteOrigin, siteVerificationMetadata } from '@/lib/metadata';
 import '@/app/global.css';
 
 export function generateStaticParams() {
@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: LayoutProps<'/[lang]'>): Prom
     .filter((candidate): candidate is string => Boolean(candidate));
 
   return {
+    ...siteVerificationMetadata(),
     metadataBase: new URL(siteOrigin),
     title: {
       default: content.title,
