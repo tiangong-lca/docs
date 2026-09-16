@@ -18,7 +18,13 @@ const deny = load('manifests/p0b/greenfield-deny.json');
 const categories = load('manifests/p0b/categories.json');
 const sourcePages = readPublicDocInventory(path.join(ROOT, 'content', 'docs'));
 const indexablePages = sourcePages.filter((page) => page.indexable);
-const expectedPublicRoutes = ['/', ...publicLocales.map((lang) => `/${lang}/`), ...sourcePages.map((page) => page.url)];
+// Home entries come from the retained route contract: `/zh/` is the permanent redirect alias of the
+// x-default `/` home, so it stays an exported page but is marked out of the sitemap there.
+const expectedPublicRoutes = [
+  '/',
+  ...siteRoutes.htmlRoutes.filter((route) => route.pageType === 'locale-home' && route.sitemap).map((route) => route.route),
+  ...sourcePages.map((page) => page.url),
+];
 const expectedIndexRoutes = indexablePages.map((page) => page.url);
 
 const errors = [];

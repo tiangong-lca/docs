@@ -13,7 +13,7 @@
       "route": "/zh/",
       "locale": "zh",
       "pageType": "locale-home",
-      "sitemap": true,
+      "sitemap": false,
       "llms": false,
       "search": false,
       "context7": false

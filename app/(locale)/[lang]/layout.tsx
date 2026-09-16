@@ -3,7 +3,7 @@ import { i18nProvider } from 'fumadocs-ui/i18n';
 import { Provider } from '@/components/provider';
 import { translations } from '@/lib/layout.shared';
 import { i18n, toHtmlLang } from '@/lib/i18n';
-import { languageAlternates, localeMetadata, pageImagePath, siteOrigin } from '@/lib/metadata';
+import { homePath, languageAlternates, localeMetadata, pageImagePath, siteOrigin } from '@/lib/metadata';
 import '@/app/global.css';
 
 export function generateStaticParams() {
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: LayoutProps<'/[lang]'>): Prom
     },
     description: content.description,
     alternates: {
-      canonical: `/${lang}/`,
+      canonical: homePath(lang),
       languages: languageAlternates(),
     },
     openGraph: {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: LayoutProps<'/[lang]'>): Prom
       siteName: 'TianGong LCA Docs',
       title: content.title,
       description: content.description,
-      url: `/${lang}/`,
+      url: homePath(lang),
       locale: content.openGraphLocale,
       alternateLocale,
       images: [pageImagePath(lang, [])],

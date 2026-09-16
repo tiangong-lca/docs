@@ -2,5 +2,17 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "outputDirectory": "out",
-  "nodeVersion": "24.18.0"
+  "nodeVersion": "24.18.0",
+  "redirects": [
+    {
+      "source": "/zh",
+      "destination": "/",
+      "statusCode": 301
+    },
+    {
+      "source": "/zh/",
+      "destination": "/",
+      "statusCode": 301
+    }
+  ]
 }
