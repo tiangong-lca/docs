@@ -19,7 +19,7 @@ checkPaths:
   - lib/**
 lastReviewedAt: 2026-09-16
 lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
-lastReviewedNote: "Reviewed for docs #210: the maintenance baseline now records the canonical Chinese home with its single `/zh/` redirect alias, the build-gated canonical/hreflang/sitemap metadata with omitted `lastmod` and reported content debt, and the environment-supplied provider verification marker. No new product/documentation drift is known; the EdgeOne-layer redirect proof and production samples remain delivery items rather than product drift."
+lastReviewedNote: "Reviewed for docs #210: the maintenance baseline now records the canonical Chinese home with its single `/zh/` redirect alias, the build-gated canonical/hreflang/sitemap metadata with omitted `lastmod` and reported content debt, and the environment-supplied provider verification marker. The shared SEO checker reaches CI as a generated snapshot verified against its manifest, with no private action or token. No new product/documentation drift is known; the EdgeOne-layer redirect proof and production samples remain delivery items rather than product drift."
 related:
   - AGENTS.md
   - README.md
@@ -54,6 +54,7 @@ No active repository-local documentation drift is known after Issue #182. The to
 - Canonicals, hreflang, the sitemap and Open Graph metadata are build-gated: each canonical URL is listed once with reciprocal alternates, `lastmod` is omitted rather than faked from one build epoch, and pages without a page-specific description are reported as editorial content debt instead of being filled with a site-level default.
 - Provider ownership verification is environment-supplied and gated exactly: a configured code is published verbatim and an unset environment must publish no marker.
 - Generated routes, public endpoints, search records, AI index, metadata, local links, fragments, and assets are build-gated.
+- The required-check job additionally runs the generated shared SEO checker snapshot (`scripts/vendor/workspace-seo/`, checked against its manifest) over the already-built `out/`. That snapshot is generated tooling from the private workspace source: it is consumed read-only and replaced only by a workspace-side export, never by a local edit.
 - Docs-impact screenshots are gated as shared content-addressed assets with complete four-locale MDX bindings and safe add/replace/reuse semantics.
 - Visual changes require real-browser inspection at mobile, desktop, ultra-wide, light, and dark states.
 - EdgeOne reconciliation validates source identity and indexing policy for both allowlisted origins; preview canonicalizes to production, and only production may mutate Algolia or Context7 state.

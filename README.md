@@ -30,7 +30,7 @@ checkPaths:
   - .github/workflows/**
 lastReviewedAt: 2026-09-16
 lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
-lastReviewedNote: "Reviewed for docs #210 SEO Plan v2 (final): the required-check job now runs the pinned shared workspace SEO checker over the built `out/` and uploads its report with `if: always()`, and `BAIDU_SITE_VERIFICATION` is documented as an optional, environment-supplied ownership code that must be published exactly when configured and absent when not. Build, publication and reconciliation ownership are unchanged."
+lastReviewedNote: "Reviewed for docs #210 SEO Plan v2 (final): the required-check job checks the generated `scripts/vendor/workspace-seo/` snapshot against its manifest and runs that local checker over the built `out/` — no private action and no token — uploading its report with `if: always()`, and `BAIDU_SITE_VERIFICATION` is documented as an optional, environment-supplied ownership code that must be published exactly when configured and absent when not. Build, publication and reconciliation ownership are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -88,7 +88,7 @@ pnpm build
 
 The build wrapper performs environment validation, `next build`, deterministic output verification, and generated HTML link/fragment/asset checking. A successful build currently validates all locale routes, public endpoints, search and AI records, SEO files, Open Graph images, negative retired paths, and internal-content exclusion.
 
-The required-check job then runs the shared workspace SEO checker (`tiangong-lca/workspace/.github/actions/seo-check`, pinned to a reviewed commit) against the already-built `out/` with `artifact-indexing: disabled`, and uploads its JSON report with `if: always()` so a failing check still leaves evidence. The same checker is runnable locally from a workspace checkout against this repository's `out/`.
+The required-check job then runs the generated shared SEO checker snapshot in `scripts/vendor/workspace-seo/` against the already-built `out/` with `artifact-indexing: disabled`, and uploads its JSON report with `if: always()` so a failing check still leaves evidence. The job first checks the snapshot bytes against `manifest.json`; it fetches no external action and holds no token, because the workspace source repository is private. The snapshot is generated there and consumed read-only here, so updating it means re-exporting from an authorized workspace checkout rather than editing these files — `docs/agents/repo-validation.md` records that procedure and the limit of what a local digest match proves.
 
 Provider ownership verification is environment-driven: `BAIDU_SITE_VERIFICATION` publishes the exact Baidu marker on both the entry and locale homes, an unset or blank value publishes no marker, and `verify:out` fails a build that emits one it was not configured with.
 

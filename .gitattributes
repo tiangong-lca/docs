@@ -1,0 +1,3 @@
+
+# Preserve the generated checker snapshot hash on every supported checkout platform.
+scripts/vendor/workspace-seo/* text eol=lf
