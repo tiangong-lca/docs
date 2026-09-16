@@ -4,15 +4,24 @@ import path from 'node:path';
 import test from 'node:test';
 
 import {
+  classifyPageDescription,
   homePath,
   languageAlternates,
   localeMetadata,
   maximumPageDescriptionLength,
   pageDescription,
+  siteDescription,
 } from '../lib/seo-policy.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
+
+/** A valid astral character is a surrogate pair; a lone surrogate is a broken cut. */
+const hasLoneSurrogate = (value) =>
+  /(?:[\uD800-\uDBFF](?![\uDC00-\uDFFF]))|(?:(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])/u.test(value);
+
+const prose =
+  'Life cycle inventory data are collected per process and published as versioned datasets with a public identifier.';
 
 test('the Chinese home is the x-default entry and /zh/ is never a canonical or alternate', () => {
   const home = languageAlternates();
@@ -65,55 +74,60 @@ test('the route contract keeps the alias exported but out of the sitemap', () =>
   }
 });
 
-test('page descriptions prefer authored text and never invent one', () => {
-  assert.equal(
-    pageDescription({ description: 'Authored summary', structuredData: undefined }, 'en'),
-    'Authored summary',
-  );
+test('page summaries report authored, derived or unresolved and never borrow the site default', () => {
+  assert.deepEqual(pageDescription({ description: 'Authored summary' }, 'en'), {
+    status: 'authored',
+    description: 'Authored summary',
+  });
 
-  const derived = pageDescription(
-    {
-      structuredData: {
-        contents: [
-          { content: '| column | column |' },
-          { content: '```ts\nconst forbidden = true;\n```' },
-          { content: '1. first\n2. second' },
-          {
-            content:
-              'Life cycle inventory data are collected per process and published as versioned datasets with a public identifier.',
-          },
-        ],
-      },
-    },
-    'en',
-  );
-  assert.equal(
-    derived,
-    'Life cycle inventory data are collected per process and published as versioned datasets with a public identifier.',
-  );
-
-  assert.equal(
-    pageDescription({ structuredData: { contents: [{ content: '`code only`' }] } }, 'de'),
-    localeMetadata.de.description,
-  );
-  assert.equal(pageDescription({}, 'fr'), localeMetadata.fr.description);
+  const derived = pageDescription({ structuredData: { contents: [{ content: prose }] } }, 'en');
+  assert.deepEqual(derived, { status: 'derived', description: prose });
 });
 
-test('derived descriptions stop at a sentence or a word boundary and mark truncation', () => {
-  const sentence = 'Documented behaviour is described here with real content. ';
-  const long = sentence.repeat(20).trim();
-  const described = pageDescription({ structuredData: { contents: [{ content: long }] } }, 'en');
+test('navigation, code and table content alone is reported unresolved, not summarized', () => {
+  for (const contents of [
+    [{ content: '| column | column |' }],
+    [{ content: '```ts\nconst forbidden = true;\n```' }],
+    [{ content: '1. first\n2. second' }],
+    [{ content: '[Data collection](/en/docs/data-collection/)' }],
+    [{ content: '### Section heading' }],
+    [],
+  ]) {
+    const result = pageDescription({ structuredData: { contents } }, 'de');
+    assert.deepEqual(result, { status: 'unresolved', description: undefined });
+    assert.notEqual(result.description, siteDescription('de'));
+  }
 
-  assert.ok(described.length <= maximumPageDescriptionLength);
-  assert.ok(long.startsWith(described.replace(/…$/u, '').trimEnd()));
-  assert.equal(described.endsWith('.'), true);
-  assert.equal(described.endsWith('…'), false);
+  assert.deepEqual(pageDescription({}, 'fr'), { status: 'unresolved', description: undefined });
+  assert.equal(siteDescription('fr'), localeMetadata.fr.description);
+});
+
+test('verification classifies built pages from artifacts, not from the derivation', () => {
+  assert.equal(classifyPageDescription({ authored: 'Authored', output: 'anything', lang: 'en' }), 'authored');
+  assert.equal(
+    classifyPageDescription({ authored: '', output: `${prose} Extra.`, lang: 'en' }),
+    'derived',
+  );
+  assert.equal(
+    classifyPageDescription({ authored: '', output: siteDescription('en'), lang: 'en' }),
+    'unresolved',
+  );
+  assert.equal(classifyPageDescription({ authored: '', output: undefined, lang: 'zh' }), 'unresolved');
+});
+
+test('truncation counts Unicode characters, keeps astral characters whole and marks the cut', () => {
+  const mixed = 'Documented behaviour with real content 🌍 '.repeat(20).trim();
+  const result = pageDescription({ structuredData: { contents: [{ content: mixed }] } }, 'en');
+
+  assert.equal(result.status, 'derived');
+  assert.ok(Array.from(result.description).length <= maximumPageDescriptionLength);
+  assert.equal(hasLoneSurrogate(result.description), false);
 
   const unbroken = pageDescription(
     { structuredData: { contents: [{ content: `A summary without sentence end ${'word '.repeat(80)}` }] } },
     'en',
   );
-  assert.ok(unbroken.length <= maximumPageDescriptionLength);
-  assert.equal(unbroken.endsWith('…'), true);
-  assert.equal(unbroken.endsWith(' …'), false);
+  assert.ok(Array.from(unbroken.description).length <= maximumPageDescriptionLength);
+  assert.equal(unbroken.description.endsWith('…'), true);
+  assert.equal(unbroken.description.endsWith(' …'), false);
 });

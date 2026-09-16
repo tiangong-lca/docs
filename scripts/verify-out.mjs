@@ -9,6 +9,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { publicLocales, readPublicDocInventory, toolGuideRoutes, normalizeRoute, assertStaticSearchPageCoverage } from '../lib/public-doc-inventory.mjs';
 import { categoryBases } from '../lib/ia.ts';
+import { classifyPageDescription } from '../lib/seo-policy.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const outRoot = path.join(ROOT, 'out');
@@ -360,9 +361,37 @@ if (landingActionCount === landingOutputs.length) {
   passed.push(`${landingActionCount} landing pages with technical guides and safe platform actions`);
 }
 
+// --- description content debt (advisory, never a gate) ---
+// A page with no authored or derived summary publishes no page-specific description; Next then
+// inherits the layout's site-level description. That inherited default is not a page summary, so the
+// URL is reported here as editorial content debt instead of being counted as covered. This report
+// changes no indexability and blocks nothing: it names the pages that still need an author summary.
+const descriptionDebt = { authored: [], derived: [], unresolved: [] };
+for (const page of sourcePages) {
+  const source = fs.readFileSync(path.join(ROOT, 'content', 'docs', page.source), 'utf8');
+  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/u.exec(source)?.[1] ?? '';
+  const declared = /^description:\s*(.+)$/mu.exec(frontmatter)?.[1] ?? '';
+  const htmlPath = `${page.url.replace(/^\//u, '')}index.html`;
+  const output = fs.existsSync(path.join(outRoot, htmlPath))
+    ? /<meta name="description" content="([^"]*)"/u.exec(read(htmlPath))?.[1]
+    : undefined;
+  descriptionDebt[classifyPageDescription({ authored: declared, output, lang: page.locale })].push(page.url);
+}
+const unresolvedDescriptions = [...descriptionDebt.unresolved].sort();
+passed.push(
+  `page descriptions measured: ${descriptionDebt.authored.length} authored / ${descriptionDebt.derived.length} derived / ${unresolvedDescriptions.length} unresolved (advisory)`,
+);
+
 // --- summary ---
 console.log(`\n[verify-out] ${passed.length} checks passed:`);
 for (const p of passed) console.log(`  ✓ ${p}`);
+if (unresolvedDescriptions.length > 0) {
+  console.log(
+    `\n[verify-out] ${unresolvedDescriptions.length} URLs have no page-specific description ` +
+      '(editorial content debt; the layout site description is inherited, nothing is blocked):',
+  );
+  for (const url of unresolvedDescriptions) console.log(`  ! ${url}`);
+}
 if (errors.length > 0) {
   console.error(`\n[verify-out] ${errors.length} FAILURES:`);
   for (const e of errors.slice(0, 30)) console.error(`  ✗ ${e}`);
