@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
 import { i18n } from '@/lib/i18n';
-import { localeMetadata, pageImagePath, withTrailingSlash } from '@/lib/metadata';
+import { localeMetadata, pageDescription, pageImagePath, withTrailingSlash } from '@/lib/metadata';
 import { source } from '@/lib/source';
 
 export const dynamicParams = false;
@@ -47,10 +47,20 @@ export async function generateMetadata(
   const defaultPage = source.getPage(params.slug, i18n.defaultLanguage);
   const pageImage = pageImagePath(params.lang, page.slugs);
   const content = localeMetadata[params.lang] ?? localeMetadata.en;
+  // Authored frontmatter first, else a summary derived from this page's own structured content.
+  // A page with neither stays unresolved: no page-specific description is published, so Next keeps
+  // the layout's site-level description and the URL is reported as content debt by `verify:out`.
+  const structuredData =
+    typeof page.data.structuredData === 'function' ? undefined : page.data.structuredData;
+  const summary = pageDescription(
+    { description: page.data.description, structuredData },
+    params.lang,
+  );
+  const descriptionFields = summary.description ? { description: summary.description } : {};
 
   return {
     title: page.data.title,
-    description: page.data.description,
+    ...descriptionFields,
     alternates: {
       canonical,
       languages: {
@@ -62,7 +72,7 @@ export async function generateMetadata(
       type: 'article',
       siteName: 'TianGong LCA Docs',
       title: page.data.title,
-      description: page.data.description,
+      ...descriptionFields,
       url: canonical,
       locale: content.openGraphLocale,
       images: [pageImage],
@@ -70,7 +80,7 @@ export async function generateMetadata(
     twitter: {
       card: 'summary_large_image',
       title: page.data.title,
-      description: page.data.description,
+      ...descriptionFields,
       images: [pageImage],
     },
   };

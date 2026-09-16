@@ -36,9 +36,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-15
-lastReviewedCommit: e94e1e591ec6679e878af136d6cd9f47574db9e1
-lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
+lastReviewedAt: 2026-09-16
+lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
+lastReviewedNote: "Reviewed for Docs #210 SEO Plan v2 (final): `/` is the canonical Chinese home and `/zh/` is only a permanent provider redirect, so it appears in no canonical, hreflang or sitemap target; the sitemap lists each canonical URL once and omits `lastmod`. Page descriptions use the authored frontmatter first, else the page's own structured prose (Unicode-safe truncation); a page with neither publishes no page-specific description and is reported as editorial content debt instead of counted as coverage. Provider ownership verification is environment-driven: `BAIDU_SITE_VERIFICATION` (never committed) publishes the exact Baidu marker and an unset value must publish none, both gated by `verify:out`. The required-check job hashes the generated `scripts/vendor/workspace-seo/` snapshot against its manifest and runs that local checker over the built `out/` — no private action, no token — and uploads its report with `if: always()`. EdgeOne-layer redirect proof and production samples remain pending."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md

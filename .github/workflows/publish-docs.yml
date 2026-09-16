@@ -32,6 +32,35 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The workspace source repository is private, so this job consumes the generated snapshot
+      # instead of fetching a private action or holding a token. Verify it before installing or
+      # building: a snapshot that no longer matches its manifest must fail in seconds, not minutes.
+      - name: Check the vendored shared SEO checker against its manifest
+        run: |
+          python3 - <<'PYVERIFY'
+          import hashlib, json, re, sys
+          from pathlib import Path
+
+          folder = Path('scripts/vendor/workspace-seo')
+          manifest = json.loads((folder / 'manifest.json').read_text())
+          expected = {
+              'schema': 1,
+              'generated': True,
+              'source_repository': 'tiangong-lca/workspace',
+              'source_path': 'scripts/seo/check.py',
+          }
+          problems = [f'{key}={manifest.get(key)!r} but expected {value!r}' for key, value in expected.items() if manifest.get(key) != value]
+          if not re.fullmatch(r'[0-9a-f]{40}', str(manifest.get('source_commit', ''))):
+              problems.append(f"source_commit={manifest.get('source_commit')!r} is not a full lowercase commit")
+          digest = hashlib.sha256((folder / 'check.py').read_bytes()).hexdigest()
+          if manifest.get('sha256') != digest:
+              problems.append(f"check.py sha256={digest} but the manifest records {manifest.get('sha256')!r}")
+          if problems:
+              sys.exit('Vendored SEO checker snapshot does not match its manifest: ' + '; '.join(problems))
+          print(f"local snapshot bytes match the manifest for {manifest['source_repository']}@{manifest['source_commit']} ({digest})")
+          print('manifest identity is a local integrity statement only; origin provenance is attested by the workspace export against the private source commit')
+          PYVERIFY
+
       - name: Set up pnpm and Node.js
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
@@ -54,8 +83,20 @@ jobs:
           DEPLOY_ENV: ci
           CANONICAL_ORIGIN: http://localhost:3000
           NEXT_PUBLIC_SEARCH_MODE: static
+          BAIDU_SITE_VERIFICATION: ci-public-baidu-marker
           SOURCE_COMMIT: ${{ github.sha }}
         run: pnpm build
+
+      - name: Check published SEO output
+        run: |
+          python3 scripts/vendor/workspace-seo/check.py --root out --origin http://localhost:3000 --artifact-indexing disabled --output "seo-report.json"
+
+      - name: Upload SEO report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: seo-report
+          path: seo-report.json
 
   post-deploy-evidence:
     name: Post-deploy evidence (EdgeOne Makers owns build+deploy)

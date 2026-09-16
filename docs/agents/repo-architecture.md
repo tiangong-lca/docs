@@ -28,14 +28,16 @@ checkPaths:
   - scripts/verify-out.mjs
   - scripts/check-links.mjs
   - scripts/check-screenshots.mjs
+  - scripts/vendor/workspace-seo/**
+  - .gitattributes
   - package.json
   - next.config.ts
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-09-15
-lastReviewedCommit: e94e1e591ec6679e878af136d6cd9f47574db9e1
-lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
+lastReviewedAt: 2026-09-16
+lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
+lastReviewedNote: "Reviewed for Docs #210 SEO Plan v2 (final): `/` is the canonical Chinese home and `/zh/` is only a permanent provider redirect, so it appears in no canonical, hreflang or sitemap target; the sitemap lists each canonical URL once and omits `lastmod`. Page descriptions use the authored frontmatter first, else the page's own structured prose (Unicode-safe truncation); a page with neither publishes no page-specific description and is reported as editorial content debt instead of counted as coverage. Provider ownership verification is environment-driven: `BAIDU_SITE_VERIFICATION` (never committed) publishes the exact Baidu marker and an unset value must publish none, both gated by `verify:out`. The required-check job hashes the generated `scripts/vendor/workspace-seo/` snapshot against its manifest and runs that local checker over the built `out/` — no private action, no token — and uploads its report with `if: always()`. EdgeOne-layer redirect proof and production samples remain pending."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -48,13 +50,17 @@ related:
 
 The site uses Next.js App Router with Fumadocs and exports static files to `out/`.
 
-- `app/(entry)/**` owns `/`, the `x-default` entry that renders the full Chinese home without a redirect.
-- `app/(locale)/[lang]/**` owns `/{lang}/` and `/{lang}/docs/**` for `zh`, `en`, `de`, and `fr`.
+- `app/(entry)/**` owns `/`, the `x-default` entry that renders the complete Chinese home. Chinese is the canonical home, so `/zh/` is only a permanent provider redirect (see `edgeone.json`) and never a canonical, hreflang, sitemap or Open Graph target.
+- `app/(locale)/[lang]/**` owns `/{lang}/` and `/{lang}/docs/**` for `zh`, `en`, `de`, and `fr`. The `zh` locale keeps its documentation routes; only its redundant home alias redirects.
 - `lib/source.ts` loads dot-locale MDX from `content/docs/**` with no locale fallback.
 - `app/llms.txt`, `app/search-records.json`, `app/api/search`, `app/robots.ts`, `app/sitemap.ts`, and `app/og/**` are generated public endpoints.
-- Canonical URLs, language alternatives, `x-default`, and Open Graph images are produced by the layouts, document metadata, and `lib/metadata.ts`.
+- Canonical URLs, language alternatives, `x-default`, and Open Graph images are produced by the layouts, document metadata, and `lib/seo-policy.mjs` (re-exported for application code by `lib/metadata.ts`).
+- `app/sitemap.ts` lists each canonical page URL once with reciprocal alternates and the default-language counterpart as `x-default`. It deliberately omits `lastmod`: the static build exposes one source epoch, so per-URL timestamps would claim unrelated pages changed at the same time.
+- Provider ownership verification is optional and environment-driven: `BAIDU_SITE_VERIFICATION` (supplied by the deployment, never committed) publishes `<meta name="baidu-site-verification">` from both the entry and locale layouts. An unset or blank value publishes no marker at all, and `verify:out` fails a build that emits one it was not configured with.
+- The required-check CI job runs the generated local checker in `scripts/vendor/workspace-seo/`: it first verifies `check.py` against the `manifest.json` SHA-256 and identity fields with the Python standard library, then runs that same snapshot over the already-built `out/` with `artifact-indexing disabled`. The workspace source repository is private, so CI fetches no external action and needs no token; the snapshot is the whole distribution surface and is replaced only by the workspace-side export, never edited here. `.gitattributes` pins its line endings so the verified bytes are portable. The JSON report is uploaded with `if: always()` so a failing check still leaves evidence.
+- Page descriptions prefer the authored frontmatter `description`, which is also how an author overrides the derived text. Without one, the page's own structured content supplies the first block that reads as prose; code, JSX, tables, list runs and navigation labels are rejected rather than trimmed into a sentence, and derived text is cut on Unicode character boundaries. A page with neither is **unresolved**: it publishes no page-specific description, inherits the layout's site-level description from Next, and is listed as editorial content debt by `verify:out`. That inherited default is a site default, never a page summary, so it is reported rather than counted as coverage, and it never changes a page's indexability.
 
-Retired paths are intentionally absent. No application or hosting configuration may introduce redirects, rewrites, or compatibility copies.
+Retired paths are intentionally absent and keep their 404s. The only redirect in the hosting configuration is the `/zh` → `/` home alias; no other redirect, rewrite, or compatibility copy may be introduced, and the deny contract is never relaxed to accommodate it.
 
 ## Presentation
 

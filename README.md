@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-09-14
-lastReviewedCommit: 7b8490ac905238e6f5455b67940bb06104385749
-lastReviewedNote: "Reviewed for docs #205: contributor product-sync guidance in AGENTS.md, the current TODO, and all four locales of docs-product-sync now point at the canonical ../platform product directory, and the tracked .claude/launch.json drops its user-specific absolute pnpm -C path for portable runtimeArgs so local preview stays rooted in the selected repository. User-facing product claims, screenshots, publication and source receipts are unchanged."
+lastReviewedAt: 2026-09-16
+lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
+lastReviewedNote: "Reviewed for docs #210 SEO Plan v2 (final): the required-check job checks the generated `scripts/vendor/workspace-seo/` snapshot against its manifest and runs that local checker over the built `out/` — no private action and no token — uploading its report with `if: always()`, and `BAIDU_SITE_VERIFICATION` is documented as an optional, environment-supplied ownership code that must be published exactly when configured and absent when not. Build, publication and reconciliation ownership are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -88,6 +88,10 @@ pnpm build
 
 The build wrapper performs environment validation, `next build`, deterministic output verification, and generated HTML link/fragment/asset checking. A successful build currently validates all locale routes, public endpoints, search and AI records, SEO files, Open Graph images, negative retired paths, and internal-content exclusion.
 
+The required-check job then runs the generated shared SEO checker snapshot in `scripts/vendor/workspace-seo/` against the already-built `out/` with `artifact-indexing: disabled`, and uploads its JSON report with `if: always()` so a failing check still leaves evidence. The job first checks the snapshot bytes against `manifest.json`; it fetches no external action and holds no token, because the workspace source repository is private. The snapshot is generated there and consumed read-only here, so updating it means re-exporting from an authorized workspace checkout rather than editing these files — `docs/agents/repo-validation.md` records that procedure and the limit of what a local digest match proves.
+
+Provider ownership verification is environment-driven: `BAIDU_SITE_VERIFICATION` publishes the exact Baidu marker on both the entry and locale homes, an unset or blank value publishes no marker, and `verify:out` fails a build that emits one it was not configured with.
+
 Docs-impact visual manifests are validated with `pnpm check:screenshots -- --manifest <visual-result.json> --diff-file <name-status> --base-ref <ref> --json`. The validator requires one content-addressed public PNG, explicit zh/en/de/fr MDX bindings, valid references and explanatory prose, verified image/privacy metadata, and safe add/replace/reuse diff semantics.
 
 `pnpm test:screenshots` is a dedicated validator test suite used only by the docs-impact mapped/replay worker when visual evidence is present. It is intentionally not included in `pnpm test`, the `pnpm build` wrapper, pull-request CI, or release CI.
@@ -101,6 +105,7 @@ Docs-impact visual manifests are validated with `pnpm check:screenshots -- --man
 | `DEPLOY_ENV` | `ci`, `preview`, or `production` |
 | `CANONICAL_ORIGIN` | Production must use `https://docs.tiangong.earth` |
 | `NEXT_PUBLIC_SEARCH_MODE` | `static` for CI/preview or `algolia` for production |
+| `BAIDU_SITE_VERIFICATION` | Optional provider ownership code; when set it must be published exactly, when unset no marker may appear |
 
 ## Publishing and reconciliation
 

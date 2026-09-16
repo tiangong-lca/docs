@@ -3,7 +3,7 @@ import { i18nProvider } from 'fumadocs-ui/i18n';
 import { Provider } from '@/components/provider';
 import { translations } from '@/lib/layout.shared';
 import { toHtmlLang } from '@/lib/i18n';
-import { languageAlternates, localeMetadata, pageImagePath, siteOrigin } from '@/lib/metadata';
+import { languageAlternates, localeMetadata, pageImagePath, siteOrigin, siteVerificationMetadata } from '@/lib/metadata';
 import '@/app/global.css';
 
 const rootMeta = localeMetadata.zh;
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     description: rootMeta.description,
     images: [pageImagePath('zh', [])],
   },
+  ...siteVerificationMetadata(),
   ...(process.env.DEPLOY_ENV !== 'production'
     ? { robots: { index: false, follow: false } }
     : {}),
