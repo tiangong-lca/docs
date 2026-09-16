@@ -36,9 +36,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-15
-lastReviewedCommit: e94e1e591ec6679e878af136d6cd9f47574db9e1
-lastReviewedNote: "Reviewed for Docs #208: shared navigation links the actual Chinese/English PCR production entries, with explicit English labels for German/French readers. Frozen install, lint, typecheck, full static build and four-locale/five-width/light-dark browser checks pass. PCR production readiness and exact workspace integration remain separate delivery gates."
+lastReviewedAt: 2026-09-16
+lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
+lastReviewedNote: "Reviewed for Docs #210 SEO Plan v2: `/` is the canonical Chinese home and `/zh/` is now only a permanent provider redirect (one alias; every retired path keeps its 404), so `/zh/` is no longer a canonical, hreflang or sitemap target. The sitemap lists each canonical URL once with reciprocal alternates and a default-language `x-default`, and omits `lastmod` instead of stamping unrelated pages with one build epoch. Page descriptions prefer the authored frontmatter and otherwise take the page's own structured prose, rejecting code/JSX/table/navigation blocks. Four-locale sources, routes, search, presentation and static export are unchanged. EdgeOne-layer redirect proof and production samples remain pending."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
