@@ -36,9 +36,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-09-29
-lastReviewedCommit: 9e1257b21d5ecd422d12b3c051485ea8760ac5d1
-lastReviewedNote: "Reviewed for #214: resources-and-support points at the current Portal Chinese home and the data-use guide adds the anonymous public-databases entry and ILCD distribution node in all four locales; ownership, routing and publication boundaries unchanged."
+lastReviewedAt: 2026-10-08
+lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
+lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
@@ -76,7 +76,7 @@ This repository does not own shipped product behavior, route truth, API semantic
 ## Runtime facts
 
 - Supported locales are `zh`, `en`, `de`, and `fr`; every public page currently exists in all four.
-- `/` renders the complete Chinese home as the `x-default` entry without redirecting. Locale homes remain `/{lang}/`; documents remain `/{lang}/docs/**`.
+- The static `/` artifact remains the Chinese canonical and `x-default` home. In a browser, only neutral `/` negotiates: a valid manually saved language in localStorage (`tiangong.manual-language`) wins, then the first supported `navigator.languages` entry (regional/script variants map to `zh`, `en`, `de`, or `fr`), then English. An empty language list uses `navigator.language`. Automatic selection never writes storage. Every explicit locale URL, including `/zh/` and `/zh/docs/**`, retains its language. Manual switching saves the chosen language and keeps the page path, query and fragment; every manual home destination is explicit `/{lang}/`. Storage access failures do not block navigation. `/zh/` renders Chinese with canonical `/` and is omitted from sitemap/hreflang to avoid advertising a duplicate. Hosting must not redirect it back to neutral `/`. Documentation remains `/{lang}/docs/**`.
 - Retired paths have no redirect or rewrite compatibility and must remain 404. `manifests/p0b/greenfield-deny.json` is a negative build contract, not a mapping table.
 - Public document links use locale-absolute `/{lang}/docs/**/` routes. The link gate checks browser-resolved output, canonical trailing slashes, source-locale ownership, and the normalized internal-link topology across all four variants of a page.
 - Docs-impact screenshots use one shared `public/assets/docs/<sha256-prefix>/<semantic-name>.png` asset and explicit zh/en/de/fr document bindings. Added and replaced screenshots must pass the repository validator; replacement never overwrites an existing content-addressed path.
