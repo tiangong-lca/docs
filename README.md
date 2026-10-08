@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-09-16
-lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
-lastReviewedNote: "Reviewed for docs #210 SEO Plan v2 (final): the required-check job checks the generated `scripts/vendor/workspace-seo/` snapshot against its manifest and runs that local checker over the built `out/` — no private action and no token — uploading its report with `if: always()`, and `BAIDU_SITE_VERIFICATION` is documented as an optional, environment-supplied ownership code that must be published exactly when configured and absent when not. Build, publication and reconciliation ownership are unchanged."
+lastReviewedAt: 2026-10-08
+lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
+lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -46,7 +46,7 @@ Public documentation for the [TianGong LCA](https://lca.tiangong.earth) platform
 
 - `zh` — canonical authoring source
 - `en`, `de`, and `fr` — maintained full-page translations
-- `/` — complete Chinese `x-default` home, rendered directly without redirect
+- `/` — static Chinese canonical and `x-default` home; neutral browser entry selects remembered manual language, ordered browser languages, then English
 - `/{lang}/` — locale home
 - `/{lang}/docs/**` — locale documentation
 
@@ -127,3 +127,5 @@ manifests/p0b/   retained deterministic route, category, and negative-path contr
 scripts/         build, output, link, search, and Docpact validation
 docs/agents/     internal architecture, validation, and operations references
 ```
+
+Browser language selection applies only to neutral `/`. Explicit locale homes and documents keep their language. Manual language selection is saved in localStorage, and preserves the current path, query and fragment. The explicit Chinese `/zh/` homepage remains available with canonical `/`, and is excluded from sitemap/hreflang.

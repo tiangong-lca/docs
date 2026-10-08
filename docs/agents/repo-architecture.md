@@ -35,9 +35,9 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-09-29
-lastReviewedCommit: 9e1257b21d5ecd422d12b3c051485ea8760ac5d1
-lastReviewedNote: "Reviewed for #214: the data-use guide now links the public databases entry and the ILCD distribution node, and documentation pages carry resolved-page breadcrumb and minimal site metadata; site structure and ownership unchanged."
+lastReviewedAt: 2026-10-08
+lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
+lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -50,8 +50,8 @@ related:
 
 The site uses Next.js App Router with Fumadocs and exports static files to `out/`.
 
-- `app/(entry)/**` owns `/`, the `x-default` entry that renders the complete Chinese home. Chinese is the canonical home, so `/zh/` is only a permanent provider redirect (see `edgeone.json`) and never a canonical, hreflang, sitemap or Open Graph target.
-- `app/(locale)/[lang]/**` owns `/{lang}/` and `/{lang}/docs/**` for `zh`, `en`, `de`, and `fr`. The `zh` locale keeps its documentation routes; only its redundant home alias redirects.
+- `app/(entry)/**` owns the static Chinese canonical `/` and `x-default` home. `components/provider.tsx` negotiates only browser visits to neutral `/`; `lib/locale-preference.mjs` owns preference resolution, safe storage, and locale-preserving destinations.
+- `app/(locale)/[lang]/**` owns explicit `/{lang}/` and `/{lang}/docs/**` for `zh`, `en`, `de`, and `fr`. `/zh/` renders Chinese and shares canonical `/`; no explicit locale is negotiated or redirected.
 - `lib/source.ts` loads dot-locale MDX from `content/docs/**` with no locale fallback.
 - `app/llms.txt`, `app/search-records.json`, `app/api/search`, `app/robots.ts`, `app/sitemap.ts`, and `app/og/**` are generated public endpoints.
 - Canonical URLs, language alternatives, `x-default`, and Open Graph images are produced by the layouts, document metadata, and `lib/seo-policy.mjs` (re-exported for application code by `lib/metadata.ts`).
@@ -60,7 +60,7 @@ The site uses Next.js App Router with Fumadocs and exports static files to `out/
 - The required-check CI job runs the generated local checker in `scripts/vendor/workspace-seo/`: it first verifies `check.py` against the `manifest.json` SHA-256 and identity fields with the Python standard library, then runs that same snapshot over the already-built `out/` with `artifact-indexing disabled`. The workspace source repository is private, so CI fetches no external action and needs no token; the snapshot is the whole distribution surface and is replaced only by the workspace-side export, never edited here. `.gitattributes` pins its line endings so the verified bytes are portable. The JSON report is uploaded with `if: always()` so a failing check still leaves evidence.
 - Page descriptions prefer the authored frontmatter `description`, which is also how an author overrides the derived text. Without one, the page's own structured content supplies the first block that reads as prose; code, JSX, tables, list runs and navigation labels are rejected rather than trimmed into a sentence, and derived text is cut on Unicode character boundaries. A page with neither is **unresolved**: it publishes no page-specific description, inherits the layout's site-level description from Next, and is listed as editorial content debt by `verify:out`. That inherited default is a site default, never a page summary, so it is reported rather than counted as coverage, and it never changes a page's indexability.
 
-Retired paths are intentionally absent and keep their 404s. The only redirect in the hosting configuration is the `/zh` → `/` home alias; no other redirect, rewrite, or compatibility copy may be introduced, and the deny contract is never relaxed to accommodate it.
+Retired paths are intentionally absent and keep their 404s. Hosting has no locale redirects, and no redirect, rewrite, or compatibility copy may be introduced for retired paths; the deny contract is never relaxed to accommodate one.
 
 ## Presentation
 
@@ -84,6 +84,8 @@ The four `content/docs/quick-start/index*.mdx` sources render `components/quick-
 The `overview`, `user-guide`, `data-collection`, `integration`, `openapi`, `deploy-and-dev`, `faq`, and `changelog` roots, plus the nested `data-collection/case-introduction` root, render `components/category-directory.tsx`. Each MDX variant supplies only its locale and category slug. The server component locates the category folder in `source.getPageTree(lang)`, preserves current `meta*.json` order, includes direct pages and folder index pages, and normalizes emitted links to locale-absolute trailing-slash URLs. Titles and descriptions are read from the child page; when description metadata is absent, a bounded first sentence is derived from `structuredData`. Future child-page additions, removals, renames, ordering changes, and copy updates therefore require no category-index edit.
 
 ## Content and locales
+
+The static `/` artifact remains the Chinese canonical and `x-default` home. In a browser, only neutral `/` negotiates: a valid manually saved language in localStorage (`tiangong.manual-language`) wins, then the first supported `navigator.languages` entry (regional/script variants map to `zh`, `en`, `de`, or `fr`), then English. An empty language list uses `navigator.language`. Automatic selection never writes storage. Every explicit locale URL, including `/zh/` and `/zh/docs/**`, retains its language. Manual switching saves the chosen language and keeps the page path, query and fragment; every manual home destination is explicit `/{lang}/`. Storage access failures do not block navigation. `/zh/` renders Chinese with canonical `/` and is omitted from sitemap/hreflang to avoid advertising a duplicate. Hosting must not redirect it back to neutral `/`.
 
 Chinese is the canonical authoring source. The same logical page uses:
 

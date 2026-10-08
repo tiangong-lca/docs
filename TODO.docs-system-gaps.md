@@ -17,9 +17,9 @@ checkPaths:
   - app/**
   - components/**
   - lib/**
-lastReviewedAt: 2026-09-16
-lastReviewedCommit: 2168af06c6c9e21b97d94093f008bbdfa1c37e5e
-lastReviewedNote: "Reviewed for docs #210: the maintenance baseline now records the canonical Chinese home with its single `/zh/` redirect alias, the build-gated canonical/hreflang/sitemap metadata with omitted `lastmod` and reported content debt, and the environment-supplied provider verification marker. The shared SEO checker reaches CI as a generated snapshot verified against its manifest, with no private action or token. No new product/documentation drift is known; the EdgeOne-layer redirect proof and production samples remain delivery items rather than product drift."
+lastReviewedAt: 2026-10-08
+lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
+lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
 related:
   - AGENTS.md
   - README.md
@@ -50,7 +50,7 @@ No active repository-local documentation drift is known after Issue #182. The to
 ## Current maintenance baseline
 
 - Four complete locales: Chinese source plus English, German, and French translations.
-- Root `/` renders the full default-language home; `/zh/` is a permanent provider redirect to it and no other redirect compatibility exists, while retired paths keep their 404s.
+- Static root `/` retains the Chinese canonical home. Neutral browser entry selects manually saved language, ordered supported browser languages, then English; explicit `/zh/` remains Chinese with canonical `/`. Hosting has no locale redirects, while retired paths keep their 404s.
 - Canonicals, hreflang, the sitemap and Open Graph metadata are build-gated: each canonical URL is listed once with reciprocal alternates, `lastmod` is omitted rather than faked from one build epoch, and pages without a page-specific description are reported as editorial content debt instead of being filled with a site-level default.
 - Provider ownership verification is environment-supplied and gated exactly: a configured code is published verbatim and an unset environment must publish no marker.
 - Generated routes, public endpoints, search records, AI index, metadata, local links, fragments, and assets are build-gated.

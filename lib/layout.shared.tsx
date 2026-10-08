@@ -108,7 +108,7 @@ export function baseOptions(locale: string): BaseLayoutProps {
       {
         type: 'main',
         text: pcrLabel[locale] ?? pcrLabel.en,
-        url: locale === 'zh' ? 'https://pcr.tiangong.earth/' : 'https://pcr.tiangong.earth/en/',
+        url: locale === 'zh' ? 'https://pcr.tiangong.earth/zh/' : 'https://pcr.tiangong.earth/en/',
         external: true,
       },
     ],

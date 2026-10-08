@@ -19,7 +19,7 @@ const deny = load('manifests/p0b/greenfield-deny.json');
 const categories = load('manifests/p0b/categories.json');
 const sourcePages = readPublicDocInventory(path.join(ROOT, 'content', 'docs'));
 const indexablePages = sourcePages.filter((page) => page.indexable);
-// Home entries come from the retained route contract: `/zh/` is the permanent redirect alias of the
+// Home entries come from the retained route contract: `/zh/` is the explicit duplicate of the
 // x-default `/` home, so it stays an exported page but is marked out of the sitemap there.
 const expectedPublicRoutes = [
   '/',

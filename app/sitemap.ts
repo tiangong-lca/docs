@@ -9,7 +9,7 @@ export const dynamic = 'force-static';
  * v4 §5.4：只列真实存在的语言页面。fallbackLanguage 为 null，de/fr 未翻译页面不生成路由，
  * 因此不会出现在 sitemap。
  *
- * `/zh/` 只是 `/` 的永久重定向别名（见 edgeone.json），因此不作为条目出现，也不会出现在
+ * `/zh/` 是显式中文首页，其 canonical 为 `/`，因此不作为条目出现，也不会出现在
  * 任何 hreflang 中；`languageAlternates()` 负责这套映射。
  *
  * lastmod 有意省略：当前静态构建只提供一个 source epoch，逐页写入会把所有无关页面标成同一次

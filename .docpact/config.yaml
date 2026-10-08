@@ -1,9 +1,9 @@
 version: 1
 layout: repo
-lastReviewedAt: 2026-09-29
-lastReviewedCommit: 9e1257b21d5ecd422d12b3c051485ea8760ac5d1
-reviewNote: "Reviewed for Next Docs #197: four locale Foundry fingerprints and all23 catalogue entries bind Skills0a33; CI locks task examples to the exact published-parser-qualified specimen and rejects drift. Stale pre-release claims are replaced by actual source/integration boundaries. Owner parser four positive/nine negative cases, lint/types and full build pass; no dependency or runtime behavior change."
-lastReviewedNote: "Reviewed for #214: reader links now target the current public surfaces and documentation pages emit resolved-page BreadcrumbList plus a minimal WebSite entity; routing, coverage and governed-document rules unchanged."
+lastReviewedAt: "2026-10-08"
+lastReviewedCommit: "063a38f40b609727100f49fc5528d65ec13ab91f"
+reviewNote: "Reviewed for #216: browser-neutral root resolves manual preference, ordered browser languages and English; explicit /zh/ is generated without hosting redirect and shares canonical /. Existing ownership and documentation routing cover the locale module and regression scripts."
+lastReviewedNote: "Reviewed for #216: browser-neutral root resolves manual preference, ordered browser languages and English; explicit /zh/ is generated without hosting redirect and shares canonical /. Existing ownership and documentation routing cover the locale module and regression scripts."
 
 catalog:
   repos:

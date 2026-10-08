@@ -48,18 +48,15 @@ test('deep pages keep their own locale and fall back to their default-language c
   assert.equal(deep.en, '/en/docs/quick-start/');
 });
 
-test('the alias redirect is exactly the Chinese home, added to hosting without relaxing 404s', () => {
+test('explicit Chinese home is never redirected, while retired paths stay denied', () => {
   const hosting = JSON.parse(read('edgeone.json'));
-  assert.deepEqual(hosting.redirects, [
-    { source: '/zh', destination: '/', statusCode: 301 },
-    { source: '/zh/', destination: '/', statusCode: 301 },
-  ]);
+  assert.deepEqual(hosting.redirects ?? [], []);
 
   const deny = JSON.parse(read('manifests/p0b/greenfield-deny.json'));
   assert.equal(
     deny.oldPages.some((page) => page === '/zh' || page === '/zh/'),
     false,
-    'the Chinese home alias must stay a redirect, not a deny entry',
+    'the explicit Chinese home must stay available, not a deny entry',
   );
   assert.ok(
     deny.oldPages.includes('/zh/docs/integration/mcp-kb-remote/'),
@@ -67,7 +64,7 @@ test('the alias redirect is exactly the Chinese home, added to hosting without r
   );
 });
 
-test('the route contract keeps the alias exported but out of the sitemap', () => {
+test('the route contract exports the explicit Chinese home but excludes its duplicate from the sitemap', () => {
   const routes = JSON.parse(read('manifests/p0b/site-routes.json')).htmlRoutes;
   const byRoute = new Map(routes.map((route) => [route.route, route]));
 
