@@ -17,9 +17,9 @@ checkPaths:
   - app/**
   - components/**
   - lib/**
-lastReviewedAt: 2026-10-08
-lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
-lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
+lastReviewedAt: 2026-10-19
+lastReviewedCommit: 0879a97d09487135d799b3276fa5df4136fbbc8d
+lastReviewedNote: "Reviewed for Docs #228: dependency and action qualification preserves the existing public-content, locale, SEO and deployment boundaries; no new product/documentation drift is introduced."
 related:
   - AGENTS.md
   - README.md
