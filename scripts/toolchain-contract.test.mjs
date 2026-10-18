@@ -16,7 +16,7 @@ const workflowSources = fs
 const expectedActions = new Map([
   ['actions/checkout', '3d3c42e5aac5ba805825da76410c181273ba90b1'],
   ['dtolnay/rust-toolchain', '4360b52568e2003a75bf9bc1d59f33a8e3fc893c'],
-  ['pnpm/setup', 'fbda4c85fc2e1e08721cd8763afea8f48d60f024'],
+  ['pnpm/setup', 'a0881977cd8ea73b1ed212236c99ca10dcc80cf4'],
   ['actions/upload-artifact', 'cf430e030ddbb5b0abf93d22962f4752f3646cd9'],
 ]);
 

@@ -18,8 +18,8 @@ checkPaths:
   - components/**
   - lib/**
 lastReviewedAt: 2026-10-19
-lastReviewedCommit: 0879a97d09487135d799b3276fa5df4136fbbc8d
-lastReviewedNote: "Reviewed for Docs #228: dependency and action qualification preserves the existing public-content, locale, SEO and deployment boundaries; no new product/documentation drift is introduced."
+lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
+lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
 related:
   - AGENTS.md
   - README.md
