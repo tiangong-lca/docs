@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-10-08
-lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
-lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
+lastReviewedAt: 2026-10-19
+lastReviewedCommit: b6bbd3f3d2ff58bf1d9a557819f9e544473ee111
+lastReviewedNote: "Reviewed for Docs #228: mature React 19.3.1/types 19.3.0 and Fumadocs 16.17.5/MDX 15.4.7/language 0.2.15 preserve four-language static/search/SEO and publication boundaries; exact pnpm/setup 3.0.0 and artifact 7.0.2 action pins retain Node/pnpm/compiler inputs. Local qualification does not prove hosted cache, CI or deployment."
 related:
   - AGENTS.md
   - .docpact/config.yaml

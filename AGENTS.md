@@ -36,9 +36,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-10-16
-lastReviewedCommit: f33c10e20b80879bba567d910b6ed3de0f0d0467
-lastReviewedNote: "Reviewed for Docs #226: retain the existing four-language URL as a platform Save/results/reuse guide and link the general relationships and schematic to TIDAS #98; preserve locale, link, screenshot and publication contracts."
+lastReviewedAt: 2026-10-19
+lastReviewedCommit: b6bbd3f3d2ff58bf1d9a557819f9e544473ee111
+lastReviewedNote: "Reviewed for Docs #228: mature React 19.3.1/types 19.3.0 and Fumadocs 16.17.5/MDX 15.4.7/language 0.2.15 preserve four-language static/search/SEO and publication boundaries; exact pnpm/setup 3.0.0 and artifact 7.0.2 action pins retain Node/pnpm/compiler inputs. Local qualification does not prove hosted cache, CI or deployment."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
