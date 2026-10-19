@@ -16,8 +16,8 @@ const workflowSources = fs
 const expectedActions = new Map([
   ['actions/checkout', '3d3c42e5aac5ba805825da76410c181273ba90b1'],
   ['dtolnay/rust-toolchain', '4360b52568e2003a75bf9bc1d59f33a8e3fc893c'],
-  ['pnpm/setup', '84cb39b217b10273981911c288cd62326dc7c6d2'],
-  ['actions/upload-artifact', '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'],
+  ['pnpm/setup', 'a0881977cd8ea73b1ed212236c99ca10dcc80cf4'],
+  ['actions/upload-artifact', 'cf430e030ddbb5b0abf93d22962f4752f3646cd9'],
 ]);
 
 test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', () => {

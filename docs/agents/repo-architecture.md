@@ -35,9 +35,9 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-10-16
-lastReviewedCommit: f33c10e20b80879bba567d910b6ed3de0f0d0467
-lastReviewedNote: "Reviewed for Docs #226: retain the existing four-language URL as a platform Save/results/reuse guide and link the general relationships and schematic to TIDAS #98; preserve locale, link, screenshot and publication contracts."
+lastReviewedAt: 2026-10-19
+lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
+lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
 related:
   - AGENTS.md
   - .docpact/config.yaml
