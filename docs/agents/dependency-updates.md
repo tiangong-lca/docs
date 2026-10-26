@@ -36,6 +36,10 @@ styling packages, and remaining development tooling. Package major updates stay
 individually visible; Next.js and Algolia updates remain independent. Actions
 updates share one group. Automatic merging is not configured.
 
+To match the approved Node 24 LTS runtime, npm ignores `@types/node` versions
+`>=25.0.0` while retaining Node 24 updates; revisit this bound only with explicit
+approval for a future Node major.
+
 The existing `Validate (required check)` PR job already installs the frozen graph,
 lints Markdown, typechecks, builds the CI static fixture and checks the vendored
 SEO snapshot/output. It has read-only repository permission and does not run the
