@@ -35,9 +35,9 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-10-19
-lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
-lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
+lastReviewedAt: 2026-11-02
+lastReviewedCommit: f124e98fcfc9ec44e0c5a6d40e39ed90d6c57c6b
+lastReviewedNote: "Docs #228: reviewed the nine-package cohort, scoped fixed RE2JS/KaTeX graph and real consumer contracts; existing Node/pnpm/TypeScript pins, strict policy, four-locale static/search/SEO and publication boundaries remain. Frozen install, parser comparison, consumer/toolchain, audit, lint and typecheck evidence is local; full build and hosted/deployment qualification remain separate."
 related:
   - AGENTS.md
   - .docpact/config.yaml

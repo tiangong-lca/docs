@@ -31,9 +31,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-10-19
-lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
-lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
+lastReviewedAt: 2026-11-02
+lastReviewedCommit: f124e98fcfc9ec44e0c5a6d40e39ed90d6c57c6b
+lastReviewedNote: "Docs #228: reviewed the nine-package cohort, scoped fixed RE2JS/KaTeX graph and real consumer contracts; existing Node/pnpm/TypeScript pins, strict policy, four-locale static/search/SEO and publication boundaries remain. Frozen install, parser comparison, consumer/toolchain, audit, lint and typecheck evidence is local; full build and hosted/deployment qualification remain separate."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -54,13 +54,34 @@ DEPLOY_ENV=ci CANONICAL_ORIGIN=http://localhost:3000 NEXT_PUBLIC_SEARCH_MODE=sta
 
 `pnpm build` includes fail-closed bounded Node 24 and exact package-tool/environment validation, the general Node contract/link tests, static export, `verify:out`, and `check:links`. Screenshot-validator tests intentionally remain outside `pnpm test`, `pnpm build`, pull-request CI, and release CI. Use `pnpm test:env`, `pnpm test:toolchain`, or `pnpm test:links` for regular focused diagnosis; the docs-impact mapped/replay worker owns `pnpm test:screenshots` when visual evidence is present.
 
+## Dependency consumer checks
+
+`scripts/dependency-consumers.test.mjs` runs inside the existing general test and
+build commands. It exercises the installed Algolia requester/reconciliation,
+Fumadocs Node loader and macro compiler, Next SWC and CSS hosts, image codecs,
+and selected security-sensitive parser/math/source-map consumers. Inputs are
+finite and synthetic; the requester does not contact a live search index, and
+image generation permits only bounded embedded WASM data URLs. Production
+credentials and service endpoints are not required.
+
+Each native child has an execution deadline and a separate bounded stdio-close
+join. An unexpected failure retains its owned fixture path for inspection;
+releasing observation handles or acknowledging `esbuild.stop()` does not prove
+that every native descendant exited. Task-owned external resource observation
+records actual cleanup when required. It is not an additional contributor setup
+step or a replacement for the canonical build and hosted checks.
+
+A passing consumer check does not replace corpus-level parser comparisons,
+registry audit evidence, static-output/link validation, browser qualification or
+the separate disposition of vendored code not represented by the lockfile.
+
 ## Proof by change type
 
 - Public content: update all four locale variants; run lint and the complete build.
 - Reader-first tool guides: `scripts/tool-guides.test.mjs` and `scripts/public-doc-inventory.test.mjs` cover the 19-page/four-language structure, complete JSON inputs, tool separation, published versions, duplicate URL rejection, and search inclusion. Execute published CLI OAuth/list/get/search and independent Skill installation in an isolated session; test positive/negative local CLI validation and native tidas validation/conversion/roundtrip. Record actual outputs and scope without credentials. Reader review must cover installation, client discovery, empty/error states, immediate exit checks, and the distinction between read-only, preflight, write, and readback. Preserve advanced material but remove unsupported command examples.
 - CLI first-install onboarding: the first executable `auth login` example must pin verified 0.1.8, precede custom templates, and contain no required public env assignments. Every locale retains the exact CLI loopback callback, explicit headless destination/key/mode, private sessions, and revocation limits. `scripts/oauth-doc-contract.test.mjs` rejects missing/unpinned login examples; release evidence must separately prove the real published CLI and installed Skills.
 - LCA authentication content: run `scripts/oauth-doc-contract.test.mjs`; prove CLI/MCP/account/OpenAPI locale families contain OAuth/PKCE/revoke/headless facts, every remote MCP locale contains direct Supabase access JWT/JWKS, client-local refresh, Claude Code, Codex, Edge `getClaims()`, and `auth.uid()` plus `client_id` RLS. Every Codex example must use top-level `mcp_oauth_callback_url` and `mcp_oauth_callback_port`, a per-server public `oauth.client_id`, and the MCP `oauth_resource` before `codex mcp login`; the documented base plus deterministic server callback ID must equal the registered Supabase redirect. Command-only setup with an unspecified callback is forbidden. Also prove no locale contains the retired broker architecture, LCA API-key assignment, demo, or manual bearer setup; reject the executable zh/en/de/fr forbidden-generation fixtures and six forbidden credential screenshots. Then run lint, links, and the complete build.
-- Toolchain, package manager, environment checker, or CI actions: run a clean frozen install, `pnpm test:env`, `pnpm test:toolchain`, lint, typecheck, and the complete static build. Node must satisfy `>=24.18.0 <25`; EdgeOne must use `24.18.0` plus direct `pnpm install --frozen-lockfile`, local `.nvmrc` must select major `24`, reviewed GitHub workflows remain on `24.19.0`, pnpm stays exactly `11.24.0`, TypeScript exactly `7.0.2`, and markdownlint exactly local `0.23.2`; external actions must use reviewed executable commit SHAs.
+- Toolchain, package manager, environment checker, or CI actions: run a clean frozen install, `pnpm test:env`, `pnpm test:toolchain`, lint, typecheck, and the complete static build. Node must satisfy `>=24.18.0 <25`; EdgeOne must use `24.18.0` plus direct `pnpm install --frozen-lockfile`, local `.nvmrc` must select major `24`, reviewed GitHub workflows remain on `24.19.0`, pnpm stays exactly `11.24.0`, TypeScript exactly `7.0.2`, and markdownlint exactly local `0.24.0`; external actions must use reviewed executable commit SHAs.
 - Links, anchors, navigation, or assets: run link unit tests and the complete build. `check:links` must report zero missing pages, fragments, or local assets, zero path-relative document links, zero source-locale mismatches, and identical normalized internal-document target sets across the four variants of each page.
 - Docs-impact screenshots: the mapped/replay worker runs `pnpm test:screenshots`, then invokes `pnpm check:screenshots -- --manifest <visual-result.json> --diff-file <name-status> --base-ref <ref> --json`. Added assets must be content-addressed and referenced by all four locale siblings; replacement must use a new hash path and may delete the old asset only after all remaining MDX references are gone; reuse must not mutate the asset.
 - Layout, CSS, brand, search dialog, or responsive behavior: run typecheck and build, then inspect a real browser at 390px, 1440px, 1633px, 2048px, and 2560px in light and dark themes. Confirm keyboard focus, language switching, search, mobile menu, and zero horizontal overflow.
