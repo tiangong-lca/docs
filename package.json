@@ -15,7 +15,7 @@
     "verify:out": "node scripts/verify-out.mjs",
     "check:links": "node scripts/check-links.mjs",
     "check:screenshots": "node scripts/check-screenshots.mjs",
-    "test": "node --test scripts/check-env.test.mjs scripts/seo-policy.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs scripts/context7-refresh.test.mjs scripts/locale-preference.test.mjs",
+    "test": "node --test scripts/check-env.test.mjs scripts/seo-policy.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs scripts/context7-refresh.test.mjs scripts/locale-preference.test.mjs scripts/dependency-consumers.test.mjs",
     "test:env": "node --test scripts/check-env.test.mjs",
     "test:links": "node --test scripts/check-links.test.mjs",
     "test:screenshots": "node --test scripts/check-screenshots.test.mjs",
@@ -23,23 +23,23 @@
     "lint": "pnpm exec markdownlint-cli2 '**/*.md' '**/*.mdx' '#node_modules' '#content/docs/.source'"
   },
   "dependencies": {
-    "@fumadocs/language": "0.2.2",
-    "algoliasearch": "5.57.0",
-    "fumadocs-core": "16.15.0",
-    "fumadocs-mdx": "15.3.1",
-    "fumadocs-ui": "16.15.0",
-    "next": "16.3.2",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "@fumadocs/language": "0.2.17",
+    "algoliasearch": "5.61.0",
+    "fumadocs-core": "16.17.9",
+    "fumadocs-mdx": "15.4.10",
+    "fumadocs-ui": "16.17.9",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
     "@types/mdx": "2.0.14",
-    "@types/node": "24.13.3",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.4",
-    "markdownlint-cli2": "0.23.2",
-    "postcss": "8.5.26",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "markdownlint-cli2": "0.24.0",
+    "postcss": "8.5.32",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2"
   }

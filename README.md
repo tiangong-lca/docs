@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-10-08
-lastReviewedCommit: 063a38f40b609727100f49fc5528d65ec13ab91f
-lastReviewedNote: "Reviewed for #216: neutral-root browser selection, manual-only localStorage preference and explicit localized homes preserve the static Chinese canonical and sitemap policy; locale unit and browser regression proof added."
+lastReviewedAt: 2026-10-19
+lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
+lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
 related:
   - AGENTS.md
   - .docpact/config.yaml

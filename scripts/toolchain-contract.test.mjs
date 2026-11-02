@@ -16,8 +16,8 @@ const workflowSources = fs
 const expectedActions = new Map([
   ['actions/checkout', '3d3c42e5aac5ba805825da76410c181273ba90b1'],
   ['dtolnay/rust-toolchain', '4360b52568e2003a75bf9bc1d59f33a8e3fc893c'],
-  ['pnpm/setup', '84cb39b217b10273981911c288cd62326dc7c6d2'],
-  ['actions/upload-artifact', '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'],
+  ['pnpm/setup', 'a0881977cd8ea73b1ed212236c99ca10dcc80cf4'],
+  ['actions/upload-artifact', 'cf430e030ddbb5b0abf93d22962f4752f3646cd9'],
 ]);
 
 test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', () => {
@@ -27,7 +27,7 @@ test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', 
   assert.equal(packageJson.packageManager, 'pnpm@11.24.0');
   assert.deepEqual(packageJson.engines, { node: '>=24.18.0 <25', pnpm: '11.24.0' });
   assert.equal(packageJson.devDependencies.typescript, '7.0.2');
-  assert.equal(packageJson.devDependencies['markdownlint-cli2'], '0.23.2');
+  assert.equal(packageJson.devDependencies['markdownlint-cli2'], '0.24.0');
   assert.equal(read('.nvmrc').trim(), '24');
   assert.equal(edgeOne.nodeVersion, '24.18.0');
   assert.equal(edgeOne.installCommand, 'pnpm install --frozen-lockfile');
@@ -37,7 +37,7 @@ test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', 
   );
   assert.equal(
     packageJson.scripts.test,
-    'node --test scripts/check-env.test.mjs scripts/seo-policy.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs scripts/context7-refresh.test.mjs scripts/locale-preference.test.mjs',
+    'node --test scripts/check-env.test.mjs scripts/seo-policy.test.mjs scripts/check-links.test.mjs scripts/oauth-doc-contract.test.mjs scripts/tool-guides.test.mjs scripts/public-doc-inventory.test.mjs scripts/toolchain-contract.test.mjs scripts/context7-refresh.test.mjs scripts/locale-preference.test.mjs scripts/dependency-consumers.test.mjs',
   );
   assert.equal(
     packageJson.scripts['test:screenshots'],
@@ -48,7 +48,7 @@ test('bounds Node 24 while pinning pnpm, TypeScript, and markdownlint exactly', 
 test('keeps the frozen graph on TypeScript 7 without dynamic lint installation', () => {
   const lockfile = read('pnpm-lock.yaml');
 
-  assert.match(lockfile, /^\s{2}markdownlint-cli2@0\.23\.2:/mu);
+  assert.match(lockfile, /^\s{2}markdownlint-cli2@0\.24\.0:/mu);
   assert.match(lockfile, /^\s{2}typescript@7\.0\.2:/mu);
   assert.doesNotMatch(lockfile, /^\s{2}typescript@[0-6]\./mu);
   assert.equal(fs.existsSync(path.join(repositoryRoot, 'package-lock.json')), false);
