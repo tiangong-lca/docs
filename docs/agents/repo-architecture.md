@@ -35,9 +35,9 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-10-16
-lastReviewedCommit: f33c10e20b80879bba567d910b6ed3de0f0d0467
-lastReviewedNote: "Reviewed for Docs #226: retain the existing four-language URL as a platform Save/results/reuse guide and link the general relationships and schematic to TIDAS #98; preserve locale, link, screenshot and publication contracts."
+lastReviewedAt: 2026-11-02
+lastReviewedCommit: f124e98fcfc9ec44e0c5a6d40e39ed90d6c57c6b
+lastReviewedNote: "Docs #228: reviewed the nine-package cohort, scoped fixed RE2JS/KaTeX graph and real consumer contracts; existing Node/pnpm/TypeScript pins, strict policy, four-locale static/search/SEO and publication boundaries remain. Frozen install, parser comparison, consumer/toolchain, audit, lint and typecheck evidence is local; full build and hosted/deployment qualification remain separate."
 related:
   - AGENTS.md
   - .docpact/config.yaml
