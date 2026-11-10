@@ -39,11 +39,11 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.8 tiangong-lca search flow --input ./fl
 
 Jeder Treffer wird durch `id` und `version` identifiziert; der vollständige Fluss steht unter `json.flowDataSet`. Darin steht der Name unter `flowInformation.dataSetInformation.name.baseName`; Sprachtexte verwenden `@xml:lang` und `#text`. Nur tatsächlich gelieferte Felder verwenden.
 
-Bei Erfolg mit Treffern lautet die Form `{ "data": [...] }`. Ohne Treffer sind `[]` oder `{ "data": [] }` möglich. Eine leere Liste allein ist kein Fehler; die Trefferreihenfolge beweist auch nicht die Eignung für Ihre Untersuchung.
+Bei Erfolg mit Treffern lautet die Form `{ "data": [...] }`. Ohne Treffer sind `[]` oder `{ "data": [] }` möglich. Eine leere Liste allein ist kein Fehler; die Trefferreihenfolge beweist auch nicht die Eignung für Ihr Modell und Ihre Berechnung.
 
 Prüfen Sie vor dem JSON den Exit-Code. Ohne Treffer bewahren Sie die ursprüngliche Anfrage auf und versuchen einen genaueren Namen oder Stoffidentifikator oder lockern `filter` schrittweise. Bei `400` prüfen Sie `query` und die JSON-Syntax; bei `401`/`403` Identität und Rechte. `500` ist ein serverseitiger Suchfehler, nicht der Nachweis fehlender Daten.
 
-Prüfen Sie vor der Auswahl Flusstyp, Name, Klassifikation, Region und Einheit/Flusseigenschaft. Bewahren Sie Anfrage und Antwort auf, nennen Sie die tatsächliche Trefferzahl und lassen Sie keine fehlenden Datensätze durch die KI erfinden.
+Prüfen Sie vor der Auswahl Flusstyp, Name, Klassifikation, Region und Einheit/Flusseigenschaft auf ihre Eignung für Ihr Modell und Ihre Berechnung. Bewahren Sie Anfrage und Antwort auf, nennen Sie die tatsächliche Trefferzahl und lassen Sie keine fehlenden Datensätze durch die KI erfinden.
 
 ## Einen vollständigen Prozess per ID lesen
 
