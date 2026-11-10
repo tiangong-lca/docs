@@ -39,11 +39,11 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.8 tiangong-lca search flow --input ./fl
 
 Each result uses `id` and `version` for identity; the full flow is under `json.flowDataSet`. Within it, find the name at `flowInformation.dataSetInformation.name.baseName`; language text uses `@xml:lang` and `#text`. Use only fields actually returned.
 
-A successful nonempty result is `{ "data": [...] }`. No matches may be represented as `[]` or `{ "data": [] }`. An empty array alone is not a failure, and retrieval order is not proof that a record fits your study.
+A successful nonempty result is `{ "data": [...] }`. No matches may be represented as `[]` or `{ "data": [] }`. An empty array alone is not a failure, and retrieval order is not proof that a record fits your model and calculation.
 
 Check the exit code before interpreting JSON. If nothing matches, retain the original request and try a more precise name or chemical identifier, or relax `filter` step by step. For `400`, check `query` and JSON syntax. For `401`/`403`, check identity and permissions. `500` means a server-side search failure, not “the database contains no such data.”
 
-Before choosing a candidate, check its flow type, name, classification, geography, and unit/flow property against your study. Keep the original request and response, report the actual result count, and do not ask an AI to invent missing records.
+Before choosing a candidate, check its flow type, name, classification, geography, and unit/flow property against your model and calculation. Keep the original request and response, report the actual result count, and do not ask an AI to invent missing records.
 
 ## Retrieve one complete process by ID
 

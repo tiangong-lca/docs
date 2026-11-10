@@ -39,11 +39,11 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.8 tiangong-lca search flow --input ./fl
 
 Chaque résultat est identifié par `id` et `version` ; le flux complet se trouve dans `json.flowDataSet`. Son nom se lit dans `flowInformation.dataSetInformation.name.baseName` ; les textes multilingues utilisent `@xml:lang` et `#text`. N’utilisez que les champs réellement renvoyés.
 
-Une réponse réussie non vide a la forme `{ "data": [...] }`. Sans résultat, la réponse peut être `[]` ou `{ "data": [] }`. Un tableau vide seul n’est pas un échec, et l’ordre des résultats ne prouve pas leur pertinence pour votre étude.
+Une réponse réussie non vide a la forme `{ "data": [...] }`. Sans résultat, la réponse peut être `[]` ou `{ "data": [] }`. Un tableau vide seul n’est pas un échec, et l’ordre des résultats ne prouve pas leur pertinence pour votre modèle et votre calcul.
 
 Vérifiez le code de sortie avant le JSON. Sans correspondance, conservez la requête originale puis essayez un nom ou identifiant chimique plus précis, ou assouplissez `filter` progressivement. Pour `400`, vérifiez `query` et la syntaxe JSON ; pour `401`/`403`, l’identité et les droits. `500` indique un échec serveur, pas l’absence de données dans la base.
 
-Avant de retenir un candidat, vérifiez son type de flux, son nom, sa classification, sa géographie et son unité/propriété de flux. Conservez requête et réponse, indiquez le nombre réel de résultats et ne demandez pas à l’IA d’inventer les enregistrements manquants.
+Avant de retenir un candidat, vérifiez son type de flux, son nom, sa classification, sa géographie et son unité/propriété de flux, en fonction de votre modèle et de votre calcul. Conservez requête et réponse, indiquez le nombre réel de résultats et ne demandez pas à l’IA d’inventer les enregistrements manquants.
 
 ## Lire un procédé complet par ID
 
