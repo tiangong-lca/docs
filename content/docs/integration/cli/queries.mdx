@@ -39,7 +39,7 @@ pnpm dlx --package=@tiangong-lca/cli@0.1.8 tiangong-lca search flow --input ./fl
 
 结果的每条记录用 `id` 和 `version` 标识；完整流内容在 `json.flowDataSet` 中。名称可从其中的 `flowInformation.dataSetInformation.name.baseName` 查看，语言文本使用 `@xml:lang` 和 `#text`。只使用响应实际给出的字段。
 
-成功且有匹配时返回 `{ "data": [...] }`；无匹配时可能返回 `[]` 或 `{ "data": [] }`。不要仅凭数组为空判断失败，也不要把检索顺序当成适用性证明。
+成功且有匹配时返回 `{ "data": [...] }`；无匹配时可能返回 `[]` 或 `{ "data": [] }`。不要仅凭数组为空判断失败，也不要把检索顺序当成适用于当前模型和计算的证明。
 
 先检查退出码，再看 JSON。没有匹配时，保留原请求作为记录，尝试更具体的名称、化学物质信息，或逐步放宽 `filter`。出现 `400` 时检查 `query` 和 JSON；`401`/`403` 先做身份与权限检查；`500` 是服务端检索失败，不能当作“数据库无此数据”。
 
