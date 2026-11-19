@@ -31,9 +31,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-11-10
-lastReviewedCommit: b66b2bfb5be610b06fe00a1e38957361d11da476
-lastReviewedNote: "Docs #234: reviewed calculation-focused four-language introduction and query suitability copy. Routes, command examples, dependencies, current hosted capability claims and content/build validation remain unchanged."
+lastReviewedAt: 2026-11-19
+lastReviewedCommit: addc7160f79997fc38eb0aafe80f44c46e2b33db
+lastReviewedNote: "Docs #239 / original PR #233: reviewed pnpm/setup v3.1.2 executable fa36a5e and the exact action expectation correction. Node/pnpm/TypeScript pins, complete action enumeration, cache inputs, frozen graph, locale/static/search/SEO checks and publication boundaries remain unchanged. Newer upstream v3.2.0 is outside this original-proposal repair; hosted and deployment qualification remain separate."
 related:
   - AGENTS.md
   - .docpact/config.yaml
