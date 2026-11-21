@@ -28,9 +28,9 @@ checkPaths:
   - context7.json
   - crowdin.yml
   - .github/workflows/**
-lastReviewedAt: 2026-10-19
-lastReviewedCommit: 6fe9194e1720147e028c981ba3e556e9a71e329b
-lastReviewedNote: "Reviewed for Docs #228 successor: adopt current stable pnpm/setup 3.1.1 executable while preserving exact Node 24.19.0, pnpm 11.24.0, install:false and cache inputs, unchanged package graph, four-language static/search/SEO and publication boundaries. Exact-source local qualification does not prove hosted cache, CI or deployment."
+lastReviewedAt: 2026-11-19
+lastReviewedCommit: addc7160f79997fc38eb0aafe80f44c46e2b33db
+lastReviewedNote: "Docs #239 / original PR #233: reviewed pnpm/setup v3.1.2 executable fa36a5e and the exact action expectation correction. Node/pnpm/TypeScript pins, complete action enumeration, cache inputs, frozen graph, locale/static/search/SEO checks and publication boundaries remain unchanged. Newer upstream v3.2.0 is outside this original-proposal repair; hosted and deployment qualification remain separate."
 related:
   - AGENTS.md
   - .docpact/config.yaml
