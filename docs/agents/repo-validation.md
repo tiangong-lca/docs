@@ -31,9 +31,9 @@ checkPaths:
   - context7.json
   - .github/workflows/**
   - .githooks/**
-lastReviewedAt: 2026-11-19
-lastReviewedCommit: addc7160f79997fc38eb0aafe80f44c46e2b33db
-lastReviewedNote: "Docs #239 / original PR #233: reviewed pnpm/setup v3.1.2 executable fa36a5e and the exact action expectation correction. Node/pnpm/TypeScript pins, complete action enumeration, cache inputs, frozen graph, locale/static/search/SEO checks and publication boundaries remain unchanged. Newer upstream v3.2.0 is outside this original-proposal repair; hosted and deployment qualification remain separate."
+lastReviewedAt: 2026-11-21
+lastReviewedCommit: 70ecdc734236d89d071ac5bfdb319b7b722cfcd5
+lastReviewedNote: "Docs #240: reviewed Next 16.4.6 framework/env/SWC patch qualification with the existing Fumadocs, React, TypeScript 7, Node 24 and pnpm contracts. Full static export, 86 consumer/contract tests, 26 output checks and 16832 local links passed. Public locale, route, publication and ownership contracts retain their existing requirements."
 related:
   - AGENTS.md
   - .docpact/config.yaml
