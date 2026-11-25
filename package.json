@@ -23,11 +23,11 @@
     "lint": "pnpm exec markdownlint-cli2 '**/*.md' '**/*.mdx' '#node_modules' '#content/docs/.source'"
   },
   "dependencies": {
-    "@fumadocs/language": "0.2.17",
+    "@fumadocs/language": "0.2.19",
     "algoliasearch": "5.61.0",
-    "fumadocs-core": "16.17.9",
-    "fumadocs-mdx": "15.4.10",
-    "fumadocs-ui": "16.17.9",
+    "fumadocs-core": "16.19.0",
+    "fumadocs-mdx": "15.6.1",
+    "fumadocs-ui": "16.19.0",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
