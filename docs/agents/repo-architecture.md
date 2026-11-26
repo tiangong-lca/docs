@@ -35,8 +35,8 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-11-24
-lastReviewedCommit: b0676bc9b1d935fa65d2165082a5b8c5ae596db2
+lastReviewedAt: 2026-11-26
+lastReviewedCommit: 0a85fc2aba2e6c72d3dc319493027a3db1ee785f
 lastReviewedNote: "Docs #240: reviewed Next 16.4.6 framework/env/SWC patch qualification with the existing Fumadocs, React, TypeScript 7, Node 24 and pnpm contracts. Full static export, 86 consumer/contract tests, 26 output checks and 16832 local links passed. Public locale, route, publication and ownership contracts retain their existing requirements."
 related:
   - AGENTS.md

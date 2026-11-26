@@ -17,8 +17,8 @@ checkPaths:
   - app/**
   - components/**
   - lib/**
-lastReviewedAt: 2026-11-19
-lastReviewedCommit: addc7160f79997fc38eb0aafe80f44c46e2b33db
+lastReviewedAt: 2026-11-26
+lastReviewedCommit: 44ff8ec6a382e229106ac3ebd7efa0f5d0c7bdee
 lastReviewedNote: "Docs #239 / original PR #233: reviewed pnpm/setup v3.1.2 executable fa36a5e and the exact action expectation correction. Node/pnpm/TypeScript pins, complete action enumeration, cache inputs, frozen graph, locale/static/search/SEO checks and publication boundaries remain unchanged. Newer upstream v3.2.0 is outside this original-proposal repair; hosted and deployment qualification remain separate."
 related:
   - AGENTS.md

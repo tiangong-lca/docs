@@ -1,7 +1,7 @@
 version: 1
 layout: repo
-lastReviewedAt: "2026-11-24"
-lastReviewedCommit: "5f32a1da76bfb01dad228ad076ac8e5d4e67848f"
+lastReviewedAt: "2026-11-26"
+lastReviewedCommit: "0a85fc2aba2e6c72d3dc319493027a3db1ee785f"
 reviewNote: "Docs #228: reviewed the nine-package cohort, scoped fixed RE2JS/KaTeX graph and real consumer contracts; existing Node/pnpm/TypeScript pins, strict policy, four-locale static/search/SEO and publication boundaries remain. Frozen install, parser comparison, consumer/toolchain, audit, lint and typecheck evidence is local; full build and hosted/deployment qualification remain separate."
 lastReviewedNote: "Docs #240: reviewed Next 16.4.6 framework/env/SWC patch qualification with the existing Fumadocs, React, TypeScript 7, Node 24 and pnpm contracts. Full static export, 86 consumer/contract tests, 26 output checks and 16832 local links passed. Public locale, route, publication and ownership contracts retain their existing requirements."
 
