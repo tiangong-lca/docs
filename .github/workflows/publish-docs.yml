@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: publish-docs-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOCS_SITE_URL: https://docs.tiangong.earth
