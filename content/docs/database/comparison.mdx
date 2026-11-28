@@ -1,66 +1,108 @@
 ---
 title: "跨库比较与格式互通"
-description: "对照 TianGong LCA 与 ecoinvent、ILCD/EF、USLCI、BAFU、AGRIBALYSE、worldsteel 等数据库及主流 LCA 软件的定位差异，并说明格式转换与可比性边界。"
+description: "全面对比 TianGong LCA 与主流 LCA 软件（openLCA、SimaPro、GaBi、Brightway）、ecoinvent v3 四大系统模型及七大背景数据库，并给出格式转换损失、tidas 导入核查步骤与六维可比性审计清单。"
 ---
 
-将不同背景数据库或软件导出的 LCI/LCIA 结果并列比较，是 LCA 实践中最容易出错的环节之一。本页从**数据库范式、软件与数据库分工、格式互通与转换损失，以及可比性前提**四个维度说明 TianGong LCA 与外部生态的差异。
+在生命周期评价实践中，把不同软件或不同背景数据库算出来的碳足迹、能耗或环境影响指标直接并排比较，是最容易“差之毫厘、谬以千里”的环节之一。
 
-## 先分清：数据库方法文档 vs 软件操作手册
+本页从**软件与数据库分工、ecoinvent v3 深度对照、七大数据库生态图景、格式转换与损失披露、导入后实操核查步骤，以及跨库可比性六维审计**六个方面，帮您建立清晰的跨生态判断框架。
 
-讨论“跨平台差异”时，必须先把**软件工具**与**背景数据库**分开：
+> **核心要点一览**
+>
+> - **先分三层再比较**：**软件工具**（openLCA、SimaPro、Brightway）管怎么建模与计算，**背景数据库**（ecoinvent、BAFU、AGRIBALYSE、USLCI 等）管数据怎么生产、怎么选系统模型，**格式与网络规范**（ILCD/LCDN、TIDAS、FEDEFL）管数据怎么交换。TianGong LCA 同时承担云端软件与开放/商业数据托管，因此必须把两层文档结合起来看。
+> - **“能导入/导出”绝不等于“无损等价”**：不同格式的流命名、子室（compartment）、分配规则与市场表达差异很大；导入后必须核查转换报告、映射表与 LCIA 覆盖率。
+> - **跨库数值不同往往不是“算错了”**：同一产品在两个数据库里差 20% 以上非常常见，根源通常在于系统边界、分配策略、市场组合假设、年份工艺代表性或表征因子口径不一致。
 
-- **软件工具（openLCA、SimaPro、Brightway 等）**：其手册重点在于“如何在工具中编码建模决定”（参数、分配选项、产品系统连接、验证与聚合）；一般不定义全局背景数据库方法学，系统模型选择通常交由数据库提供方文档承担。
-- **背景数据库提供方（ecoinvent、Sphera/GaBi、BAFU、AGRIBALYSE、USLCI 等）**：发布数据库自身的数据生产规则、系统模型假设、质量评定与变更说明。
-- **格式与网络治理（ILCD/EPLCA、FLCAC 等）**：规定交换格式、流命名映射与数据节点合规边界，本身不是单一数据库。
+## 一、先分清三层：软件工具、背景数据库与格式网络
 
-TianGong LCA 既是开源云端建模平台，也是面向开放与商业数据的托管与分发体系，因此需要同时阅读操作类文档与本栏目的数据库说明（见[数据库总览](/zh/docs/database/overview/)与[系统建模 FAQ](/zh/docs/faq/system-models/)）。
+很多用户对比“TianGong 文档”与“openLCA 文档”时容易产生错觉，以为桌面软件手册本身就包含完整的数据库方法论。实际上，行业内三类文档各有明确分工：
 
-## 主要 LCA 数据库范式对照
-
-下表概括常见背景数据库与 TianGong LCA 的核心结构差异；更深入的历史演进与方法学底层分歧见天工 LCA 知识库[背景数据库的演变与方法差异](https://prism.tiangong.earth/zh/docs/book/lca-database-landscape-and-history/)：
-
-| 数据库 / 体系 | 主要数据格式 | 市场与系统模型机制 | 典型覆盖与治理特征 |
+| 平台 / 软件 | 定位 | 官方文档主要讲什么 | 数据库方法与系统模型由谁承担 |
 | --- | --- | --- | --- |
-| **TianGong LCA** | [TIDAS](https://tidas.tiangong.earth/) JSON（兼容 ILCD/eILCD 结构，支持 LCDN 分发） | 无独立 `market` 数据集；求解快照采用**隐式区域供应组合**（`split_by_process_volume`）与 `closed`/`open`/`cutoff` 边界策略；不宣称归因或后果命名系统模型，见[供应连接与市场机制](/zh/docs/database/supply-markets/) | 开放数据经多角色审核发布，商业数据仅展示元信息；实时公开目录与版本可见性见[公开数据目录](https://www.tiangong.earth/zh-CN/lca-database) |
-| **ecoinvent v3** | ecoSpold2 | 显式 `market activity` 与 `market groups`（含进口、运输与损耗）；提供 Cut-off、Cut-off EN15804、APOS 与 Consequential 四类命名系统模型，Consequential 下 market 为边际消费 mix | 商业综合背景库；年度版本附 Report of Changes、Correspondence File、Database Overview 与 LCIA Implementation Report |
-| **ILCD / EU EF & LCDN** | ILCD / eILCD XML | 由 ILCD Handbook、EF 合规导则及具体节点数据库分别约定；节点本身侧重格式与分发治理 | 国际与欧盟互操作基础框架；TianGong 通过 [LCDN](https://lcdn.tiangong.earth/) 与 ILCD 节点生态衔接 |
-| **USLCI / FLCAC** | JSON-LD / ILCD（依托 FEDEFL 公共基本流清单） | 开放公共清单库，侧重提交元数据规范与基本流映射，不强制统一单一系统模型 | 美国联邦生命周期评估社区公开仓库，按季度发布更新说明 |
-| **BAFU（瑞士）** | ecoSpold / ILCD 兼容分发 | 侧重公共政策评估用 LCI 清单，配 DQRv2.1 与外部 ISO 14040 评审 | 瑞士联邦环境局公开清单，附年度变更日志与方法报告 |
-| **AGRIBALYSE** | openLCA / SimaPro 适配分发 | 面向农食部门的系统化方法与边界约定，强调 DQR 与使用条款 | 法国农食领域公开数据库，带版本日历与 Dataverse DOI |
-| **worldsteel** | 行业 LCI 分发格式（Excel / 软件适配） | 行业加权平均的摇篮到大门（cradle-to-gate）钢铁清单与闭环回收方法说明 | 全球钢铁协会行业平均数据库，专注钢铁产品代表性 |
+| **openLCA** | 开源桌面 LCA 软件 | 软件操作与工具内建模机制（分配选项、参数、嵌套产品系统、废物建模、数据聚合、蒙特卡洛与 ISO 验证映射） | 交由外部数据库厂商（如 ecoinvent、AGRIBALYSE）及 Nexus 数据包说明承担；手册本身不定义 `market` 章节或命名系统模型 |
+| **SimaPro** | 商业桌面 LCA 软件 | 桌面操作帮助、教程、LCIA 方法说明以及如何正确使用 unit vs system、market vs transformation 库 | 数据生产与系统模型文档由对应背景库厂商提供 |
+| **Sphera / GaBi** | 商业软件 + 自研商业数据库 | 软件操作配合《GaBi Databases & Modeling Principles》长篇建模原则报告（部分版本受登录或表单门禁限制） | 由 Sphera 自家数据库团队统一维护方法学、DQI 与年度评审报告 |
+| **Brightway** | 开源 Python LCA 框架 | 编程库 API、矩阵代数与代码教程 | 不内置方法学或数据库内容文档，完全依赖用户导入的背景库 |
+| **TianGong LCA** | 开源云端平台 + 开放/商业数据体系 | 既需要操作手册（见[系统建模 FAQ](/zh/docs/faq/system-models/)），也需要本栏目专门说明平台数据库组成、隐式供应路由、版本许可与互通边界（见[数据库总览](/zh/docs/database/overview/)） | 平台数据库事实在本栏目维护；一般 LCA 理论在知识库，字段规范在 [TIDAS](https://tidas.tiangong.earth/)，品类规则在 PCR |
 
-## 格式互通与转换损失披露
+## 二、重点对照：TianGong LCA 与 ecoinvent v3 的核心差异
 
-“支持导入或导出”**不等于无损等价转换**。在 TianGong LCA 与 openLCA、SimaPro、GaBi 或 ecoinvent 之间交换数据时，应重点关注工具入口与已知转换边界：
+ecoinvent v3 是目前全球文档化最完整的商业综合背景数据库，也是从业者最常拿来与 TianGong 对照的参照系。两者在“系统模型”和“市场机制”上的设计哲学有本质区别：
 
-| 外部格式 / 渠道 | 当前支持路径 | 关键映射与潜在转换损失 |
+### 1. ecoinvent v3 的四套命名系统模型
+
+在 ecoinvent v3 中，同一套原始单元过程会被链接算法编译为四个不同的系统模型版本，选择哪个版本由研究者根据研究目的自行负责：
+
+- **Cut-off by Classification（截断模型）**：可回收废料的负担归属于初级生产者，回收料进入下一生命周期时仅承担回收处理负担、不背负原生生产负担（最常作为教学与企业核算起点）。
+- **Cut-off, EN15804**：面向欧洲建筑 EPD（EN 15804+A2）扩展的截断变体，补充特定指标与流分类要求。
+- **APOS（Allocation at the Point of Substitution，替代点分配）**：把废物处理与副产品按扩展分配逻辑在替代点共同分摊负担，强调责任共担。
+- **Consequential（后果模型）**：采用系统扩展与边际供应商假设，其中的 `market activity` 不再代表历史平均消费组合，而代表需求变动时响应的**边际消费组合**。
+
+此外，ecoinvent v3 每年随大版本配套发布 **Report of Changes**（变更报告）、**Correspondence File**（版本对应表）、**Database Overview**（数据库概览）与 **LCIA Implementation Report**（LCIA 实施报告），并把贸易进口、运输距离/方式、损耗和 `market groups` 编织进独立的 `market activity` 数据集中。
+
+### 2. TianGong LCA 的对照定位
+
+- **无命名系统模型与独立 `market` 数据集**：TianGong 不提供上述四套命名系统模型，也不宣称采用归因或后果范式；对未手动连线的上游投入，求解快照默认采用**隐式区域供应组合**（`split_by_process_volume`）及显式的 `closed` / `open` / `cutoff` 边界策略（完整机制与算例见[供应连接与市场机制](/zh/docs/database/supply-markets/)）。
+- **运输与损耗不自动附加**：隐式组合只按地理层级与年产量分摊上游过程份额，**不会像 ecoinvent `market` 那样自动加入物流运输或电网损耗**；若研究需要这些环节，须在过程或模型中显式建入。
+- **版本与覆盖实时透明**：实时公开数据集覆盖以[公开数据目录](https://www.tiangong.earth/zh-CN/lca-database)为准，每条记录精确锁定 `(UUID, version)` 与许可字段（见[版本、许可与引用](/zh/docs/database/versions-citation/)）。
+
+## 三、七大主流 LCA 数据库生态图景对照
+
+下表将 TianGong LCA 放进全球主要 LCA 数据库生态中横向比较；更深入的历史沿革与学派差异请参阅天工 LCA 知识库[背景数据库的演变与方法差异](https://prism.tiangong.earth/zh/docs/book/lca-database-landscape-and-history/)：
+
+| 数据库 / 体系 | 主要数据格式 | 市场与系统模型特点 | 典型覆盖、文档与治理特征 |
+| --- | --- | --- | --- |
+| **TianGong LCA** | [TIDAS](https://tidas.tiangong.earth/) JSON（兼容 ILCD/eILCD，支持 LCDN） | 无独立 `market` 数据集；求解期隐式区域供应组合（`split_by_process_volume`）与 `closed`/`open`/`cutoff` 边界 | 开放数据经多角色审核发布，商业数据仅展元信息；实时目录与可见性见[公开数据目录](https://www.tiangong.earth/zh-CN/lca-database) |
+| **ecoinvent v3** | ecoSpold2 | 显式 `market activity` 与 `market groups`（含进口、运输、损耗）；Cut-off、Cut-off EN15804、APOS、Consequential 四套命名系统模型 | 商业综合背景库；年度发布配 Report of Changes、Correspondence File、Overview 与 LCIA 实施报告 |
+| **ILCD / EU EF & LCDN** | ILCD / eILCD XML | 由 ILCD Handbook、欧盟 EF 合规导则及各具体节点库分别规定，本身侧重格式与节点治理 | 国际与欧盟互操作骨架；TianGong 通过 [LCDN](https://lcdn.tiangong.earth/) 与 ILCD 节点网络衔接 |
+| **USLCI / FLCAC** | JSON-LD / ILCD（依托 FEDEFL 统一基本流清单） | 美国公共 LCI 仓库，强调提交规范、元数据指南与 FEDEFL 基本流映射，不强制单一系统模型 | 面向北美公开研究，按季度发布更新说明 |
+| **BAFU（瑞士联邦环境局）** | ecoSpold / ILCD 兼容分发 | 面向瑞士公共政策评估的公开背景清单 | 配有 DQRv2.1 质量体系、方法报告、外部 ISO 14040 评审、年度变更日志与开发者手册 |
+| **AGRIBALYSE** | openLCA / SimaPro 适配分发 | 聚焦法国农食全链条的统一边界、分配与质量规则 | 公开文档站完整披露方法、使用条款、DQR、版本日历及 Dataverse DOI |
+| **worldsteel** | 行业 LCI 包（Excel / 主流软件适配） | 行业加权平均摇篮到大门（cradle-to-gate）钢铁清单，附闭环回收核算方法 | 全球钢铁协会行业代表性数据库，专注钢铁产品生产与回收 |
+
+## 四、格式互通与转换损失披露
+
+在 TianGong LCA 与 openLCA、SimaPro、GaBi 或 ecoinvent 之间交换数据包时，务必先看清工具入口和已知转换边界——**格式能够导入成功，不代表所有方法学语义都被无损保留**：
+
+| 外部格式 / 通道 | 当前支持入口 | 已保留的核心内容 | 必须重点核查的转换差异与损失边界 |
+| --- | --- | --- | --- |
+| **TIDAS JSON / ZIP** | 网页端 [TIDAS ZIP 工作流](/zh/docs/user-guide/tidas-zip-workflows/)、CLI、API | 完整保留 6 类对象结构、精确版本引用与校验规则 | 原生无损格式，跨环境协作的首选格式 |
+| **ILCD / eILCD XML** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas convert` / `tidas import`）、网页 ZIP 校验与 [LCDN](https://lcdn.tiangong.earth/) | 与 TIDAS 高度同源；`tidas convert` 会写出确定性的 `.tidas-envelope.json` 与 `.tidas-recovery.json` 伴随文件，支持可验证的双向无损往返转换 | 第三方非标准 ILCD 节点仍可能存在扩展字段差异、分类映射偏移或 CAS 校验位报错 |
+| **EcoSpold 1 / EcoSpold 2** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`） | 保留来源过程、流、交换编号、地理代码、CAS 与原始数值文本；无法直接写入正式字段的信息保存在导入 `trace` 中 | **不会**将 ecoinvent 的 `market` 机制还原为 TianGong 内置市场类型；原库的系统模型假设（如 Cut-off / APOS / Consequential）须人工记录与复核 |
+| **openLCA JSON-LD / process XLSX** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`） | 可解析的 `defaultProvider` 自动转为候选生命周期模型；交换量统一换算为参考流属性基准单位；`Occupation, ...` 与 `Transformation, from/to ...` 土地利用流自动映射为 `Land use` 基本流 | **不支持直接导入 `.zolca` 二进制归档**，必须先在 openLCA 中导出为 JSON-LD 或 process XLSX；无法换算的单位或未映射扩展字段会保留在 `trace` 中，必须人工复核 |
+| **SimaPro CSV** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`） | 解析常见过程、流与基本清单表结构 | SimaPro 的流命名、子室（compartment）划分、自定义单位以及废物流/分配写法与 ILCD/TIDAS 差异较大，导入后务必逐项核查流方向、分类与 LCIA 因子命中率 |
+| **远程程序接口** | [天工 LCA MCP（远程）](/zh/docs/integration/mcp-lca-remote/) 与 OpenAPI | 受控查询、结构化检索与自动化工作流集成 | 面向在线检索与系统调用，不替代完整离线数据包的 Schema 校验 |
+
+## 五、外部数据包导入后的四步实操核查流程
+
+使用本地 `tidas` 命令行工具把外部数据转换为 TIDAS 包时，**不要只看到命令运行结束就直接上传计算**。建议固定执行以下四步验收流程：
+
+```bash
+# 第 1 步：导入外部格式并强制输出字段映射清单（mapping.csv.gz）
+tidas import --input ./source-export.zip --output ./tidas-out --write-mapping
+
+# 第 2 步：执行结构与引用校验（退出码 0 才算通过；退出码 2 表示存在数据问题）
+tidas validate --input ./tidas-out
+```
+
+1. **先读 `import-report.json` 与 `issues.jsonl`**：核对导入后的过程、流、来源数量是否与源库一致，逐条查看 Schema 校验报错、断裂引用、CAS 校验位异常以及无法自动换算的交换量。
+2. **抽查 `mapping.csv.gz` 与导入 `trace`**：确认关键技术参数、注释和扩展字段是写入了正式 TIDAS 字段，还是仅以源文本保留在 `trace` 里，避免重要边界说明在后续建模中“隐身”。
+3. **确认 `tidas validate` 返回退出码 `0`**：若返回退出码 `2`，说明仍存在字段缺失、枚举不合规或引用断裂，应先修复再导入平台或用于正式计算。
+4. **上平台后立刻核查 LCIA 表征因子覆盖率**：外部库导入的基本流若未对齐到 TianGong 内置方法包对应的精确 `(Flow UUID, version, direction)`，会在 LCIA 面板被标为“覆盖不完整”。切勿把未命中因子的基本流误当成零排放或零影响。
+
+关于交换格式局限、流映射风险与三级互操作披露框架的完整论述，请延伸阅读天工 LCA 知识库[数据格式、映射与转换披露](https://prism.tiangong.earth/zh/docs/book/exchange-formats-and-interoperability-governance/)。
+
+## 六、为什么同一产品在两个数据库里算出的结果不一样：六维可比性审计表
+
+当您想把 TianGong LCA 的结果与 ecoinvent、GaBi、USLCI 或 AGRIBALYSE 的同类结果并列对比时，请先按以下六个维度逐项核对（另见门户[数据说明](https://www.tiangong.earth/zh-CN/methodology)与[版本、许可与引用](/zh/docs/database/versions-citation/)）：
+
+| 审计维度 | 跨库常见差异来源 | 比较前必须完成的核对或披露动作 |
 | --- | --- | --- |
-| **TIDAS JSON / ZIP** | 网页端 [TIDAS ZIP 工作流](/zh/docs/user-guide/tidas-zip-workflows/)、CLI、API | 原生完整保留结构、引用、版本与校验规则 |
-| **ILCD / eILCD XML** | 本地 [`tidas` 命令行工具](/zh/docs/integration/tidas/)、`tidas convert` / `tidas import`、网页 ZIP 校验与 [LCDN](https://lcdn.tiangong.earth/) | 与 TIDAS 高度同源，但仍须检查扩展字段、分类映射与 CAS 校验位 |
-| **EcoSpold 1 / EcoSpold 2** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`） | 保留来源过程、流、交换编号、地理、CAS 与数值文本；无法直接写入正式字段的内容存入 import `trace`；**不会把 ecoinvent `market` 机制还原为平台内置市场类型**，且系统模型假设须人工核对 |
-| **openLCA JSON-LD / process XLSX** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`）；**不支持直接导入 `.zolca`**，须先在 openLCA 导出交换格式 | 可解析的 `defaultProvider` 转为候选生命周期模型；交换量按参考流属性基准单位换算；土地利用流按规则映射为 `Land use` 基本流；无法换算或未映射字段须复核报告 |
-| **SimaPro CSV** | 本地 [`tidas` 工具](/zh/docs/integration/tidas/)（`tidas import`） | 流名称、子室（compartment）、单位及分配/废物流语义差异较大，导入后必须逐项核对分类、方向与表征因子匹配 |
-| **远程程序调用** | [天工 LCA MCP（远程）](/zh/docs/integration/mcp-lca-remote/) 与 OpenAPI | 用于受控检索与集成调用，不替代完整数据包的结构校验 |
+| **1. 功能单位与参考流** | 含水率、纯度、热值（低位 vs 高位）、包装规格或基准量（干基 vs 湿基）不同 | 先统一换算到同一物理规格与计量基准，再对比数值 |
+| **2. 系统边界与资本品** | 摇篮到大门 vs 摇篮到坟墓、是否含厂房设备等资本品、截断阈值（如 1% 质量截断）不同 | 明确标注各方包含/排除的阶段与资本品范围；截断边界不一致时不可直接相减 |
+| **3. 多功能性与分配规则** | 质量分配、经济分配、能量分配、因果分配或系统扩展（替代法）选型不同 | 对比前确认主要联产品与废物的负担分摊原则一致，或在报告中并列说明差异 |
+| **4. 市场与供应假设** | ecoinvent 含运输与损耗的 `market`、Consequential 边际供应、vs TianGong 隐式区域供应组合或显式供应商链接 | 核查是否一边含长途运输与电网线损、另一边未含；必要时补齐运输与损耗后再比较 |
+| **5. 时空与技术代表性** | 电力结构年份（如 2018 vs 2024）、区域粒度（省级 vs 国家级 vs 全球平均）与工艺代差（煤制 vs 气制）不同 | 检查双方参考年份、地区代码与工艺描述；仅在代表性匹配时做横向排名 |
+| **6. LCIA 方法与覆盖率** | IPCC AR5 vs AR6、EF 3.0 vs EF 3.1、区域化 vs 非区域化表征因子，以及未匹配基本流造成的覆盖缺口 | 统一评价方法与版本，并披露双方是否存在未覆盖基本流，切勿拿缺口不同的结果直接排序 |
 
-### 导入转换后的最小核查清单
-
-使用 `tidas import` 转换外部数据包时，不要只看命令是否成功退出，务必同时检查：
-
-1. **`import-report.json` 与 `issues.jsonl`**：确认文档计数、schema/引用校验问题、CAS 校验位错误与无法换算的交换量。
-2. **`--write-mapping`（`mapping.csv.gz`）**：逐字段复核正式映射字段、仅保留在 `trace` 中的源信息、占位字段与生成字段。
-3. **基本流与 LCIA 覆盖率**：导入外部流后，确认基本流 UUID、版本与方向是否能命中目标评价方法的表征因子；切勿把未匹配流误当成零排放或零影响。
-
-关于交换格式局限、流映射风险与三级互操作披露原则的系统阐述，请参见天工 LCA 知识库[数据格式、映射与转换披露](https://prism.tiangong.earth/zh/docs/book/exchange-formats-and-interoperability-governance/)。
-
-## 跨库结果可比性的硬前提
-
-只有在以下六个维度均已核对且兼容时，不同数据库或不同版本的结果才适合并列比较（另见门户[数据说明](https://www.tiangong.earth/zh-CN/methodology)与[版本、许可与引用](/zh/docs/database/versions-citation/)）：
-
-1. **功能单位与参考流**：计量基准、产品规格与参考规模一致。
-2. **系统边界**：摇篮到大门、摇篮到坟墓、资本品截断及废物处理边界一致。
-3. **多功能性处理**：分配规则（质量/经济/因果）或系统扩展策略一致。
-4. **市场与供应假设**：确认使用的是平均区域组合、特定供应商还是边际供应假设。
-5. **时空与技术代表性**：地区范围、参考年份与工艺路线可比。
-6. **LCIA 方法与因子版本**：使用相同评价方法版本，且已核对表征因子覆盖率缺口。
-
-若上述任一前提不一致，应先在报告中披露差异，避免直接把两个数据库的单值碳足迹或综合指标相减排序；更多适用性审查框架见天工 LCA 知识库[数据适用性](https://prism.tiangong.earth/zh/docs/book/data-applicability/)。
+只要上述六个维度中有任何一项未对齐，都应在报告中**如实披露差异来源**，避免把两个数据库的单一碳足迹或综合分值直接相减下结论。更完整的适用性审查清单请参阅天工 LCA 知识库[数据适用性](https://prism.tiangong.earth/zh/docs/book/data-applicability/)。
