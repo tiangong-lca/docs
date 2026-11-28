@@ -29,18 +29,9 @@ description: "回答在 TianGong LCA 中构建模型时与其他 LCA 软件的�
 
 ## 平台如何为产品输入选择供应者？
 
-当产品输入交换没有显式连接到唯一 provider 时，TianGong LCA 会在求解快照中使用隐式区域供应组合。
-产品输入的 `exchange.location` 会优先作为供应区域；如果没有可用位置，则使用消费过程的位置作为默认供应区域。
-如果消费过程具有 `model_id`，并且同一模型内存在可供应该产品流的 reference-output provider，
-系统会先使用这个同模型 provider 子集；如果没有同模型 provider，才回到更宽的区域供应组合。
-随后系统选择最合适的地理层级，再在该层级内按 provider 过程的年供应量或年产量分配份额。自动链接
-只把 quantitative reference output 视为可供应该产品流的 provider；同 `flow_id` 的非 reference
-output 不会因为存在数量或 allocation fraction 就自动进入 provider set。
+TianGong LCA **不提供独立的 ecoinvent 式 `market activity` 数据集**。当产品输入交换没有显式连接到唯一 provider 时，求解快照会使用**隐式区域供应组合**（默认规则 `split_by_process_volume`）：在通过数值准入与精确版本 Lifecycle Model 谱系门禁后，按“同 `model_id` 硬过滤 → 供应区域锚点（`exchange.location` 优先于过程位置）→ 首个非空地理层级 → 年供应量/年产量加权（缺失回退为固定权重 `1.0`）”分配权重。自动链接只接受 quantitative reference output；全为非参考候选时诊断会报告 `rejected_non_reference_only`。
 
-这类分配只决定一条输入需求由哪些 provider 承担，不会放大或缩小该输入的总需求量。如果某个 provider
-缺少有效年量，系统会使用默认正权重保留它，并在覆盖率或 provider linking 诊断中暴露 fallback 情况。
-如果所有同流候选项都不是 reference output，诊断会把该输入暴露为 `rejected_non_reference_only`，
-需要通过修复参考输出、补充 provider 数据，或显式 market / co-product 建模解决。
+隐式组合是计算期路由策略，不持久化为独立市场数据集，也不自动保证研究年份、技术或地理代表性。完整路由规则、诊断解读与何时应显式建模，请阅读[供应连接与市场机制](/zh/docs/database/supply-markets/)。
 
 ## 与其他 LCA 软件相比有哪些差异？
 
@@ -50,6 +41,8 @@ output 不会因为存在数量或 allocation fraction 就自动进入 provider 
 | 模型构建 | 基于过程库组合，可直接引用平台数据 | 多通过导入外部数据库或本地建库 |
 | 数据结构 | 采用 TIDAS JSON 结构，支持开放接口与自动化集成 | 以专有数据库格式为主 |
 | 版本控制 | 支持 Data check、自检与审核状态筛选 | 需依赖外部版本管理或手动记录 |
+
+如需对照 TianGong LCA 与 ecoinvent、ILCD/EF、USLCI、BAFU、AGRIBALYSE 等背景数据库及格式转换边界，请阅读[跨库比较与格式互通](/zh/docs/database/comparison/)。
 
 ## 是否可以与其他软件互通？
 

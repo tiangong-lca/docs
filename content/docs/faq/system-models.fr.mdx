@@ -36,27 +36,9 @@ pas que l'éditeur prend en charge plusieurs connexions explicites de fournisseu
 
 ## Comment la plateforme choisit-elle les fournisseurs pour les entrées de produits ?
 
-Lorsqu'un échange d'entrée de produit n'est pas explicitement lié à un fournisseur, TianGong LCA
-utilise un mix régional d'approvisionnement implicite dans l'instantané du solveur.
-`exchange.location` de l'entrée de produit sert d'abord de région d'approvisionnement. En
-l'absence de localisation d'échange utilisable, la localisation du processus consommateur sert
-d'ancre par défaut. Si le processus consommateur possède un `model_id` et que le même modèle
-contient un fournisseur éligible de sortie de référence pour le flux de produit, le système
-utilise d'abord ce sous-ensemble de fournisseurs du même modèle. Sans fournisseur de même modèle,
-il revient au mix régional plus large. Le système choisit ensuite le meilleur niveau géographique
-et pondère les fournisseurs de ce niveau par leur volume annuel d'approvisionnement ou de
-production. La liaison automatique ne traite comme fournisseur éligible pour ce flux de produit
-qu'une sortie de référence quantitative ; une sortie non-référence de même `flow_id` n'entre pas
-automatiquement dans l'ensemble des fournisseurs au seul motif qu'elle possède un montant ou une
-fraction d'allocation.
+TianGong LCA **ne fournit pas de jeux autonomes `market activity` à la manière d'ecoinvent**. Lorsqu'un échange d'entrée de produit n'est pas relié explicitement à un fournisseur, l'instantané du solveur applique un **mix régional d'approvisionnement implicite** (règle par défaut `split_by_process_volume`) : après éligibilité numérique et barrière de lignage Lifecycle Model exacte en version, il route par filtre strict même `model_id` → ancre de région d'approvisionnement (`exchange.location` avant la localisation du processus) → premier niveau géographique non vide → pondération par volume annuel (avec repli positif fixe `1.0`). Seules les sorties de référence quantitatives sont éligibles ; si tous les candidats de même flux sont non-référence, les diagnostics signalent `rejected_non_reference_only`.
 
-Cette répartition détermine quels fournisseurs portent la demande d'une entrée ; elle n'augmente
-ni ne réduit le montant total de cette entrée. Si un fournisseur n'a pas de volume annuel valide,
-le système le conserve avec une pondération positive par défaut et expose le repli dans la
-couverture de l'instantané ou les diagnostics de liaison des fournisseurs. Si tous les candidats
-de même flux sont des sorties non-référence, les diagnostics exposent l'entrée comme
-`rejected_non_reference_only` ; réparez la sortie de référence, ajoutez des données de fournisseur
-ou modélisez explicitement le processus de marché / coproduit.
+Ce mix implicite est une politique de routage au calcul — et non un jeu de marché persisté — qui ne garantit pas automatiquement la représentativité temporelle, technologique ou géographique. Consultez [Liaison d'approvisionnement et mécanisme de marché](/fr/docs/database/supply-markets/) pour l'ordre complet de routage, les diagnostics et les cas nécessitant une modélisation explicite.
 
 ## En quoi TianGong LCA diffère-t-il des autres plateformes d'ACV ?
 
@@ -66,6 +48,8 @@ ou modélisez explicitement le processus de marché / coproduit.
 | Construction de modèles | Assembler des processus depuis des dépôts partagés ; publier vers les équipes | Généralement import ou maintenance de bases privées |
 | Format des données | Utilise le schéma JSON ouvert TIDAS pour la transparence et l'intégration | Formats de bases propriétaires |
 | Contrôle de versions | Brouillons, historique et suivi d'état intégrés | Dépend d'une gestion de fichiers externe |
+
+Pour une comparaison structurée avec ecoinvent, ILCD/EF, USLCI, BAFU, AGRIBALYSE ainsi que les limites de conversion de formats, consultez [Comparaison des bases et interopérabilité](/fr/docs/database/comparison/).
 
 ## Puis-je interopérer avec d'autres logiciels ?
 

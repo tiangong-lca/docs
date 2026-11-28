@@ -36,26 +36,9 @@ Editor mehrere explizite Anbieter-Verbindungen für einen Eingabefluss unterstü
 
 ## Wie wählt die Plattform Anbieter für Produkteingaben?
 
-Wenn ein Produkteingabe-Austausch nicht ausdrücklich mit einem Anbieter verknüpft ist, nutzt
-TianGong LCA im Solver-Snapshot einen impliziten regionalen Versorgungsmix. Zuerst dient
-`exchange.location` der Produkteingabe als Versorgungsregion. Liegt kein nutzbarer Austausch-Standort
-vor, dient der Standort des Verbraucherprozesses als Standardversorgungsanker. Hat der
-Verbraucherprozess eine `model_id` und enthält dasselbe Modell einen zulässigen
-Referenzausgangs-Anbieter für den Produktfluss, nutzt das System zuerst diese Anbieter-Teilmenge
-gleichen Modells. Existiert kein Anbieter mit gleichem Modell, greift der breitere regionale
-Versorgungsmix. Das System wählt anschließend die beste Geografie-Ebene und gewichtet die Anbieter
-innerhalb dieser Ebene nach ihrem jährlichen Versorgungs- oder Produktionsvolumen. Die automatische
-Verknüpfung behandelt nur einen quantitativen Referenzausgang als zulässigen Anbieter für diesen
-Produktfluss; ein Nicht-Referenzausgang mit gleichem `flow_id` gelangt nicht allein deshalb in die
-Anbietermenge, weil er über einen Betrag oder Allokationsanteil verfügt.
+TianGong LCA **bietet keine eigenständigen ecoinvent-artigen `market activity`-Datensätze**. Ist ein Produkteingabe-Austausch nicht explizit mit einem Anbieter verknüpft, wendet der Solver-Snapshot einen **impliziten regionalen Versorgungsmix** an (Standardregel `split_by_process_volume`): Nach numerischer Zulassung und versionsgenauem Lifecycle-Model-Lineage-Gate erfolgt das Routing über den harten Filter auf gleiches `model_id` → Versorgungsregionsanker (`exchange.location` vor Prozessstandort) → erste nicht-leere Geografie-Ebene → Gewichtung nach Jahresvolumen (mit festem positiven `1.0`-Fallback). Nur quantitative Referenzausgänge sind zulässig; sind alle Kandidaten gleichen Flusses Nicht-Referenzausgänge, melden Diagnosen `rejected_non_reference_only`.
 
-Diese Zuteilung bestimmt, welche Anbieter eine Eingabenachfrage tragen; sie erhöht oder vermindert
-nicht die Gesamtmenge dieser Eingabe. Verfügt ein Anbieter über kein gültiges Jahresvolumen, behält
-das System ihn mit einem positiven Standardgewicht und legt den Fallback in der Snapshot-Abdeckung
-oder den Anbieter-Verknüpfungsdiagnosen offen. Ist jeder Kandidat mit gleichem Fluss ein
-Nicht-Referenzausgang, weisen die Diagnosen die Eingabe als `rejected_non_reference_only` aus;
-reparieren Sie den Referenzausgang, ergänzen Sie Anbieterdaten oder modellieren Sie den Markt-/Koproduktprozess
-explizit.
+Dieser implizite Mix ist eine Rechenzeit-Routingregel — kein persistierter Marktdatensatz — und garantiert keine zeitliche, technologische oder geografische Repräsentativität. Die vollständige Routing-Reihenfolge, Diagnosen und Kriterien für explizite Modellierung finden Sie unter [Versorgungsverknüpfung & Marktmechanismus](/de/docs/database/supply-markets/).
 
 ## Wie unterscheidet sich TianGong LCA von anderen LCA-Plattformen?
 
@@ -65,6 +48,8 @@ explizit.
 | Modellaufbau | Prozesse aus geteilten Repositories zusammensetzen; an Teams veröffentlichen | Üblicherweise Import oder Pflege privater Datenbanken |
 | Datenformat | Nutzt das offene TIDAS-JSON-Schema für Transparenz und Integration | Proprietäre Datenbankformate |
 | Versionsverwaltung | Eingebaute Entwürfe, Historie und Statusverfolgung | Abhängig von externer Dateiverwaltung |
+
+Für strukturierte Vergleiche mit ecoinvent, ILCD/EF, USLCI, BAFU, AGRIBALYSE sowie Grenzen der Formatkonvertierung siehe [Datenbankvergleich & Interoperabilität](/de/docs/database/comparison/).
 
 ## Kann ich mit anderer Software zusammenarbeiten?
 

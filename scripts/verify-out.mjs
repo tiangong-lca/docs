@@ -262,7 +262,7 @@ for (const signature of ['source.getPageTree', 'findParent', 'structuredData']) 
 }
 
 const directoryBases = [
-  'overview', 'user-guide', 'data-collection', 'integration',
+  'overview', 'user-guide', 'database', 'data-collection', 'integration',
   'openapi', 'deploy-and-dev', 'faq', 'changelog',
   'data-collection/case-introduction',
   'integration/cli', 'integration/skills', 'integration/tidas',

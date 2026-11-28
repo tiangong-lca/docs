@@ -1,0 +1,79 @@
+---
+title: "Versions, licences et citation"
+description: "Présente la sémantique des versions, les URI permanents, les états de revue et de publication, les licences des données ouvertes et commerciales, le statut DOI, les modèles de citation et la distribution LCDN dans TianGong LCA."
+---
+
+Cette page rassemble les règles d'identité de jeu de données, de numérotation des versions, d'états de publication, de licences et de citation dans TianGong LCA afin de garantir la reproductibilité et la conformité des études.
+
+## Identité d'un jeu de données et sémantique des versions
+
+Dans TianGong LCA et TIDAS, une révision exacte est identifiée de manière unique par la paire **`(UUID, version)`**, notée `UUID@version` :
+
+- **Version à trois segments `XX.XX.XXX`** : suit la convention ILCD/TIDAS — les deux premiers chiffres indiquent les mises à jour majeures, les deux suivants les révisions mineures et corrections, et les trois derniers le comptage interne/incrémental en cours de développement.
+- **Version initiale par défaut** : un nouveau jeu de données créé sur la plateforme démarre par défaut à `01.01.000`.
+- **Liste par défaut vs historique** : les listes et résultats de recherche affichent par défaut la **dernière version visible** par UUID. Utilisez **Toutes les versions** sur une ligne pour consulter ou citer une version antérieure ; voir [Vue d'ensemble de la plateforme de données](/fr/docs/user-guide/data/) et [Guide d'utilisation des données](/fr/docs/user-guide/data-use/).
+- **Créer une version vs Copier les données** :
+  - **Créer une version** depuis **Toutes les versions** **conserve le même UUID**, génère automatiquement le numéro de version suivant et relie la version précédente (`common:referenceToPrecedingDataSetVersion`).
+  - **Copier les données** attribue un **nouvel UUID** indépendant pour dériver un jeu distinct.
+- **Liaison à la version exacte** : les références de modèle, les instantanés du solveur et les pages du catalogue public se lient à la paire exacte `(UUID, version)` ; deux noms identiques ou deux versions d'un même UUID ne sont jamais considérés comme silencieusement équivalents.
+
+## URI permanent de jeu de données et liens publics
+
+Chaque jeu TIDAS porte `common:permanentDataSetURI` dans ses métadonnées administratives :
+
+- **Format d'URI généré par la plateforme** : identifiant persistant de style LCDN selon le type d'objet — par exemple `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>` pour un processus (avec des chemins analogues pour flux, modèles de cycle de vie, sources, contacts et propriétés de flux).
+- **Liens de version exacte dans le catalogue public** : chaque révision publiée dans le [catalogue public de données TianGong LCA](https://www.tiangong.earth/fr/lca-database) possède sa propre URL canonique. Les versions retirées ou restreintes sont retirées du catalogue.
+- **Statut DOI** : l'identité native repose sur `(UUID, version)` et `common:permanentDataSetURI`. La plateforme **n'attribue pas automatiquement de DOI distinct par jeu de données** ; si une publication ou un rapport source possède un DOI, il est consigné dans l'objet **Source** associé.
+
+## Cycle de vie : états de revue et de publication
+
+La plateforme applique les transitions et règles de visibilité au moyen du champ structuré `state_code` :
+
+| État (`state_code`) | Emplacement et sens habituels | Modification | Catalogue public et éligibilité au calcul numérique |
+| --- | --- | --- | --- |
+| `0` (Brouillon) | Brouillons de travail dans **Mes données** | Modifiable par le propriétaire | Absent du catalogue public ; éligible au calcul uniquement pour son propriétaire dans le périmètre versionné `public_plus_owner_draft` |
+| `20` (En revue) | Soumis à la [Revue de données](/fr/docs/user-guide/data-review/) | Verrouillé en écriture directe | En attente d'attribution par `review-admin` et d'examen par `review-member` ; renvoyé en révision en cas de rejet |
+| `100` (Données ouvertes publiées) | **Données ouvertes** et catalogue public | Immuable sur place ; toute révision crée une nouvelle version | **Seul état public exact éligible au calcul numérique des processus** ; recherchable, référençable, copiable et exportable |
+| `120` (Processus de résultat dérivé publié) | Résultat dérivé persisté par la gouvernance de publication | Immuable | Strictement isolé des lectures produit génériques, exports et pools numériques de fournisseurs/racines ; relecture réservée aux reçus de publication autorisés |
+| `200` (Données commerciales) | Espace **Données commerciales** | Métadonnées en lecture seule | Le catalogue et la plateforme n'affichent que les métadonnées et coordonnées du fournisseur ; non citables directement dans les modèles |
+| `-1` (Exemples curés) | Jeux illustratifs visibles des utilisateurs connectés | Lecture seule pour les utilisateurs ordinaires | Destinés uniquement à la prise en main ; exclus des comptages de Données ouvertes |
+
+> Distinguez deux niveaux : `common:workflowAndPublicationStatus` dans le JSON TIDAS (`Working draft`, `Data set finalised; entirely published`, `Withdrawn`, etc.) décrit le statut bibliographique ILCD/TIDAS, tandis que le contrôle d'accès et l'admission dans le solveur appliquent le `state_code` en base.
+
+## Licences et limites de redistribution
+
+**La visibilité publique n'accorde pas automatiquement un droit illimité de redistribution ou de réutilisation commerciale.** Avant de réutiliser ou diffuser un jeu de données, vérifiez les champs `publicationAndOwnership` de la version exacte :
+
+- `common:referenceToOwnershipOfDataSet` : propriétaire des données (pas nécessairement identique à l'éditeur de la plateforme).
+- `common:copyright` : existence d'un droit d'auteur (`true` / `false`).
+- `common:licenseType` : énumération contrôlée :
+  - `Free of charge for all users and uses`
+  - `Free of charge for some user types or use types`
+  - `Free of charge for members only`
+  - `License fee`
+  - `Other`
+- `common:accessRestrictions` : conditions d'utilisation, limites de redistribution ou référence au texte de licence.
+
+### Données ouvertes vs Données commerciales
+
+- **Données ouvertes** : auditées et librement consultables/référençables sur la plateforme, mais la redistribution, les travaux dérivés et les usages commerciaux demeurent régis par **la licence et les conditions de source déclarées sur chaque version**. Voir aussi [À propos des données](https://www.tiangong.earth/fr/methodology) sur le portail.
+- **Données commerciales** : exposent uniquement des métadonnées descriptives, sans inventaire de modélisation complet, et ne peuvent pas être citées dans un modèle. Pour les licences ou l'accès aux bases commerciales telles que HiQLCD, contactez le fournisseur indiqué dans [Accès aux bases commerciales](/fr/docs/faq/commercial-database/).
+- **Distribution LCDN** : les jeux obtenus au format ILCD via le [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) restent soumis aux versions et licences indiquées sur le nœud.
+
+## Formats de citation recommandés
+
+Pour garantir la vérifiabilité d'un article, rapport ou bilan carbone, mentionnez au minimum le **fournisseur de données (le cas échéant), le nom du jeu de données, la version exacte, l'identifiant `UUID@version`, l'URL canonique et la date de consultation**.
+
+### Citer un jeu de données unique (aligné sur le catalogue public)
+
+> Fournisseur de données : *Nom du fournisseur* (le cas échéant). Plateforme TianGong LCA, jeu de données : *Nom du jeu de données*, version *01.01.000*, identifiant *`<uuid>@01.01.000`*, consulté le *AAAA-MM-JJ*, disponible sur [https://www.tiangong.earth/fr/lca-database](https://www.tiangong.earth/fr/lca-database) (ou l'URL canonique / URI permanent de cette version).
+
+### Citer un calcul de modèle ou des résultats LCIA
+
+Lorsque vous publiez des valeurs d'ICV ou d'ÉICV calculées sur la plateforme, précisez également :
+
+1. Le nom et la version de la méthode LCIA ainsi que toute lacune de couverture des facteurs de caractérisation (voir [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/)).
+2. La version de release et le hachage du manifeste si vous citez une release Model/Result ou un Calculation Bundle publié.
+3. **Vérification machine vs attestation scientifique** : les reçus de publication, contrôles SHA-256 et vérifications de relecture prouvent l'intégrité binaire et le lien à la source ; ils ne remplacent ni l'examen scientifique propre à une étude ni une certification de conformité par tierce partie.
+
+Pour les conseils pratiques d'enregistrement des objets Source, consultez la [FAQ Sources et citation](/fr/docs/faq/sources-and-citation/) et la [Vue d'ensemble de la base de données](/fr/docs/database/overview/).

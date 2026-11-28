@@ -1,0 +1,131 @@
+---
+title: "供应连接与市场机制"
+description: "解释为什么 TianGong LCA 没有 ecoinvent 式 market 数据集、求解快照如何执行隐式区域供应组合、编辑器与求解器边界、诊断项以及何时应显式建模。"
+---
+
+从 ecoinvent 等背景数据库转向 TianGong LCA 时，最常见的误解有两个：一是把平台当成自带独立 `market activity` 数据集的数据库，二是把求解期自动路由或结果物化误解为“按查询动态生成 market 数据集”。本页把这两件事的真实机制与边界写清楚。
+
+## 核心结论：没有 market 数据集，也不是动态合成数据库
+
+1. **TianGong 不提供 ecoinvent 式 `market activity` 数据集。** 未显式连接的技术圈输入，在构建求解快照时按**隐式区域供应组合（implicit regional supply mix）**路由。该组合是计算期策略，**不是持久化数据集、采购关系或统计供应链**。
+2. **模型保存与发布时生成结果过程等计算产物，不是“动态数据库”。** 保存或发布物化的是已分配子模型过程、结果过程与 Calculation Bundle，**不是参数化/虚拟数据集，也不代表按查询实时合成 market 数据**。
+3. **自动链接不保证研究年份、技术或地理代表性。** 平台不宣称采用归因（attributional）或后果（consequential）命名系统模型；研究者须核对实际选中的 provider 及其份额，必要时显式建模。
+
+## 编辑器显式连接与求解快照隐式组合的区别
+
+不要把“模型画布编辑器”和“求解器快照”混为一谈：
+
+- **模型编辑器（显式连接）**：在网页端画布中，编辑器会校验显式连线。如果同一过程的同一输入流连向多个不同上游过程，本地计算会报多供应方错误（`MULTIPLE_PROVIDERS`）并停止计算。详见[在平台中保存与复用模型结果](/zh/docs/overview/data-relationships/)与[系统建模 FAQ](/zh/docs/faq/system-models/)。
+- **求解快照（隐式区域供应组合）**：面向已入库的候选过程宇宙，在构建技术矩阵 `A` 时对未显式闭合的技术圈残差（residual）自动选择合格的供应方参考端口并分配路由权重。隐式组合只发生在 snapshot 构建期，不会回写为新的 `market` 过程。
+
+## 隐式区域供应组合的完整路由顺序
+
+求解器当前默认的 multi-provider 规则为 `split_by_process_volume`。每一条需要闭合的技术圈非参考交换（residual），严格按以下顺序进入矩阵 `A`：
+
+```text
+数值准入（公开 state_code = 100；或受版本化 owner 范围授权的个人草稿 0）
+  -> 有符号系数与定量参考枢轴（signed-flow balance）
+  -> 精确同流（Flow UUID + 已解析版本）、异符号、另一过程的定量参考端口
+  -> 精确版本 Lifecycle Model 谱系门禁（version-exact-lineage-gate-v1）
+  -> 同 model_id 硬过滤（若存在合格同模型候选）
+  -> 供应区域锚点（exchange.location -> 消费过程 location -> unspecified）
+  -> 首个非空地理层级（local/subnational -> same country -> same region -> global -> other）
+  -> 层级内按年供应量/年产量加权（缺失或非正回退为固定权重 1.0）
+  -> 写入稀疏矩阵 A[balancing_process, dependent_process]
+```
+
+### 1. 数值准入边界与有符号流基础
+
+并非所有公开可见记录都进入供应候选宇宙：
+
+- **精确数值准入**：公开计算仅接纳 `state_code = 100` 的已发布过程（在版本化个人草稿计算范围 `public_plus_owner_draft` 下，额外仅允许当前认证用户本人的 `state_code = 0` 草稿）。已发布的派生结果过程（`state_code = 120`）及其他预留发布状态（`101..199`）**永远不会**作为隐式供应组合的供应方。
+- **流空间划分**：Product 与 Waste 流进入技术圈参与供应平衡；Elementary 流进入生物圈直接写入 `B`；Other 流仅保留报告证据，不参与 `A/B`。
+- **有符号系数**：每条交换编译为 `c = direction_sign * calculation_amount`（`Input = -1`，`Output = +1`），过程定量参考（quantitative reference）将枢轴归一化为 `+1` 或 `-1`。
+- **仅定量参考端口合格**：候选必须具备精确一致的 `(Flow UUID, resolved version)`、来自合格过程、为该过程的 quantitative reference exchange，且满足相反符号 `sign(c_i) = -sign(c_r)`。同一 `flow_id` 的**非参考输出**不会因为存在数值或分配比例就自动进入供应方集合。
+
+### 2. Lifecycle Model 谱系门禁
+
+在地理与年量路由之前，系统先执行 `version-exact-lineage-gate-v1`，防止同一生命周期模型的结果过程与它的组成过程、或同一模型的旧版本结果被错误地同时混入隐式组合：
+
+- 当请求根精确选中了冲突候选中的 resulting Process 时，该结果过程独占本条连接，不与组成过程或旧版本结果混拼。
+- 当候选之间存在模型谱系冲突、但请求没有提供可判定的精确结果过程选择证据时，该条边会以 `lineage_overlap_requires_binding` 保持未闭合（fail closed），不会用年产量或均分去猜测边界。
+
+### 3. 同 `model_id` 硬过滤
+
+如果消费过程属于某个 `model_id`，且通过前述检查的合格候选中至少存在一个同 `model_id` 的参考端口，路由范围会**先硬性收窄到该同模型子集**。
+
+- 这是**硬过滤**，不是权重加成，优先级高于地理距离与年产量。
+- 当同模型存在合格供应方时，其他模型的过程不会因为地理更近或年产量更大而混入该输入的供应组合。
+- 只有在不存在任何同 `model_id` 合格候选时，才回退到更宽的合格过程宇宙。
+- 模型内组织表达的是数据提供方选定的内部供应候选范围，本身不等同于逐条交换的显式供应商指针或任意混合比例。
+
+### 4. 供应区域锚点与地理层级
+
+确定候选范围后，系统按以下优先级解析本条交换的供应区域锚点（supply-region anchor）：
+
+1. 交换自身的 `exchange.location`（可显式指定该条投入期望的供应区域）
+2. 消费过程的 `location`（默认供应区域）
+3. `unspecified`
+
+随后在候选集合中选择**第一个非空**的地理层级：
+
+1. `local / subnational`（本地 / 次国家）
+2. `same country`（同国家）
+3. `same region`（同区域）
+4. `global`（全球）
+5. `other`（其他）
+
+年供应量**绝不跨地理层级比较**：系统先锁定最匹配的层级，再在该层级内部计算份额。
+
+### 5. 年供应量 / 年产量加权与 `1.0` 回退
+
+在选中的地理层级内，各候选的路由权重按如下公式计算：
+
+```text
+raw_weight_i = annualSupplyOrProductionVolume_i   （若有限且 > 0）
+raw_weight_i = 1.0                                （否则：缺失、非法、非有限或 <= 0）
+share_i      = raw_weight_i / sum(raw_weight)
+```
+
+请注意两条关键性质：
+
+- **只分配归属，不改变总量**：同一条残差的所有路由权重之和恒等于 `1`（`sum(w_i) = 1`），因此路由只决定需求在多个 provider 之间如何分摊，绝不会放大或缩小输入需求总量。
+- **`1.0` 回退不是产量声明**：`1.0` 仅是保留该候选参与资格的固定正权重，不表示其真实年产量为 1；每次使用都会在快照覆盖率与 provider linking 诊断中显式计数。
+
+## 分配（Allocation）与边界策略（Boundary Policy）
+
+- **分配发生在路由之前**：过程级分配系数先作用于非参考交换，决定归属于当前定量参考产品的残差量；路由权重随后只负责把已经确定的残差量分摊给合格的供应参考端口。两者语义严格分离，不可混用。
+- **边界策略显式化**：通用生产快照支持 `closed`（默认，任何未闭合的非零技术圈残差均阻断 readiness）、`open`（允许未闭合残差留在系统边界外）和 `cutoff`（允许按显式截断边界省略残差）。证书级完整性检查（Scope Closure）固定冻结为 `cutoff`，以便完整暴露未闭合证据而不把缺失 provider 静默隐藏。无论选择哪种策略，`open` 和 `cutoff` 都会写入配置指纹并产出逐边未闭合证据。
+
+## ecoinvent `market activity` 与 TianGong 机制对照
+
+| 维度 | ecoinvent v3 | TianGong LCA |
+| --- | --- | --- |
+| **数据集形态** | 显式的 `market activity` 数据集（与 `transforming` 分离） | 无独立的 `market` 数据集类型 |
+| **构成规则** | 区域消费 mix、按产量构成，包含进口活动、运输距离/方式、损耗及 `market groups` | 谱系门禁 → 同模型硬过滤 → 供应区域锚点 → 地理层级 → 年供应量/产量加权（缺失回退 `1.0`） |
+| **系统模型** | 命名系统模型（Cut-off、Cut-off EN15804、APOS、Consequential），决定供应商资格与废物负担归属；Consequential 下 market 为边际消费 mix | 无命名系统模型；默认规则 `split_by_process_volume`；边界策略 `closed` / `open` / `cutoff`；不宣称归因或后果 |
+| **编辑器体验** | `market` 作为普通 process 节点连接 | 模型编辑器拒绝单输入多显式 provider（`MULTIPLE_PROVIDERS`）；隐式组合仅发生在 solver snapshot |
+| **代表性责任** | 文档化系统模型假设，由用户选择合适版本与模型 | 明确声明自动链接不保证研究年份、技术或地理代表性，研究者须核对选中 provider 与份额 |
+| **可引用身份** | 每个 market 数据集拥有独立 UUID 与版本号 | 隐式组合不持久化为独立数据集；需要可复用市场身份时须显式建立 Process |
+
+更多跨数据库范式对比请参见[跨库比较与格式互通](/zh/docs/database/comparison/)；关于归因消费组合与后果边际市场响应的理论区别，请延伸阅读天工 LCA 知识库[市场响应](https://prism.tiangong.earth/zh/docs/book/market-boundaries-and-response/)。
+
+## 如何解读常见诊断信息
+
+在[LCIA 计算与结果查看](/zh/docs/user-guide/lcia/)及求解快照诊断中，应重点核查以下信号：
+
+| 诊断信号 | 含义 | 推荐处理方式 |
+| --- | --- | --- |
+| `rejected_non_reference_only` | 存在同流输出候选，但都不是对应过程的 quantitative reference output | 修复供应过程的定量参考输出、补充合格的 provider 过程，或显式建立 market / co-product 过程 |
+| `lineage_overlap_requires_binding` | 候选中存在同一 Lifecycle Model 的结果过程与组成过程或历史版本冲突，且缺少精确选择证据 | 选用明确的 resulting Process 作为请求根，或修复相关 Lifecycle Model 边界 |
+| **年量 `1.0` fallback 计数** | 部分选中层级内的候选缺少有效正值 `annualSupplyOrProductionVolume` | 核查这些候选是否应在组合中占有均等权重，必要时补充权威年产量数据或显式建模 |
+| **供应区域来源与地理层级分布** | 反映每条边使用了 `exchange.location` 还是默认过程位置，以及落在了哪一级地理层级 | 检查是否因为本地缺数而回退到 `global` / `other`，确认是否仍符合研究地理代表性 |
+
+## 什么时候必须显式建模
+
+当您的研究满足以下任一条件时，**不要依赖隐式区域供应组合**，而应显式建模完整的过程或生命周期模型（参考[部分终止系统建模案例](/zh/docs/data-collection/case-introduction/model-building/)与[数据库总览](/zh/docs/database/overview/)）：
+
+- **需要可引用、可复用的市场数据集身份**：显式创建一个代表特定区域消费组合的 Process（拥有独立 UUID 与版本号），在其中列出明确份额的上游供应过程。
+- **需要刻画运输、装卸损耗或真实采购比例**：隐式组合不自动添加运输距离或损耗交换；涉及贸易运输、电网线损或特定供应链配比时须显式建入过程清单。
+- **需要特定年份或技术路线代表性**：例如研究目标限定 2019 年或特定工艺路线，自动链接可能匹配到其他年份或通用工艺；应通过模型内组织或显式链接锁定目标版本。
+- **需要处理多功能联产品**：非参考联产品不会自动进入隐式供应池，须完成清晰分配并作为独立可引用的过程提供，或在显式模型中定义归属。

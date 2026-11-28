@@ -1,5 +1,5 @@
 /**
- * Public information architecture: 10 category groups.
+ * Public information architecture: 11 category groups.
  * The retained build contract is manifests/p0b/categories.json; verify-out
  * keeps this runtime list aligned with that deterministic route inventory.
  *
@@ -9,6 +9,7 @@ export const categoryBases: readonly string[] = [
   'overview',
   'quick-start',
   'user-guide',
+  'database',
   'data-collection',
   'data-collection/case-introduction',
   'integration',

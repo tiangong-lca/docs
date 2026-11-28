@@ -1,0 +1,78 @@
+---
+title: "Vue d'ensemble de la base de données"
+description: "Présente les types de jeux de données, les espaces de données, la couverture en direct du catalogue public, les limites entre données ouvertes et commerciales, la distribution LCDN et la répartition des sites TianGong."
+---
+
+Cette page décrit la base de données TianGong LCA elle-même — types de jeux de données, espaces de données, sources de couverture en direct et canaux de distribution — afin que vous puissiez vérifier ce que contient la base et quelles limites s'appliquent avant de modéliser ou de citer un enregistrement.
+
+## Limites documentaires : ce qui relève de cette rubrique
+
+L'écosystème TianGong sépare les faits propres à la base et à la plateforme de la théorie générale de l'ACV, des schémas de données et des règles sectorielles afin d'éviter les doublons :
+
+| Sujet | Source de référence | Rôle |
+| --- | --- | --- |
+| **Faits de la base TianGong, conventions de modélisation et limites d'usage** | Cette rubrique (**Base de données et méthodologie**) | Types de données, espaces de données, routage d'approvisionnement, versions/licences/citation et comparaisons inter-bases |
+| **Comptages publics en direct, recherche par région/source et synthèse d'usage** | [Catalogue public de données TianGong LCA](https://www.tiangong.earth/fr/lca-database) et [À propos des données](https://www.tiangong.earth/fr/methodology) | Comptages en direct sans connexion, versions exactes et visibilité par version |
+| **Structure des données et sémantique des champs** | [Système de données TIDAS](https://tidas.tiangong.earth/fr/) | Schémas JSON, relations entre modules clés et vocabulaires contrôlés |
+| **Méthodologie générale d'ACV et théorie des bases d'arrière-plan** | [Base de connaissances TianGong LCA (anglais)](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) | Objectif et champ, allocation, réponse de marché, incertitude et comparaisons de cadres |
+| **Règles de catégorie de produit (PCR)** | [Documentation PCR TianGong (anglais)](https://pcr.tiangong.earth/en/) | Frontières sectorielles et règles de production de données |
+| **Distribution réseau au format ILCD** | [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) | Nœud de publication et distribution ILCD pour les logiciels et réseaux d'ACV |
+
+## Types de jeux de données dans TianGong LCA
+
+TianGong LCA stocke et gère les jeux de données selon la structure [TIDAS](https://tidas.tiangong.earth/fr/docs/core-modules/data-relationships/) :
+
+| Type de jeu de données | Rôle | Place sur la plateforme et dans le calcul |
+| --- | --- | --- |
+| **Processus (Process)** | Inventaire entrées/sorties, périmètre spatial et temporel, description technologique et métadonnées administratives à une échelle de référence | Représente un processus unitaire ou un processus de résultat enregistré depuis un modèle. **TianGong ne comporte pas de type autonome `market` à la manière d'ecoinvent** ; voir [Liaison d'approvisionnement et mécanisme de marché](/fr/docs/database/supply-markets/) |
+| **Flux (Flow)** | Identifie un produit, matériau, vecteur énergétique, déchet ou flux élémentaire échangé ainsi que sa propriété de flux de référence | Classé en Produit, Déchet, Élémentaire ou Autre. Produits et Déchets entrent dans la technosphère ; les flux Élémentaires entrent dans la biosphère |
+| **Modèle de cycle de vie (Lifecycle Model)** | Relie des instances de processus par des connexions explicites, un processus de référence et une quantité cible pour décrire un système de produits | L'enregistrement exécute le calcul et persiste le modèle ainsi que ses processus de résultat ; voir [Enregistrer et réutiliser les résultats de modèle sur la plateforme](/fr/docs/overview/data-relationships/) |
+| **Processus de résultat (Result Process)** | Contient un inventaire agrégé issu d'un calcul de modèle ou d'une matérialisation de publication | Les processus de résultat issus de l'enregistrement d'un modèle servent à la consultation et à la réutilisation ; les processus de résultat dérivés publiés (`state_code = 120`) issus de la gouvernance de publication sont isolés des entrées numériques ordinaires |
+| **Jeux de données de support** | **Propriété de flux (Flow Property)**, **Groupe d'unités (Unit Group)**, **Source**, **Contact** | Garantissent la cohérence de conversion d'unités, la traçabilité bibliographique et les enregistrements de propriété et de revue |
+| **Méthodes ÉICV / LCIA** | Ensembles de facteurs de caractérisation traduisant les flux élémentaires en indicateurs d'impact | Le calcul plateforme utilise le paquet cache statique audité de 25 méthodes avec correspondance exacte de version de flux et de direction ; un facteur manquant est signalé comme couverture incomplète, jamais comme impact nul ; voir [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/) |
+
+Pour les workflows d'interface permettant de consulter, créer et gérer ces objets, consultez [Vue d'ensemble de la plateforme de données](/fr/docs/user-guide/data/) et [Guide d'utilisation des données](/fr/docs/user-guide/data-use/).
+
+## Espaces de données et visibilité
+
+Dans la plateforme, les jeux de données sont répartis en quatre espaces principaux. Voir [Autorisations et espaces de données](/fr/docs/user-guide/permissions-and-data-scopes/) pour la matrice complète des rôles :
+
+| Espace de données | Public principal | Contenu et état typiques | Limite d'usage sur la plateforme |
+| --- | --- | --- | --- |
+| **Données ouvertes (Open Data)** | Tous les utilisateurs | Jeux de données publics audités et publiés (`state_code = 100`) | Lecture seule ; recherche, référence, copie vers Mes données, export et éligibilité aux calculs numériques publics |
+| **Données commerciales (Commercial Data)** | Utilisateurs nécessitant des bases commerciales | Métadonnées descriptives de jeux commerciaux tiers (`state_code = 200`) | Métadonnées et coordonnées du fournisseur uniquement ; **ne peuvent pas être citées directement dans un modèle** ; contactez le fournisseur pour l'accès complet et la licence — voir [Accès aux bases commerciales](/fr/docs/faq/commercial-database/) |
+| **Mes données (My Data)** | Auteurs et mainteneurs | Brouillons personnels (`state_code = 0`), éléments en revue (`state_code = 20`) et versions propres | Lecture/écriture (les groupes d'unités et propriétés de flux de base sont administrés par les administrateurs système) ; point de départ pour la soumission en revue et la contribution d'équipe |
+| **Données d'équipe (Team Data)** | Membres d'équipe | Jeux de données partagés au sein d'une équipe | Lecture seule pour les membres ; copiez dans Mes données avant de modifier puis de repartager |
+
+> La plateforme propose également des jeux d'exemple curés en lecture seule (`state_code = -1`) pour les utilisateurs connectés ; ils sont distincts du catalogue public des Données ouvertes.
+
+## Sources, couverture en direct et absence de chiffres figés
+
+Les Données ouvertes TianGong s'enrichissent continuellement grâce aux contributions d'établissements de recherche, d'équipes sectorielles et de la communauté, publiées via la [Revue de données](/fr/docs/user-guide/data-review/). Afin d'éviter des chiffres obsolètes, cette documentation **ne fige pas de totaux statiques de jeux de données ni de parts sectorielles**.
+
+Pour vérifier la couverture en vigueur :
+
+1. Ouvrez le [catalogue public de données TianGong LCA](https://www.tiangong.earth/fr/lca-database) (sans connexion) pour consulter les comptages publics en direct de processus et de flux. Le comptage s'effectue par UUID de jeu de données : plusieurs versions d'un même UUID ne sont comptées qu'une fois.
+2. Parcourez par zone géographique ou par source, puis ouvrez la page d'une version exacte pour vérifier le périmètre, la représentativité temporelle, les sources originales ainsi que la visibilité publique des échanges et des résultats LCIA.
+3. Consultez [À propos des données](https://www.tiangong.earth/fr/methodology) sur le portail pour les règles de disponibilité, de comparabilité, de provenance et de retrait.
+
+## Qualité des données et incertitude : état actuel
+
+Pour évaluer si un jeu de données TianGong convient à votre étude, distinguez les preuves structurées déjà fournies par la plateforme des jugements méthodologiques qui restent à la charge du chercheur :
+
+- **Fourni aujourd'hui** : métadonnées TIDAS structurées (géographie, période, technologie, représentativité, champs de qualité et pièces justificatives), [Revue de données](/fr/docs/user-guide/data-review/) à rôles séparés, diagnostics de couverture des facteurs LCIA (les facteurs manquants apparaissent explicitement comme couverture incomplète, jamais comme zéro), ainsi que diagnostics de liaison de fournisseurs et de repli dans l'instantané du solveur.
+- **Limites actuelles** : la présence dans le catalogue public ou la réussite d'un calcul automatique **ne certifie pas** la représentativité temporelle, technologique ou géographique pour une étude particulière, et tous les jeux ne disposent pas de distributions probabilistes harmonisées ni d'une propagation Monte Carlo automatique.
+
+Pour la méthodologie générale d'adéquation des données, de scores de qualité (DQR / pedigree) et d'incertitude, consultez les chapitres [Data Applicability (anglais)](https://prism.tiangong.earth/en/docs/book/data-applicability/) et [Data Quality Scores and Probability (anglais)](https://prism.tiangong.earth/en/docs/book/data-quality-and-probability/) de la base de connaissances TianGong LCA.
+
+## Distribution ILCD (LCDN) et limites de réutilisation
+
+En complément de la plateforme web et du catalogue public, le [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) publie et distribue des jeux de données au format ILCD pour les logiciels d'ACV et réseaux de données compatibles.
+
+Point important : **l'affichage d'un jeu de données dans le catalogue public, les Données ouvertes ou le nœud LCDN n'accorde pas automatiquement un droit illimité de redistribution ou de réutilisation commerciale.** Vérifiez toujours le type de licence, les restrictions d'accès et les exigences de source de la version exacte dans [Versions, licences et citation](/fr/docs/database/versions-citation/).
+
+## Poursuivre la lecture
+
+- Comprendre pourquoi TianGong ne comporte pas de jeux `market` à la ecoinvent et comment le solveur résout les entrées non liées : [Liaison d'approvisionnement et mécanisme de marché](/fr/docs/database/supply-markets/)
+- Consulter les règles de version, URI permanents, états de cycle de vie, licences et formats de citation : [Versions, licences et citation](/fr/docs/database/versions-citation/)
+- Comparer TianGong avec ecoinvent, ILCD/EF, USLCI, BAFU et examiner les limites d'interopérabilité des formats : [Comparaison des bases et interopérabilité](/fr/docs/database/comparison/)
