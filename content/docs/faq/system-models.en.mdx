@@ -35,9 +35,13 @@ explicit provider connections for one input flow.
 
 ## How does the platform choose providers for product inputs?
 
-TianGong LCA **does not provide standalone ecoinvent-style `market activity` datasets**. When a product input exchange is not explicitly linked to one provider, the solver snapshot applies an **implicit regional supply mix** (default rule `split_by_process_volume`): after numerical eligibility and the version-exact Lifecycle Model lineage gate, it routes by same-`model_id` hard filter → supply-region anchor (`exchange.location` before process location) → first non-empty geography tier → annual supply/production volume weighting (with a fixed `1.0` positive fallback). Automatic linking admits only quantitative reference outputs; if every same-flow candidate is non-reference, diagnostics report `rejected_non_reference_only`.
+TianGong LCA **does not maintain standalone ecoinvent-style `market activity` datasets**. When a product or waste input is not explicitly wired to a single upstream process on the canvas, the solver snapshot builds an **implicit regional supply mix** (default rule `split_by_process_volume`) in three clear stages:
 
-This implicit mix is a calculation-time routing policy—not a persisted market dataset—and does not automatically guarantee temporal, technological, or geographic representativeness. See [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/) for the full routing order, diagnostics, and explicit-modeling criteria.
+1. **Filter eligible suppliers**: Only published Open Data (`state_code = 100`, plus your own drafts in owner-draft mode) is eligible, and only exact `(Flow UUID, resolved version)`, opposite-sign **quantitative reference** ports qualify. Non-reference co-products never enter automatically (when only non-reference candidates exist, diagnostics report `rejected_non_reference_only`).
+2. **Prevent model double-counting**: A version-exact lineage check stops a Lifecycle Model's resulting Process from being mixed with its own component processes or older revisions (reporting `lineage_overlap_requires_binding` when unresolved).
+3. **Prefer same model, then rank by geography and annual volume**: Eligible suppliers sharing the same `model_id` take strict priority; next, using `exchange.location` (or the consuming process's location), the solver stops at the first non-empty geography tier (`local/subnational` → `same country` → `same region` → `global` → `other`) and weights candidates by annual volume (falling back to fixed `1.0` when volume is missing).
+
+This implicit mix exists only at calculation time—it is never persisted as a market dataset, does not add transport or losses automatically, and does not guarantee temporal, technological, or geographic representativeness. See [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/) for worked examples, diagnostics, and explicit-modeling criteria.
 
 ## How does TianGong LCA differ from other LCA platforms?
 

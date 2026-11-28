@@ -1,131 +1,210 @@
 ---
 title: "Liaison d'approvisionnement et mécanisme de marché"
-description: "Explique pourquoi TianGong LCA ne comporte pas de jeux de données market à la ecoinvent, comment l'instantané du solveur construit un mix régional implicite, la distinction éditeur/solveur, les diagnostics et les cas exigeant une modélisation explicite."
+description: "Guide complet expliquant pourquoi TianGong LCA ne comporte pas de jeux de données market à la manière d'ecoinvent, comment le solveur construit un mix régional implicite, avec trois exemples chiffrés, la frontière des sorties matérialisées, les diagnostics et les règles de modélisation explicite."
 ---
 
-Les praticiens habitués à ecoinvent ou aux logiciels d'ACV de bureau rencontrent souvent deux malentendus à propos de TianGong LCA : supposer que la base contient des jeux autonomes `market activity`, ou croire que le routage au calcul et la persistance des résultats signifient que TianGong « génère dynamiquement des données de marché à la demande ». Cette page expose le comportement réel et ses limites.
+Les praticiens arrivant sur TianGong LCA depuis ecoinvent, openLCA ou SimaPro posent presque toujours les deux mêmes questions en premier : **« Où sont les jeux de données `market for electricity` ? »** et **« Puisque la plateforme relie automatiquement des fournisseurs et enregistre des processus de résultat, génère-t-elle des jeux de marché dynamiquement à la demande ? »**
 
-## Principes essentiels : pas de jeux de marché ni de synthèse dynamique
+Cette page détaille les règles exactes d'appariement, déroule trois exemples chiffrés, distingue clairement les sorties matérialisées d'une « base dynamique » et précise quand recourir à la modélisation explicite.
 
-1. **TianGong ne fournit pas de jeux `market activity` à la manière d'ecoinvent.** Les entrées de la technosphère non reliées explicitement sont routées lors de la construction de l'instantané de calcul selon un **mix régional d'approvisionnement implicite (implicit regional supply mix)**. Ce mix est une politique de routage au calcul — **pas un jeu de données de marché persisté, ni une relation d'achat, ni une chaîne d'approvisionnement statistique**.
-2. **Les artefacts matérialisés ne constituent pas une « base dynamique ».** L'enregistrement d'un modèle ou la publication matérialise des produits de calcul (processus de sous-modèle alloués, processus de résultat, Calculation Bundles). Il **ne s'agit ni de jeux paramétrés/virtuels ni d'une synthèse de marché à la volée**.
-3. **La liaison automatique ne garantit pas la représentativité d'étude.** TianGong ne revendique aucun modèle de système nommé (attributionnel ou conséquentiel) ; le chercheur doit vérifier les fournisseurs retenus et leurs parts au regard de l'année, de la technologie et de la géographie visées, puis modéliser explicitement si nécessaire.
+> **En un coup d'œil**
+>
+> - **Aucun type de jeu de données `market` autonome** : contrairement à ecoinvent, TianGong ne maintient pas de jeux `market activity` distincts des activités de transformation. Les intrants amont non reliés manuellement sont résolus au moment du calcul par un **mix régional d'approvisionnement implicite**.
+> - **Pas de synthèse dynamique de marché à la demande** : l'enregistrement d'un modèle, une publication formelle (Release) ou une agrégation produisent des **artefacts de calcul matérialisés** liés à des versions d'entrée figées, et non des jeux de marché virtuels ou paramétrés créés par requête.
+> - **La liaison automatique ne garantit pas la représentativité** : TianGong ne revendique aucun modèle de système nommé (attributionnel ou conséquentiel) et ne garantit pas automatiquement l'année de référence, la filière technologique ou les parts d'achat réelles de votre étude. Vérifiez toujours les diagnostics et modélisez explicitement les chaînes critiques.
 
-## Connexions explicites de l'éditeur vs mix implicite du solveur
+## 1. Repère concret : 1 kWh d'électricité industrielle
 
-Distinguez strictement l'éditeur interactif et l'instantané du solveur :
+Imaginons un procédé industriel consommant **1 kWh d'électricité**, sans données directes sur une centrale précise :
 
-- **Éditeur de modèles (connexions explicites)** : sur le canevas, l'éditeur vérifie les liens explicites. Relier un même flux d'entrée d'un processus à plusieurs processus amont distincts provoque une erreur de fournisseurs multiples (`MULTIPLE_PROVIDERS`) et interrompt le calcul local. Voir [Enregistrer et réutiliser les résultats de modèle sur la plateforme](/fr/docs/overview/data-relationships/) et la [FAQ Modélisation du système](/fr/docs/faq/system-models/).
-- **Instantané du solveur (mix régional implicite)** : sur l'univers des processus candidats admis, le constructeur d'instantané résout les résidus de technosphère non fermés dans la matrice creuse `A` en sélectionnant les ports de référence éligibles et en calculant des poids de routage. Ce mix n'existe que dans l'instantané et ne matérialise aucun nouveau processus `market`.
+- **Dans ecoinvent v3** : vous reliez généralement un jeu préconstruit tel que `market for electricity, medium voltage`. Le fournisseur de la base y a déjà compilé le mix national ou régional, les importations, les pertes réseau et les infrastructures électriques, sous un UUID et une version propres.
+- **Dans TianGong LCA** : ce type de jeu `market` n'existe pas. Si vous **reliez explicitement** l'intrant sur le canevas à un procédé de réseau ou de centrale précis, le calcul suit ce lien. Si vous laissez cet intrant de la technosphère **non relié**, l'instantané du solveur recherche dans le vivier public éligible les procédés correspondants du niveau géographique le plus fin disponible et répartit le 1 kWh selon leur volume annuel de production ou d'approvisionnement.
 
-## Ordre complet de routage du mix régional implicite
+Toutes les règles, les calculs et les diagnostics ci-dessous découlent directement de ce principe.
 
-La règle multi-fournisseurs par défaut est `split_by_process_volume`. Chaque résidu de technosphère non lié suit exactement cette séquence avant écriture dans `A` :
+## 2. Éditeur de canevas (explicite) vs instantané du solveur (implicite)
+
+Veillez à ne pas confondre **les connexions explicites sur le canevas** et **le routage implicite dans l'instantané du solveur** :
+
+| Critère | Éditeur de modèles (liaison explicite) | Instantané du solveur (mix régional implicite) |
+| --- | --- | --- |
+| **Champ d'application** | Vous placez des processus sur le canevas et reliez manuellement les échanges | Le solveur ferme automatiquement les intrants technosphériques non reliés lors du calcul d'arrière-plan |
+| **Plusieurs fournisseurs pour un intrant** | **Interdit sur le canevas** : relier un même flux d'entrée à deux processus amont ou plus déclenche `MULTIPLE_PROVIDERS` et arrête le calcul local | Autorisé par la règle par défaut `split_by_process_volume`, qui répartit la demande entre les fournisseurs éligibles du niveau géographique retenu |
+| **Enregistré comme nouveau jeu ?** | La chaîne reliée est sauvegardée en tant que modèle de cycle de vie (voir [Enregistrer et réutiliser les résultats de modèle sur la plateforme](/fr/docs/overview/data-relationships/)) | **Jamais réécrit en nouveau processus `market`** ; existe uniquement sous forme de coefficients matriciels et de diagnostics de l'instantané |
+| **Diagnostic et dépannage** | Contrôles du canevas et [FAQ Modélisation du système](/fr/docs/faq/system-models/) | Couverture et diagnostics de liaison dans [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/) |
+
+> Si un site s'approvisionne réellement à 60 % chez le fournisseur A et à 40 % chez le fournisseur B, ne reliez pas les deux directement au même port d'entrée (cela provoque `MULTIPLE_PROVIDERS`) et ne supprimez pas un fournisseur réel pour contourner le blocage. Créez plutôt un processus dédié « mix d'achat » qui consomme `0,6` de A et `0,4` de B pour fournir `1,0` à votre processus aval.
+
+## 3. Chaîne complète de routage du mix régional implicite
+
+Avec la règle multi-fournisseurs par défaut `split_by_process_volume`, chaque demande technosphérique (produit ou déchet) non fermée explicitement traverse cinq étapes strictement ordonnées pour alimenter la matrice `A` :
 
 ```text
-Éligibilité numérique (public state_code = 100 ; ou brouillon propre 0 sous périmètre propriétaire versionné)
-  -> Coefficient signé et pivot de référence quantitative (signed-flow balance)
-  -> Ports de référence quantitative de même flux exact (UUID + version résolue) et de signe opposé
-  -> Barrière de lignage Lifecycle Model exacte en version (version-exact-lineage-gate-v1)
-  -> Filtre strict même model_id (si des candidats éligibles du même modèle existent)
-  -> Ancre de région d'approvisionnement (exchange.location -> localisation du processus consommateur -> unspecified)
-  -> Premier niveau géographique non vide (local/subnational -> same country -> same region -> global -> other)
-  -> Pondération par volume annuel dans le niveau retenu (manquant/non positif -> poids fixe de repli 1.0)
-  -> Écriture dans la matrice creuse A[balancing_process, dependent_process]
+Étape 1 : Éligibilité et appariement par flux signé
+          Uniquement Données ouvertes (state_code = 100), plus brouillons personnels (0) en portée auteur ;
+          uniquement même (UUID de flux + version résolue), signe opposé et port de référence quantitatif
+   ↓
+Étape 2 : Contrôle anti-double comptage des modèles (version-exact-lineage-gate-v1)
+          Empêche de mélanger le processus de résultat d'un modèle avec ses processus composants ou une ancienne version
+   ↓
+Étape 3 : Filtre strict de même modèle (model_id)
+          Si le processus consommateur appartient à un modèle disposant d'au moins un fournisseur interne éligible,
+          la sélection se restreint strictement à ce modèle (prioritaire sur la géographie et le volume)
+   ↓
+Étape 4 : Ancre géographique et hiérarchie en 5 niveaux
+          Origine : exchange.location -> localisation du processus consommateur -> unspecified
+          Niveaux : local/subnational -> même pays -> même région -> mondial -> autre (arrêt au premier niveau non vide)
+   ↓
+Étape 5 : Pondération par volume annuel au sein du niveau retenu
+          Utilise annualSupplyOrProductionVolume fini et > 0 ; sinon poids de repli fixe 1,0 ;
+          normalisation afin que la somme des parts égale exactement 1
 ```
 
-### 1. Éligibilité numérique et base des flux signés
+### Étape 1 : Qui peut servir de fournisseur
 
-Tous les enregistrements visibles n'entrent pas dans l'univers des fournisseurs :
+Tous les jeux visibles sur la plateforme ne peuvent pas entrer dans le vivier automatique :
 
-- **Éligibilité numérique exacte** : les instantanés publics n'admettent que `state_code = 100` (et, dans le périmètre versionné `public_plus_owner_draft`, les brouillons `state_code = 0` de l'acteur authentifié). Les processus de résultat dérivés publiés (`state_code = 120`) et les autres états réservés (`101..199`) n'entrent **jamais** comme fournisseurs du mix implicite.
-- **Espaces de flux** : les flux Produit et Déchet entrent dans la technosphère ; les flux Élémentaires vont directement dans la biosphère (`B`) ; les flux Autres servent uniquement de preuve de rapport.
-- **Coefficients signés** : chaque échange devient `c = direction_sign * calculation_amount` (`Input = -1`, `Output = +1`) et la référence quantitative normalise le pivot à `+1` ou `-1`.
-- **Ports de référence quantitative uniquement** : un candidat doit correspondre exactement à `(Flow UUID, resolved version)`, appartenir à un processus éligible, constituer son échange de référence quantitative et présenter un signe opposé `sign(c_i) = -sign(c_r)`. Une **sortie non-référence** de même `flow_id` n'entre jamais automatiquement dans l'ensemble des fournisseurs du seul fait qu'elle possède une quantité ou une fraction d'allocation.
+- **Éligibilité selon l'état de publication** : les calculs publics n'admettent que les processus publiés en Données ouvertes (`state_code = 100`). Uniquement lorsqu'un utilisateur connecté active explicitement la portée brouillon auteur (`public_plus_owner_draft`), ses propres brouillons (`state_code = 0`) s'ajoutent à la sélection. Les processus de résultat archivés en lecture seule (`state_code = 120`) et les états réservés de publication (`101..199`) n'entrent **jamais** dans le mix implicite, évitant d'injecter silencieusement des résultats agrégés dans des calculs unitaires ordinaires.
+- **Trois espaces de flux** : les flux de produit et de déchet entrent dans la matrice technosphérique `A` ; les flux élémentaires alimentent directement la matrice biosphérique `B` ; les autres flux restent purement descriptifs.
+- **Algèbre signée et port de référence obligatoire** : toute entrée porte le signe `-1` et toute sortie `+1`, la référence quantitative normalisant le processus à `+1` ou `-1`. Un candidat n'est admissible que si trois conditions sont réunies : (1) correspondance exacte `(UUID de flux, version résolue)`, (2) signe opposé à la demande et (3) rôle de **flux de référence quantitatif** du processus fournisseur.
+- **Les coproduits non-référence n'entrent jamais automatiquement** : une sortie secondaire du même flux n'intègre pas le vivier automatique, même dotée d'une quantité ou d'un facteur d'allocation. Si tous les candidats d'un flux sont non-référence, le diagnostic signale `rejected_non_reference_only`.
 
-### 2. Barrière de lignage Lifecycle Model exacte en version
+### Étape 2 : Contrôle anti-double comptage des modèles de cycle de vie
 
-Avant tout routage géographique ou par volume, `version-exact-lineage-gate-v1` empêche de mélanger ou de compter doublement le processus de résultat d'un modèle avec ses processus composants ou les résultats de révisions antérieures :
+Un modèle de cycle de vie rassemble des processus composants et peut également engendrer un processus de résultat. Si les deux partagent le même flux produit comme référence quantitative, les pondérer ensemble entraînerait un double comptage ou une frontière incohérente.
 
-- Lorsque la racine exacte de requête désigne le processus de résultat parmi des candidats en conflit, ce résultat fournit l'arête de façon exclusive.
-- En présence d'un conflit de lignage sans cette preuve de sélection, l'arête reste non résolue en `lineage_overlap_requires_binding` (fail closed) ; ni le volume annuel ni une répartition égale ne devinent la frontière.
+Avant toute sélection géographique ou volumétrique, le solveur applique un contrôle exact par version (`version-exact-lineage-gate-v1`) :
 
-### 3. Filtre strict même `model_id`
+- Si la requête de calcul désigne précisément le processus de résultat de ce modèle, celui-ci occupe la liaison de manière exclusive sans mélange avec ses composants internes ni avec d'anciennes révisions.
+- En présence d'un conflit de lignage sans preuve de liaison explicite, le solveur laisse l'arête **non fermée** et signale `lineage_overlap_requires_binding` au lieu d'arbitrer arbitrairement par volume ou moyenne.
 
-Si le processus consommateur possède un `model_id` et qu'au moins un candidat éligible partage ce `model_id`, le routage se **restreint strictement** à ce sous-ensemble :
+### Étape 3 : Filtre strict sur le même `model_id`
 
-- Il s'agit d'un **filtre strict**, non d'un bonus de score, appliqué avant la géographie et le volume annuel.
-- Tant qu'un fournisseur éligible du même modèle existe, les fournisseurs d'autres modèles n'entrent pas dans le mix au seul motif qu'ils sont plus proches ou d'un volume annuel supérieur.
-- Le routage ne revient à l'univers éligible plus large que s'il n'existe aucun candidat du même modèle.
-- L'organisation de processus au sein d'un modèle exprime un périmètre de candidats fournisseurs, et non un pointeur par échange ni des parts arbitraires.
+Lorsque le processus consommateur relève d'un modèle (`model_id`) et qu'au moins un candidat admissible des étapes 1–2 partage ce même `model_id`, la sélection est **strictement réduite à ce sous-ensemble interne** :
 
-### 4. Ancre de région d'approvisionnement et niveaux géographiques
+- C'est un **filtre éliminatoire**, non un bonus de pondération — il prime sur la proximité géographique et sur le volume annuel.
+- Les processus externes ne sont considérés qu'en l'absence totale de fournisseur admissible au sein du même modèle.
 
-Le solveur résout ensuite l'ancre géographique dans cet ordre strict :
+Ce regroupement traduit le périmètre d'approvisionnement interne choisi par l'auteur du modèle ; il n'équivaut pas à un contrat fournisseur échange par échange ni à une clé de répartition personnalisée.
 
-1. `exchange.location` de l'échange d'entrée
-2. `location` du processus consommateur
-3. `unspecified`
+### Étape 4 : Ancre de région d'approvisionnement et échelle en 5 niveaux
 
-Dans l'ensemble filtré, le routage retient le **premier niveau géographique non vide** :
+Le solveur détermine d'abord la région d'approvisionnement souhaitée selon l'ordre suivant :
 
-1. `local / subnational`
-2. `same country`
-3. `same region`
-4. `global`
-5. `other`
+1. la localisation propre de l'échange `exchange.location` (par exemple une usine du Jiangsu déclarant une matière achetée au Shandong `CN-SD`) ;
+2. à défaut, la localisation (`location`) du processus consommateur ;
+3. à défaut, `unspecified`.
 
-Le volume annuel n'est **jamais comparé entre niveaux** : le niveau est choisi d'abord, puis les parts sont calculées uniquement au sein de ce niveau.
+Il parcourt ensuite cinq niveaux géographiques dans un ordre immuable et **s'arrête dès le premier niveau non vide**. Les volumes annuels ne sont **jamais** comparés d'un niveau à l'autre :
 
-### 5. Pondération par volume annuel et repli `1.0`
+1. `local / subnational` (local / infranational)
+2. `same country` (même pays)
+3. `same region` (même région)
+4. `global` (mondial)
+5. `other` (autre)
 
-Au sein du niveau sélectionné, les poids de routage sont calculés ainsi :
+### Étape 5 : Pondération par volume annuel et repli à `1.0`
+
+Au sein du niveau géographique retenu, la part de chaque fournisseur se calcule ainsi :
 
 ```text
-raw_weight_i = annualSupplyOrProductionVolume_i   (si fini et > 0)
-raw_weight_i = 1.0                                (sinon : manquant, invalide, non fini ou <= 0)
-share_i      = raw_weight_i / sum(raw_weight)
+Si annualSupplyOrProductionVolume est fini et > 0 :
+    poids_brut_i = annualSupplyOrProductionVolume_i
+Sinon (absent, non numérique, non fini ou <= 0) :
+    poids_brut_i = 1.0
+
+part_i = poids_brut_i / sum(poids_brut)
 ```
 
-Deux propriétés sont essentielles :
+Deux propriétés mathématiques sont invariantes :
 
-- **Conservation du bilan** : la somme des poids de routage d'un résidu vaut toujours `1` (`sum(w_i) = 1`). Le routage répartit une demande déjà déterminée sans jamais amplifier ni réduire la quantité totale demandée.
-- **Le repli `1.0` n'affirme pas un volume réel** : il maintient seulement la participation du candidat ; il n'implique pas une production annuelle réelle égale à 1 et chaque recours au repli est comptabilisé dans les diagnostics de l'instantané.
+- **Conservation stricte de la demande totale** : la somme des parts d'un même besoin vaut toujours `1` (`sum(part_i) = 1`). Le routage répartit l'origine sans jamais gonfler ni réduire la quantité consommée.
+- **`1.0` est un poids de sauvegarde, pas une production de 1** : il évite d'écarter silencieusement un processus dépourvu de métadonnée de volume, tout en comptabilisant chaque repli dans les diagnostics afin d'en vérifier l'effet.
 
-## Allocation, routage et politiques de frontière
+## 4. Trois exemples chiffrés pour maîtriser les règles
 
-- **L'allocation précède le routage** : l'allocation au niveau processus détermine d'abord la quantité résiduelle attribuée au produit de référence ; les poids de routage répartissent ensuite cette quantité fixe entre ports de référence. Les deux notions restent strictement séparées.
-- **Politiques de frontière explicites** : les instantanés génériques prennent en charge `closed` (par défaut — tout résidu de technosphère non nul non résolu bloque la préparation), `open` (laisse le bilan non résolu hors frontière) et `cutoff` (omission explicite par règle de coupure). La vérification de clôture certifiable (Scope Closure) fige `cutoff` afin d'exposer les preuves arête par arête sans masquer les fournisseurs manquants. `open` et `cutoff` entrent dans l'empreinte de configuration et produisent des avertissements et diagnostics détaillés.
+### Exemple 1 : Niveau géographique, pondération et piège du repli `1.0`
 
-## Comparaison entre `market activity` ecoinvent et TianGong
+Une usine du Jiangsu (`CN-JS`) consomme **100 kWh** d'électricité sans liaison explicite. Trois procédés électriques ouverts sont admissibles :
 
-| Aspect | ecoinvent v3 | TianGong LCA |
+- Processus A (`CN-JS`) : volume annuel `300 000`
+- Processus B (`CN-JS`) : volume annuel `100 000`
+- Processus C (`CN`) : volume annuel `5 000 000`
+
+1. **Cas standard (la géographie prime sur le volume)** : le niveau 1 (`local / subnational`, `CN-JS`) retient A et B puis **s'arrête immédiatement**. Malgré son volume national de 5 millions, C relève du niveau 2 (`same country`) et n'est pas retenu. Résultat : A couvre `300 000 / 400 000 = 75 %` (75 kWh) et B couvre `25 %` (25 kWh).
+2. **Donnée manquante asymétrique (attention au biais extrême)** : si B n'a pas de volume annuel renseigné, son poids brut retombe à `1,0` face aux `300 000` de A. La répartition bascule à `300 000 / 300 001 ≈ 99,9997 %` pour A et `0,0003 %` pour B — B est pratiquement éliminé.
+3. **Deux volumes absents (partage égal)** : si ni A ni B ne possède de volume, chacun reçoit le repli `1,0` et fournit exactement `50 %` / `50 %`.
+
+> D'où l'importance de contrôler le **compteur de repli `1.0`** : un seul champ de volume manquant peut faire basculer deux fournisseurs locaux entre `50 % / 50 %` et `99,9997 % / 0,0003 %`.
+
+### Exemple 2 : Priorité de même modèle et prévention du double comptage
+
+- **Priorité interne au modèle** : dans un modèle A (cogénération interne + synthèse chimique), l'étape de synthèse consomme de la vapeur. Même si un fournisseur externe de vapeur ouvert existe dans la même province avec un volume bien supérieur, le filtre strict `model_id` impose le producteur interne du modèle A.
+- **Protection contre les recouvrements de modèle** : si un modèle B produit 1 tonne d'intermédiaire et que son processus de résultat `R(B)` comme l'un de ses composants `U(B1)` exposent ce même flux en référence quantitative, le solveur refuse de les pondérer ensemble sans liaison explicite et bloque l'arête avec `lineage_overlap_requires_binding`.
+
+### Exemple 3 : Symétrie de signe des flux de déchets
+
+Les bases d'ACV utilisent des conventions de signe variées pour les déchets envoyés en traitement. L'algèbre signée de TianGong (`Input = -1`, `Output = +1`) les unifie proprement :
+
+- Un procédé manufacturier déclare une **sortie déchet `+1000 kg`** (valeur signée `+1000`), créant une demande positive de traitement.
+- Une installation de traitement dont la référence est **entrée déchet `+1000 kg`** (`-1000`, signe normalisé `-1`) ou **sortie déchet `-1000 kg`** (`-1000`, signe normalisé `-1`) est mathématiquement identique : les deux équilibrent valablement la demande de `+1000 kg`.
+- À l'inverse, une **sortie déchet `+1000 kg`** (signe `+1`) n'équilibre qu'une demande négative et ne sera jamais choisie par erreur comme prestataire de traitement.
+
+## 5. Ce que TianGong génère vraiment — et ce qu'il ne génère pas
+
+Parce que l'enregistrement et la publication créent des processus de résultat, la plateforme est parfois prise à tort pour une « base dynamique » fabriquant des jeux de marché à la volée. Voici la frontière exacte :
+
+| Mécanisme / Artefact | Déclencheur | Ce qui est créé | Persisté comme jeu de données ? | Identité stable et citable ? |
+| --- | --- | --- | --- | --- |
+| **Instantané du solveur** | Calcul ICV/ÉICV d'arrière-plan | Matrices creuses `A` et `B`, poids de routage et diagnostics | **Non** (état de calcul ; jamais enregistré comme nouveau jeu `market`) | Consigne versions d'entrée et empreintes de configuration |
+| **Sorties d'enregistrement de modèle** | Clic sur **Enregistrer** dans un modèle | Sous-modèles alloués (principal/secondaires) et processus de résultat du modèle | **Oui** (enregistrés avec le modèle dans l'espace courant) | Lié aux `(UUID, version)` exacts du modèle et de ses résultats |
+| **Matérialisation de Release** | Pipeline officiel de publication de Release | Triade à frontière figée : processus unitaire `U(P)`, processus de résultat dérivé `R(P)` (`state_code = 120`), modèle `M(P)` (`resolved-one-hop-aggregated-background.v1`) et Calculation Bundle avec hachage de manifeste | **Oui** (archives de publication strictement isolées en lecture seule, jamais réinjectées dans le vivier courant) | Identité déterministe `UUIDv5`, version exacte, empreintes SHA-256 et vérification de relecture |
+| **Agrégation de jeux de données** | Agrégation explicite de plusieurs processus par poids ou volume | Processus de résultat agrégé (`R(P)`) | **Oui** (fiche de résultat distincte) | Version explicite et traçabilité d'origine |
+| **Synthèse de marché à la demande / processus virtuels paramétrés** | **N'existe pas** | **Aucun** (TianGong ne génère pas de jeux de marché virtuels ni de processus paramétrés par requête) | Sans objet | Créez et publiez un processus de mix explicite dès qu'une identité de marché réutilisable est requise |
+
+## 6. Allocation vs routage et politiques de frontière
+
+Deux réglages distincts interviennent à des étapes différentes du calcul :
+
+- **L'allocation précède le routage** : les facteurs d'allocation au niveau du processus déterminent d'abord la part de chaque échange non-référence attribuée au produit de référence. Les poids de routage répartissent ensuite cette demande déjà allouée entre les fournisseurs amont admissibles. Les deux mécanismes ne se mélangent jamais.
+- **Trois politiques de frontière explicites** : lorsqu'une demande technosphérique ne trouve aucun fournisseur admissible, la lacune n'est jamais masquée. Trois politiques explicites sont tracées dans l'empreinte de configuration et les diagnostics arête par arête :
+  - **`closed` (par défaut en production)** : toute demande technosphérique non nulle doit être fermée ; une seule arête ouverte empêche l'instantané d'être prêt.
+  - **`open`** : laisse les demandes non fermées hors de la frontière tout en résolvant le reste et publie la liste intégrale des arêtes ouvertes.
+  - **`cutoff`** : écarte les demandes non fermées selon une règle de coupure explicite avec preuve par arête. Les contrôles d'intégrité de niveau certification (Scope Closure) figent cette politique sur `cutoff` afin de rendre chaque fournisseur manquant totalement auditable.
+
+## 7. Interpréter les signaux de diagnostic courants
+
+Référez-vous à ce tableau lors de l'analyse dans [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/) :
+
+| Signal de diagnostic | Signification | Action recommandée |
 | --- | --- | --- |
-| **Forme du jeu de données** | Jeux `market activity` explicites (distincts des activités `transforming`) | Aucun type de jeu `market` autonome |
-| **Règles de composition** | Mix régional de consommation pondéré par production, incluant importations, transports, pertes et `market groups` | Barrière de lignage → filtre strict `model_id` → ancre régionale → niveau géographique → pondération par volume annuel (repli `1.0`) |
-| **Modèles de système** | Modèles nommés (Cut-off, Cut-off EN15804, APOS, Consequential) régissant fournisseurs et charges de déchets ; mix marginal en Consequential | Aucun modèle de système nommé ; règle par défaut `split_by_process_volume` ; politique de frontière `closed` / `open` / `cutoff` ; aucune revendication attributionnelle ou conséquentielle |
-| **Comportement éditeur** | Un `market` se relie comme un processus ordinaire | L'éditeur refuse plusieurs fournisseurs explicites pour une même entrée (`MULTIPLE_PROVIDERS`) ; le mix implicite opère uniquement dans l'instantané du solveur |
-| **Représentativité** | Hypothèses documentées ; l'utilisateur choisit le modèle adapté | Avertissement explicite : la liaison automatique ne garantit ni l'année, ni la technologie, ni la géographie ; le chercheur doit vérifier fournisseurs et parts |
-| **Identité citable** | Chaque jeu de marché possède son propre UUID et sa version | Le mix implicite n'est pas persisté comme jeu de données ; modélisez un processus explicite lorsqu'une identité de marché réutilisable est requise |
+| `MULTIPLE_PROVIDERS` | Un même flux d'entrée du canevas est relié manuellement à au moins deux processus amont | Nettoyer les doublons ; en cas de multi-sourcing réel, créer un processus de mix explicite avec les parts exactes |
+| `rejected_non_reference_only` | Des sorties du même flux existent mais sont toutes des coproduits non-référence | Corriger le flux de référence quantitatif du fournisseur, ajouter un processus fournisseur dédié ou modéliser l'allocation explicitement |
+| `lineage_overlap_requires_binding` | Le processus de résultat et les composants (ou une ancienne version) d'un même modèle se recoupent sans sélection univoque | Lier explicitement le calcul au processus de résultat voulu ou clarifier la frontière du modèle |
+| **Compteur de repli `1.0` > 0** | Au moins un candidat du niveau géographique retenu n'a pas de `annualSupplyOrProductionVolume` positif | Vérifier les fournisseurs retenus et leurs parts ; renseigner des volumes fiables ou modéliser un mix explicite |
+| **Repli géographique sur `global` / `other`** | Aucun fournisseur admissible trouvé aux niveaux local, national ou régional | Évaluer la sensibilité du résultat à cet intrant ; si l'impact est majeur, fournir une donnée locale ou choisir un substitut explicite |
+| **Arêtes non fermées (blocage `closed` ou liste `open`/`cutoff`)** | Aucun fournisseur admissible pour ce flux produit ou déchet dans la portée active | Vérifier UUID, version et sens du flux ; confirmer que le processus amont est publié en Données ouvertes (`100`) ou présent dans vos brouillons |
 
-Pour une comparaison élargie entre bases, consultez [Comparaison des bases et interopérabilité](/fr/docs/database/comparison/). Pour la théorie générale distinguant mix moyen et réponse marginale du marché, voir [Market Response (anglais)](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/) dans la base de connaissances TianGong LCA.
+## 8. Quand la liaison automatique suffit vs quand modéliser explicitement
 
-## Lire les principaux diagnostics de liaison
-
-Dans [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/) et les diagnostics d'instantané, surveillez particulièrement ces signaux :
-
-| Signal diagnostique | Signification | Action recommandée |
+| Cas d'étude | Le mix implicite suffit-il ? | Pratique recommandée |
 | --- | --- | --- |
-| `rejected_non_reference_only` | Des sorties de même flux existent, mais aucune n'est une sortie de référence quantitative | Corriger la sortie de référence du fournisseur, ajouter un processus fournisseur éligible ou modéliser explicitement le processus de marché / coproduit |
-| `lineage_overlap_requires_binding` | Conflit de lignage entre processus de résultat, composants ou révisions antérieures d'un modèle sans racine exacte | Sélectionner le processus de résultat voulu comme racine de requête ou corriger la frontière du modèle |
-| **Compteur de repli `1.0` de volume annuel** | Un ou plusieurs candidats du niveau retenu n'avaient pas de `annualSupplyOrProductionVolume` positif valide | Vérifier si la pondération de repli déforme le mix ; renseigner des volumes vérifiés ou modéliser explicitement |
-| **Source d'ancre régionale et répartition des niveaux** | Indique si l'arête utilise `exchange.location` ou la localisation du processus, et quel niveau géographique a répondu | Vérifier l'absence de repli involontaire vers `global` ou `other` si une représentativité locale est requise |
+| Repérage rapide de points chauds, enseignement ou consommables marginaux | **En général oui** | Utiliser la liaison automatique tout en vérifiant les niveaux géographiques et le compteur de repli `1.0` |
+| Marché régional réutilisable et citable avec son propre UUID et sa version | **Non** | Créer un processus de mix explicite détaillant les fournisseurs amont et leurs parts |
+| Transport de fret, pertes de réseau électrique ou pertes de manutention | **Non** | Le mix implicite **n'ajoute jamais de transport ni de pertes** ; saisir ces échanges explicitement |
+| Année de référence stricte, filière technologique précise ou répartition contractuelle | **Non** | Relier explicitement les processus cibles à leur version exacte (voir [Étude de cas de modélisation de système partiellement terminé](/fr/docs/data-collection/case-introduction/model-building/)) |
+| Coproduits multifonctionnels ou recyclage en boucle fermée | **Non** | Appliquer une allocation claire ou bâtir un modèle de cycle de vie explicite |
+| FDES/EPD auditée, empreinte carbone certifiée ou affirmation comparative ISO 14044 | **Déconseillé seul** | Modéliser explicitement toutes les chaînes contributrices majeures, figer les versions et archiver diagnostics et couverture (voir [Versions, licences et citation](/fr/docs/database/versions-citation/)) |
 
-## Quand modéliser explicitement
+## 9. Comparaison directe : ecoinvent v3 vs TianGong LCA
 
-Ne vous appuyez **pas** sur le mix régional implicite si votre étude exige l'un des éléments suivants — construisez plutôt un processus ou un modèle de cycle de vie explicite (voir [Modélisation d'un système partiellement terminé](/fr/docs/data-collection/case-introduction/model-building/) et [Vue d'ensemble de la base de données](/fr/docs/database/overview/)) :
+| Dimension | ecoinvent v3 | TianGong LCA |
+| --- | --- | --- |
+| **Type de jeu de données** | Jeux `market activity` dédiés, séparés des activités `transforming` | Pas de type de jeu `market` distinct |
+| **Construction du mix** | Mix de consommation régional préconstruit incluant production, importations, distances/modes de transport, pertes et `market groups` | Routage au calcul : contrôle anti-double comptage → filtre strict `model_id` → ancre géographique → hiérarchie en 5 niveaux → pondération par volume (`1.0` en repli) ; sans transport ni pertes automatiques |
+| **Modèles de système** | Quatre modèles nommés (Cut-off, Cut-off EN15804, APOS, Consequential) ; en Consequential, mix marginal | Aucun modèle de système nommé ; règle par défaut `split_by_process_volume` ; politiques `closed` / `open` / `cutoff` ; aucune revendication attributionnelle ou conséquentielle |
+| **Expérience dans l'éditeur** | Les jeux `market` se relient comme n'importe quel nœud | Le canevas refuse plusieurs fournisseurs explicites sur un intrant (`MULTIPLE_PROVIDERS`) ; le mix implicite opère uniquement dans le solveur |
+| **Identité citable** | Chaque jeu `market` possède son propre UUID et sa version | Les mix implicites ne sont pas persistés ; créez un processus de mix explicite pour obtenir une identité stable |
+| **Responsabilité de représentativité** | Hypothèses de modèle de système documentées par ecoinvent ; choix de version à charge de l'utilisateur | La liaison automatique ne garantit expressément ni la représentativité temporelle, ni technologique, ni géographique ; l'analyste vérifie les diagnostics ou modélise explicitement |
 
-- **Identité de marché réutilisable et citable** : créez un processus explicite (avec son propre UUID et sa version) consignant les parts d'approvisionnement régionales.
-- **Transport, pertes de distribution ou mix contractuel** : le routage implicite n'ajoute ni distances de transport ni pertes de manutention ou de réseau ; intégrez-les explicitement dans l'inventaire.
-- **Représentativité temporelle ou technologique stricte** : si l'étude vise une année précise (par exemple 2019) ou une filière technique spécifique, vérifiez que la liaison automatique n'a pas sélectionné d'autres années ou filières génériques, et verrouillez les versions voulues par organisation de modèle ou liens explicites.
-- **Coproduits multifonctionnels** : les coproduits hors référence n'entrent pas automatiquement dans le pool de fournisseurs ; allouez et publiez des processus de produit de référence distincts ou modélisez-les explicitement.
+Pour une comparaison plus large des bases externes et des règles de conversion de formats, consultez [Comparaison des bases et interopérabilité](/fr/docs/database/comparison/) et [Vue d'ensemble de la base de données](/fr/docs/database/overview/). Pour l'analyse théorique entre mix moyens attributionnels et réponses marginales conséquentielles, consultez [Market Boundaries and Response (anglais)](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/) dans la base de connaissances TianGong LCA.

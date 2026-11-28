@@ -1,73 +1,102 @@
 ---
 title: "Supply Linking & Market Mechanism"
-description: "Explains why TianGong LCA has no ecoinvent-style market datasets, how solver snapshots build an implicit regional supply mix, editor vs. solver boundaries, diagnostics, and when to model explicitly."
+description: "A complete guide to why TianGong LCA has no standalone ecoinvent-style market datasets, how the solver builds an implicit regional supply mix, worked numerical examples, materialized outputs vs. dynamic synthesis, diagnostics, and when to model explicitly."
 ---
 
-Practitioners coming from ecoinvent or desktop LCA tools often encounter two misconceptions about TianGong LCA: assuming the database contains standalone `market activity` datasets, or assuming that calculation-time linking and result persistence mean TianGong "dynamically synthesizes market datasets on demand." This page documents the actual runtime behavior and its limits.
+Practitioners coming to TianGong LCA from ecoinvent, openLCA, or SimaPro almost always ask the same two questions first: **"Where are the `market for electricity` datasets?"** and **"If the platform resolves suppliers automatically and saves Result Processes, does that mean it dynamically synthesizes market datasets on demand?"**
 
-## Core statements: no market datasets and no dynamic dataset synthesis
+This guide explains the exact linking mechanics, walks through three numerical examples, clarifies what is and is not generated, and shows when automatic linking is enough versus when you should model supply chains explicitly.
 
-1. **TianGong does not provide ecoinvent-style `market activity` datasets.** Unlinked technosphere inputs are routed at snapshot-build time through an **implicit regional supply mix**. This mix is a calculation-time routing policy—**not a persisted market dataset, procurement relationship, or statistical supply chain**.
-2. **Materialized calculation outputs are not a "dynamic database."** Saving a model or publishing a release persists computed artifacts (allocated submodel processes, Result Processes, and Calculation Bundles). These are **not parameterized/virtual datasets and do not represent on-demand synthesis of market data**.
-3. **Automatic linking does not guarantee study representativeness.** TianGong does not declare named attributional or consequential system models; researchers must inspect the selected providers and shares against their study's year, technology, and geography requirements and model explicitly when needed.
+> **At a Glance**
+>
+> - **No standalone `market` dataset type**: Unlike ecoinvent, TianGong does not maintain separate `market activity` datasets alongside transforming processes. Unlinked upstream inputs are routed at calculation time through an **implicit regional supply mix**.
+> - **Not an on-demand dynamic market generator**: Saving a model, running a formal release, or aggregating datasets creates **materialized calculation artifacts** tied to fixed input versions—not virtual or parameterized market datasets synthesized per query.
+> - **Automatic linking does not guarantee representativeness**: TianGong does not claim a named attributional or consequential system model, nor can automatic routing guarantee the reference year, technology, or procurement shares your study requires. Always inspect linking diagnostics and model critical supply chains explicitly.
 
-## Model editor links vs. solver snapshot routing
+## 1. Mental Model: 1 kWh of Industrial Electricity
 
-Keep the interactive editor and the solver snapshot strictly separate:
+Suppose you are modeling a manufacturing process that consumes **1 kWh of industrial electricity**, and you do not have direct supplier data from a specific power plant:
 
-- **Model editor (explicit connections)**: On the canvas, the editor validates explicit links. Connecting the same input flow of one process to multiple distinct upstream processes causes local calculation to report a multiple-provider error (`MULTIPLE_PROVIDERS`) and stop. See [Save and Reuse Model Results on the Platform](/en/docs/overview/data-relationships/) and [System Modelling FAQ](/en/docs/faq/system-models/).
-- **Solver snapshot (implicit regional supply mix)**: Across the admitted candidate process universe, the snapshot builder resolves unlinked technosphere residuals into sparse matrix `A` by selecting eligible reference ports and assigning routing weights. This mix exists only in the calculation snapshot and never materializes a new `market` process.
+- **In ecoinvent v3**: You normally link to a pre-authored `market for electricity, medium voltage` dataset. The database provider has already compiled national or regional generation mixes, electricity imports, transmission losses, and grid infrastructure into that market dataset under its own UUID and version.
+- **In TianGong LCA**: No dedicated `market` dataset type exists. If you **explicitly wire** the input on the model canvas to one specific grid or power-plant process, calculation follows your explicit link. If you leave that technosphere input **unlinked**, the solver snapshot searches the eligible published process pool for matching processes in the best available geographic tier and splits the 1 kWh demand across them according to annual supply or production volume.
 
-## Full routing order of the implicit regional supply mix
+Every rule, worked example, and diagnostic message below flows from this design.
 
-The current default multi-provider rule is `split_by_process_volume`. Each unlinked technosphere residual follows this exact sequence before writing to `A`:
+## 2. Model Canvas Editor vs. Solver Snapshot
+
+It is important not to conflate **explicit wiring in the model canvas editor** with **implicit supply routing in a solver snapshot**:
+
+| Aspect | Model Canvas Editor (Explicit Linking) | Solver Snapshot Engine (Implicit Regional Supply Mix) |
+| --- | --- | --- |
+| **When it applies** | You drag processes onto the canvas and manually connect exchanges | The solver closes unlinked technosphere inputs during background calculation |
+| **Multiple suppliers for one input** | **Disallowed on the canvas**: wiring one input flow to two or more upstream processes raises `MULTIPLE_PROVIDERS` and stops local calculation | Allowed under the default rule `split_by_process_volume`, which distributes demand across eligible suppliers in the matched geography tier |
+| **Persisted as a new dataset?** | Your wired supply chain is saved as a Lifecycle Model (see [Save and Reuse Model Results on the Platform](/en/docs/overview/data-relationships/)) | **Never saved back as a new `market` process**; exists only as matrix coefficients and diagnostics for that snapshot |
+| **Where to troubleshoot** | Canvas link checks and [System Modelling FAQ](/en/docs/faq/system-models/) | Coverage and linking diagnostics in [LCIA Calculation & Results](/en/docs/user-guide/lcia/) |
+
+> If a real facility buys a material 60% from Supplier A and 40% from Supplier B, do not connect both suppliers directly to the same input port on the canvas (that triggers `MULTIPLE_PROVIDERS`), and do not delete a real supplier just to clear validation. Instead, create a dedicated procurement-mix process that consumes `0.6` from Supplier A and `0.4` from Supplier B and outputs `1.0` to your downstream process.
+
+## 3. Complete Routing Pipeline for the Implicit Regional Supply Mix
+
+Under the default multi-provider rule `split_by_process_volume`, every unlinked product or waste demand enters technology matrix `A` through five ordered steps:
 
 ```text
-Numerical eligibility (public state_code = 100; or actor-owned draft 0 under versioned owner scope)
-  -> Signed coefficient & quantitative-reference pivot (signed-flow balance)
-  -> Exact same-flow (Flow UUID + resolved version), opposite-sign quantitative reference ports
-  -> Version-exact Lifecycle Model lineage gate (version-exact-lineage-gate-v1)
-  -> Same-model hard filter (model_id subset, when available)
-  -> Supply-region anchor (exchange.location -> consumer process location -> unspecified)
-  -> First non-empty geography tier (local/subnational -> same country -> same region -> global -> other)
-  -> Annual-volume weighting within tier (missing or non-positive falls back to fixed weight 1.0)
-  -> Sparse matrix write A[balancing_process, dependent_process]
+Step 1: Eligibility & Signed-Flow Matching
+        Only Open Data (state_code = 100), plus the signed-in author's own drafts (0) in owner-draft mode;
+        matches only exact (Flow UUID + resolved version), opposite sign, quantitative reference ports
+   ↓
+Step 2: Lifecycle Model Double-Counting Check (version-exact-lineage-gate-v1)
+        Prevents mixing a Lifecycle Model's resulting Process with its own component Processes or older revisions
+   ↓
+Step 3: Same-Model Hard Filter (model_id)
+        If the consuming process belongs to a model with at least one eligible supplier in that same model,
+        restrict candidates strictly to that model (takes precedence over geography and volume)
+   ↓
+Step 4: Supply-Region Anchor & 5-Tier Geography Ladder
+        Anchor priority: exchange.location -> consumer process location -> unspecified
+        Tier ladder: local/subnational -> same country -> same region -> global -> other (stops at first non-empty tier)
+   ↓
+Step 5: Volume Weighting Within the Selected Tier
+        Weight by finite positive annualSupplyOrProductionVolume; fallback to fixed 1.0 when missing/non-positive;
+        normalize so all supplier shares sum exactly to 1
 ```
 
-### 1. Numerical eligibility and signed-flow basis
+### Step 1: Who Can Act as a Supplier
 
-Not every visible record enters the supplier candidate universe:
+Not every visible record on the platform enters the automatic supplier pool:
 
-- **Exact numerical eligibility**: Public snapshots admit only `state_code = 100` processes (and, under the versioned `public_plus_owner_draft` scope, the authenticated actor's own `state_code = 0` drafts). Published derived Result Processes (`state_code = 120`) and other reserved public states (`101..199`) **never** serve as suppliers in the implicit mix.
-- **Flow-space mapping**: Product and Waste flows enter the technosphere for balance linking; Elementary flows enter the biosphere (`B`); Other flows remain reporting evidence only.
-- **Signed coefficients**: Each exchange compiles to `c = direction_sign * calculation_amount` (`Input = -1`, `Output = +1`), and the process quantitative reference normalizes its pivot to `+1` or `-1`.
-- **Quantitative reference ports only**: A candidate must match the exact `(Flow UUID, resolved version)`, belong to an eligible process, be that process's quantitative reference exchange, and have opposite sign `sign(c_i) = -sign(c_r)`. A **non-reference output** with the same `flow_id` never enters the provider set automatically merely because it carries an amount or allocation fraction.
+- **Publication-state eligibility**: Public calculations accept only published Open Data processes (`state_code = 100`). When an authenticated user explicitly runs in owner-draft calculation scope (`public_plus_owner_draft`), only that user's own draft processes (`state_code = 0`) are added. Formally archived read-only Result Processes (`state_code = 120`) and reserved release states (`101..199`) **never** enter the implicit supplier pool, preventing aggregated results from silently cascading into ordinary unit-process linking.
+- **Three flow spaces**: Product and Waste flows enter technosphere matrix `A` for supply balancing; Elementary flows enter biosphere matrix `B` for impact calculation; Other flows remain descriptive only and do not enter `A` or `B`.
+- **Signed flow math & quantitative reference rule**: Every exchange is normalized with `Input = -1` and `Output = +1`, and each process's quantitative reference sets its pivot sign to `+1` or `-1`. A candidate qualifies **only** if all three hold: (1) exact `(Flow UUID, resolved version)` match, (2) opposite sign to the demand, and (3) it is the supplying process's **quantitative reference** exchange.
+- **Non-reference co-products never enter automatically**: A secondary output of the same flow does not enter the supplier pool automatically—even if it carries an amount or allocation factor. If every same-flow candidate is non-reference, diagnostics explicitly report `rejected_non_reference_only`.
 
-### 2. Version-exact Lifecycle Model lineage gate
+### Step 2: Lifecycle Model Double-Counting Check
 
-Before geographic or volume routing, `version-exact-lineage-gate-v1` prevents double-counting or mixing between a Lifecycle Model's resulting Process, its component Processes, and results of older Model revisions:
+A Lifecycle Model contains component processes and can also generate a resulting Process. If both expose the same product flow as their quantitative reference, blending them by annual volume would double-count or corrupt the system boundary.
 
-- When the exact request root selects the resulting Process among conflicting candidates, that result exclusively supplies the edge.
-- When a lineage conflict exists without that selection evidence, the residual remains unresolved as `lineage_overlap_requires_binding` (fail closed); annual volume or equal fallback never guesses the boundary.
+Before geography or volume is evaluated, the solver runs a version-exact lineage check (`version-exact-lineage-gate-v1`):
 
-### 3. Same-model hard filter (`model_id`)
+- If the calculation request explicitly selects that model's exact resulting Process as its target, that resulting Process takes the link exclusively rather than mixing with its internal components or older versions.
+- If conflicting model-lineage candidates exist without unambiguous binding evidence, the solver **leaves the edge unresolved** and emits `lineage_overlap_requires_binding` rather than guessing weights.
 
-If the consuming process carries a `model_id` and at least one eligible candidate shares that `model_id`, routing **strictly narrows** to that same-model subset:
+### Step 3: Same-Model Hard Filter (`model_id`)
 
-- This is a **hard filter**, not a score bonus, and runs before geography and annual volume.
-- While an eligible same-model provider exists, providers from other models cannot enter the mix simply because they are geographically closer or have larger annual volume.
-- Routing falls back to the wider eligible universe only when no same-model candidate exists.
-- Organizing processes within a model expresses a supplier candidate scope; it is not an exchange-level pointer or an arbitrary mix specification.
+When the consuming process belongs to a Lifecycle Model (`model_id`) and at least one eligible candidate from Steps 1–2 shares that exact `model_id`, the candidate pool is **strictly narrowed to that same-model subset**:
 
-### 4. Supply-region anchor and geography tiers
+- This is a **hard filter**, not a score bonus—it outranks both geographic proximity and annual volume.
+- External processes will not be blended into that input while an eligible same-model supplier exists.
+- Only when no eligible same-model supplier exists does routing fall back to the broader published process pool.
 
-Next, the solver resolves the supply-region anchor in strict order:
+Note that grouping processes under one `model_id` expresses an author-curated internal supplier scope, not per-exchange supplier contracts or arbitrary custom blending shares.
 
-1. `exchange.location` on the residual input exchange
-2. Consumer process `location`
-3. `unspecified`
+### Step 4: Supply-Region Anchor and 5-Tier Geography Ladder
 
-Within the filtered candidate set, routing selects the **first non-empty** geography tier:
+Once the candidate scope is set, the solver determines the desired supply region (the anchor) in order:
+
+1. The exchange's own `exchange.location` (for example, a plant in Jiangsu explicitly specifying a raw material sourced from Shandong `CN-SD`);
+2. Otherwise, the consuming process's `location`;
+3. Otherwise, `unspecified`.
+
+The solver then checks five geography tiers in strict order and **stops at the very first non-empty tier**. Annual volume is **never** compared across tiers:
 
 1. `local / subnational`
 2. `same country`
@@ -75,57 +104,108 @@ Within the filtered candidate set, routing selects the **first non-empty** geogr
 4. `global`
 5. `other`
 
-Annual volume is **never compared across tiers**: the tier is chosen first, and shares are computed only among candidates inside that selected tier.
+### Step 5: Annual Volume Weighting and the `1.0` Fallback
 
-### 5. Annual-volume weighting and `1.0` fallback
-
-Inside the selected tier, routing weights are computed as:
+Within the matched geography tier, each candidate's share is calculated as:
 
 ```text
-raw_weight_i = annualSupplyOrProductionVolume_i   (if finite and > 0)
-raw_weight_i = 1.0                                (otherwise: missing, invalid, non-finite, or <= 0)
-share_i      = raw_weight_i / sum(raw_weight)
+If annualSupplyOrProductionVolume is finite and > 0:
+    raw_weight_i = annualSupplyOrProductionVolume_i
+Otherwise (missing, non-numeric, non-finite, or <= 0):
+    raw_weight_i = 1.0
+
+share_i = raw_weight_i / sum(raw_weight)
 ```
 
-Two properties are critical:
+Two mathematical guarantees always hold:
 
-- **Balance preservation**: Routing weights for a residual always sum to `1` (`sum(w_i) = 1`). Routing distributes an already determined demand across eligible providers without scaling the total input up or down.
-- **Fallback `1.0` is not a volume claim**: The `1.0` fallback is a fixed positive weight that keeps a candidate eligible; it does not assert that real annual production equals 1, and every fallback use is counted in snapshot diagnostics.
+- **Conservation of total demand**: All weights for a single demand always sum to `1` (`sum(share_i) = 1`). Routing allocates *who* supplies the demand and never inflates or shrinks total consumption.
+- **`1.0` is a fallback weight, not a claim that output equals 1**: It keeps eligible processes without volume metadata from being silently dropped, and every fallback use is counted explicitly in snapshot diagnostics so you can audit the resulting shares.
 
-## Allocation vs. routing and boundary policies
+## 4. Three Worked Examples
 
-- **Allocation runs before routing**: Process allocation modifies the attributed residual magnitude for the quantitative reference product before linking. Routing weights only distribute that fixed balance across reference ports. The two quantities are distinct and must not be conflated.
-- **Explicit boundary policies**: Generic production snapshots support `closed` (default—any unresolved non-zero technosphere residual blocks readiness), `open` (allows unresolved balances outside the boundary), and `cutoff` (allows explicit cutoff omission). Certificate-grade Scope Closure freezes `cutoff` so missing providers are exposed in per-edge evidence without silent omission. Both `open` and `cutoff` enter snapshot configuration fingerprints and emit explicit warnings and per-edge unresolved diagnostics.
+### Example 1: Geography Tier, Volume Weighting, and the `1.0` Fallback Trap
 
-## Comparing ecoinvent `market activity` with TianGong
+Suppose a factory in Jiangsu (`CN-JS`) consumes **100 kWh** of industrial electricity with no explicit link, and Open Data contains three eligible electricity processes:
 
-| Aspect | ecoinvent v3 | TianGong LCA |
-| --- | --- | --- |
-| **Dataset form** | Explicit `market activity` datasets (separate from `transforming` activities) | No standalone `market` dataset type |
-| **Composition rules** | Regional consumption mix weighted by production, with imports, transport distances/modes, losses, and `market groups` | Lineage gate → same-model hard filter → supply-region anchor → geography tier → annual-volume weights (`1.0` fallback) |
-| **System models** | Named system models (Cut-off, Cut-off EN15804, APOS, Consequential) controlling supplier eligibility and waste burdens; Consequential turns markets into marginal consumption mixes | No named system model; default rule `split_by_process_volume`; boundary policy `closed` / `open` / `cutoff`; makes no attributional or consequential claim |
-| **Editor behavior** | A `market` is linked like any regular process | Model editor rejects multiple explicit providers on one input (`MULTIPLE_PROVIDERS`); implicit mix applies only in solver snapshots |
-| **Representativeness** | Documented model assumptions; users choose the applicable system model | Explicit caveat: automatic linking does not guarantee study-year, technology, or geography representativeness; researchers must verify providers and shares |
-| **Citable identity** | Each market dataset has its own UUID and version | Implicit mix is not persisted as a dataset; model an explicit Process when a reusable market identity is needed |
+- Process A (`CN-JS`): annual volume `300,000`
+- Process B (`CN-JS`): annual volume `100,000`
+- Process C (`CN`): annual volume `5,000,000`
 
-For broader database comparisons, see [Cross-Database Comparison & Interoperability](/en/docs/database/comparison/). For general LCA theory contrasting average supply mixes with marginal market response, see [Market Response](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/) in the TianGong LCA Knowledge Base.
+1. **Standard case (geography beats volume)**: Tier 1 (`local / subnational`, `CN-JS`) finds Process A and Process B and **stops immediately**. Even though Process C has a much larger national volume (`5,000,000`), it sits in Tier 2 (`same country`) and is excluded. Shares are `300,000 / 400,000 = 75%` (75 kWh) for Process A and `25%` (25 kWh) for Process B.
+2. **Mixed metadata (skewed share warning)**: If Process B has no annual volume recorded, its raw weight falls back to `1.0` while Process A keeps `300,000`. The resulting split becomes `300,000 / 300,001 ≈ 99.9997%` for Process A and `0.0003%` for Process B—effectively excluding Process B.
+3. **All volumes missing (equal split)**: If neither Process A nor Process B has an annual volume, both fall back to `1.0`, producing an exact `50%` / `50%` split.
 
-## Reading key provider-linking diagnostics
+> This is why checking the **`1.0` fallback counter** matters so much: a single missing volume field can swing local supplier shares between `50% / 50%` and `99.9997% / 0.0003%`.
 
-When reviewing results in [LCIA Calculation & Results](/en/docs/user-guide/lcia/) or solver snapshot diagnostics, pay close attention to:
+### Example 2: Same-Model Priority and Double-Counting Prevention
+
+- **Same-model priority**: Inside Model A (which includes a captive cogeneration plant and a chemical synthesis step), the synthesis step requires steam. Even if an external Open Data steam process sits in the same province with a far larger annual volume, the `model_id` hard filter selects Model A's internal steam supplier exclusively.
+- **Lineage conflict protection**: Suppose Model B produces 1 tonne of an intermediate chemical, and both Model B's resulting Process `R(B)` and one of its component processes `U(B1)` share that same product as their quantitative reference flow. Without an explicit binding selecting `R(B)`, the solver refuses to blend `R(B)` and `U(B1)` and stops the edge with `lineage_overlap_requires_binding`.
+
+### Example 3: Waste-Flow Sign Symmetry
+
+Different LCA databases record waste sent to treatment using different sign conventions. TianGong resolves them cleanly through signed-flow arithmetic (`Input = -1`, `Output = +1`):
+
+- A manufacturing process records **Waste Output `+1000 kg`** (signed value `+1000`), creating a positive waste-treatment demand.
+- A treatment facility whose reference exchange is either **Waste Input `+1000 kg`** (signed `-1000`, normalized sign `-1`) or **Waste Output `-1000 kg`** (signed `-1000`, normalized sign `-1`) is mathematically identical—both carry sign `-1` and validly satisfy the `+1000 kg` waste demand.
+- Conversely, a process with **Waste Output `+1000 kg`** (normalized sign `+1`) only balances a negative waste demand and will never be mistaken for a treatment provider for the positive waste output above.
+
+## 5. What TianGong Generates vs. What It Does Not Generate
+
+Because saving or publishing models produces derived Result Processes, users sometimes assume TianGong acts as a "dynamic database" that synthesizes custom market datasets per query. The table below draws the exact boundary:
+
+| Mechanism / Artifact | When it happens | What is created | Persisted as a dataset? | Stable citable identity? |
+| --- | --- | --- | --- | --- |
+| **Solver Snapshot** | During background LCI/LCIA calculation | Sparse matrices `A` and `B`, routing weights, and diagnostics | **No** (calculation-time state; never written back as a new `market` dataset) | Records input versions and config fingerprints for reproducibility |
+| **Model Save Outputs** | Clicking **Save** on a Lifecycle Model | Allocated primary/secondary submodel processes and model Result Processes | **Yes** (stored alongside the model in the active workspace) | Bound to exact `(UUID, version)` of the model and resulting processes |
+| **Release Materialization** | Formal release publication pipeline | Frozen boundary triad: Unit Process `U(P)`, derived Result Process `R(P)` (`state_code = 120`), Lifecycle Model `M(P)` (following `resolved-one-hop-aggregated-background.v1`), plus manifest-hashed Calculation Bundle | **Yes** (strictly isolated read-only release records; never fed back into ordinary supply routing) | Deterministic `UUIDv5` identity, exact version, SHA-256 checksums, and readback verification |
+| **Dataset Aggregation** | Explicitly aggregating multiple processes by weight or volume | Aggregated Result Process (`R(P)`) | **Yes** (saved as a distinct result record) | Explicit version and provenance lineage |
+| **On-Demand Market Synthesis / Parameterized Virtual Processes** | **Does not exist** | **None** (TianGong does not dynamically synthesize and persist custom market or parameterized processes on query) | Not applicable | Create and publish an explicit mix process whenever you need a reusable regional market |
+
+## 6. Allocation vs. Routing and Boundary Policies
+
+Two related controls govern distinct stages of a calculation:
+
+- **Allocation comes before routing**: Process-level allocation factors first determine how much of each non-reference exchange belongs to the process's quantitative reference product. Routing weights then take that already-allocated demand and distribute it across eligible upstream reference ports. The two never mix.
+- **Explicit boundary policies**: When a technosphere demand has no eligible supplier in the active pool, the solver never hides the gap. Three explicit policies are supported and recorded in configuration fingerprints alongside edge-level diagnostics:
+  - **`closed` (production default)**: Every non-zero technosphere demand must be resolved; any unresolved demand prevents the snapshot from reaching ready state.
+  - **`open`**: Leaves unresolved demands outside the system boundary while still solving, and emits the full list of unresolved edges.
+  - **`cutoff`**: Omits unresolved demands under an explicit cutoff boundary with per-edge cutoff evidence. Certificate-grade Scope Closure checks freeze this policy to `cutoff` so every missing supplier stays fully exposed in audit evidence.
+
+## 7. Troubleshooting Common Diagnostics
+
+Use this quick reference when reviewing results in [LCIA Calculation & Results](/en/docs/user-guide/lcia/):
 
 | Diagnostic signal | What it means | Recommended action |
 | --- | --- | --- |
-| `rejected_non_reference_only` | Same-flow outputs exist, but none is a quantitative reference output | Repair the supplying process's reference output, add an eligible provider process, or model a market / co-product process explicitly |
-| `lineage_overlap_requires_binding` | Candidates conflict across a Lifecycle Model's resulting Process, components, or older revisions without unambiguous root evidence | Select the intended resulting Process as the exact request root or repair the Lifecycle Model boundary |
-| **Annual-volume `1.0` fallback count** | One or more candidates in the chosen tier lacked a valid positive `annualSupplyOrProductionVolume` | Check whether equal fallback weights distort your mix; supply verified annual volumes or model explicitly |
-| **Supply-region source & tier distribution** | Shows whether edges used `exchange.location` or process location and which geography tier matched | Check for unexpected fallbacks to `global` or `other` that weaken geographic representativeness |
+| `MULTIPLE_PROVIDERS` | One input flow on the model canvas is manually wired to two or more upstream processes | Clean up duplicate wires; if real procurement uses multiple suppliers, add an explicit mix process with defined shares |
+| `rejected_non_reference_only` | Same-flow outputs exist, but all are non-reference co-products rather than quantitative reference outputs | Fix the supplier's quantitative reference output, add a dedicated supplying process, or model co-product allocation explicitly |
+| `lineage_overlap_requires_binding` | Both a Lifecycle Model's resulting Process and its component process (or older version) match the same flow without unambiguous selection | Bind the calculation explicitly to the intended resulting Process, or resolve the overlapping Lifecycle Model boundary |
+| **`1.0` fallback count > 0** | One or more candidates in the matched geography tier lacked a positive `annualSupplyOrProductionVolume` | Inspect the chosen suppliers and shares; add authoritative annual volumes or model the mix explicitly if shares look skewed |
+| **Geography fell back to `global` / `other`** | No eligible supplier existed in local, national, or regional tiers | Check whether that input drives a large share of impacts; if so, supply local data or explicitly pick a proxy region |
+| **Unresolved edges (`closed` block or `open`/`cutoff` list)** | No eligible supplier matched that product or waste flow in the current scope | Verify flow UUID, version, and direction; confirm the upstream process is published in Open Data (`100`) or present in your owner-draft run |
 
-## When you should model explicitly
+## 8. When Automatic Linking Suffices vs. When to Model Explicitly
 
-Do **not** rely on the implicit regional supply mix when your study requires any of the following—instead build an explicit Process or Lifecycle Model (see [Partly Terminated System Modelling](/en/docs/data-collection/case-introduction/model-building/) and [Database Overview](/en/docs/database/overview/)):
+| Study scenario | Is implicit supply mix enough? | Recommended approach |
+| --- | --- | --- |
+| Early hotspot screening, teaching exercises, or minor low-impact consumables | **Usually sufficient** | Use automatic linking, while still checking geography tiers and `1.0` fallback counts |
+| Reusable, citable regional market with its own UUID and version | **No** | Author an explicit mix Process listing upstream suppliers and exact shares |
+| Freight transport, grid transmission losses, or handling losses | **No** | Implicit linking **never adds transport or losses automatically**; include transport and loss exchanges explicitly |
+| Strict reference year, specific technology route, or contractual supplier split | **No** | Link explicitly to the target processes and exact versions (see [Partly Terminated System Modeling Case](/en/docs/data-collection/case-introduction/model-building/)) |
+| Multifunctional co-products or closed-loop recycling | **No** | Apply clear allocation or build an explicit Lifecycle Model so secondary outputs are properly accounted for |
+| Audited EPD, product carbon footprint, or ISO 14044 comparative assertion | **Not recommended alone** | Explicitly model all major contributing chains, pin exact versions, and archive diagnostics and coverage evidence (see [Versions, Licensing & Citation](/en/docs/database/versions-citation/)) |
 
-- **A reusable, citable market identity**: Create an explicit Process (with its own UUID and version) encoding the regional consumption mix and supplier shares.
-- **Transport, distribution losses, or contractual procurement mixes**: Implicit routing does not synthesize transport legs or handling/grid losses; add them explicitly to process inventories when material.
-- **Strict temporal or technological representativeness**: If a study specifically targets a reference year (such as 2019) or a specific production route, verify whether automatic linking pulled other years or generic routes, and pin intended versions through model organization or explicit connections.
-- **Multi-output co-products**: Non-reference co-products do not enter the automatic provider pool; allocate and publish dedicated reference-product processes or model them explicitly.
+## 9. Side-by-Side Comparison: ecoinvent v3 vs. TianGong LCA
+
+| Dimension | ecoinvent v3 | TianGong LCA |
+| --- | --- | --- |
+| **Dataset form** | Dedicated `market activity` datasets separate from `transforming` activities | No separate `market` dataset type |
+| **Mix construction** | Pre-authored regional consumption mixes including production, imports, transport distances/modes, losses, and `market groups` | Calculation-time routing: lineage check → same-model hard filter → region anchor → 5-tier geography ladder → annual volume weighting (`1.0` fallback); no automatic transport or losses |
+| **System models** | Four named system models (Cut-off, Cut-off EN15804, APOS, Consequential); in Consequential, markets represent marginal mixes | No named system model; default rule `split_by_process_volume`; boundary policies `closed` / `open` / `cutoff`; makes no attributional or consequential claim |
+| **Editor experience** | `market` activities link like any ordinary process node | Canvas rejects multiple explicit providers on one input (`MULTIPLE_PROVIDERS`); implicit mix applies only in solver snapshots |
+| **Citable identity** | Each `market` dataset has its own UUID and version | Implicit mixes are not persisted as datasets; author an explicit mix Process when you need stable identity |
+| **Representativeness responsibility** | System-model rules are documented by ecoinvent; practitioners choose the appropriate release and model | Automatic linking explicitly does not guarantee temporal, technological, or geographic representativeness; practitioners audit diagnostics or model explicitly |
+
+For broader database comparisons and format-conversion boundaries, see [Cross-Database Comparison & Interoperability](/en/docs/database/comparison/) and [Database Overview](/en/docs/database/overview/). For the theoretical distinction between attributional average mixes and consequential marginal market responses, read [Market Boundaries and Response](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/) in the TianGong LCA Knowledge Base.

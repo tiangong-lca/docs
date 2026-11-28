@@ -1,79 +1,171 @@
 ---
 title: "Versions, licences et citation"
-description: "Présente la sémantique des versions, les URI permanents, les états de revue et de publication, les licences des données ouvertes et commerciales, le statut DOI, les modèles de citation et la distribution LCDN dans TianGong LCA."
+description: "Guide complet sur l'identité des jeux de données TianGong LCA, la numérotation de version en trois segments, les URI permanents et la politique DOI, le cycle de vie, la matrice des cinq licences et quatre modèles de citation prêts à l'emploi."
 ---
 
-Cette page rassemble les règles d'identité de jeu de données, de numérotation des versions, d'états de publication, de licences et de citation dans TianGong LCA afin de garantir la reproductibilité et la conformité des études.
+Que vous rédigiez un article scientifique, une empreinte carbone produit (PCF), une déclaration environnementale (FDES/EPD) ou que vous mainteniez des modèles d'équipe dans la durée, **la reproductibilité et la conformité reposent sur trois réflexes : figer la version exacte, vérifier la licence et citer de manière rigoureuse.**
 
-## Identité d'un jeu de données et sémantique des versions
+Cette page rassemble toutes les règles relatives à l'identité, au versionnement, aux états du cycle de vie, aux licences et aux modèles de citation dans TianGong LCA.
 
-Dans TianGong LCA et TIDAS, une révision exacte est identifiée de manière unique par la paire **`(UUID, version)`**, notée `UUID@version` :
+> **En un coup d'œil**
+>
+> - **L'identité exacte est le couple `(UUID, version)`** : un intitulé ou un UUID seul ne suffit jamais à reproduire un calcul. Notez toujours `UUID@version` (par exemple `<uuid>@01.01.000`).
+> - **Pas d'attribution automatique de DOI par jeu de données** : les identifiants natifs pérennes sont `(UUID, version)` et `common:permanentDataSetURI`. Si un jeu provient d'une publication dotée d'un DOI, celui-ci figure dans l'objet **Source** associé.
+> - **Visible en accès ouvert ne signifie pas réutilisation commerciale illimitée** : les Données ouvertes sont consultables et calculables librement par les utilisateurs connectés, mais la redistribution et l'usage commercial restent régis par les champs de licence et de droit d'auteur de chaque version exacte.
+> - **Une vérification machine ne vaut pas certification scientifique** : les reçus de publication, empreintes SHA-256 et contrôles de relecture attestent uniquement l'intégrité binaire vis-à-vis des données sources — jamais la pertinence scientifique ni une vérification tierce ISO/EPD.
 
-- **Version à trois segments `XX.XX.XXX`** : suit la convention ILCD/TIDAS — les deux premiers chiffres indiquent les mises à jour majeures, les deux suivants les révisions mineures et corrections, et les trois derniers le comptage interne/incrémental en cours de développement.
-- **Version initiale par défaut** : un nouveau jeu de données créé sur la plateforme démarre par défaut à `01.01.000`.
-- **Liste par défaut vs historique** : les listes et résultats de recherche affichent par défaut la **dernière version visible** par UUID. Utilisez **Toutes les versions** sur une ligne pour consulter ou citer une version antérieure ; voir [Vue d'ensemble de la plateforme de données](/fr/docs/user-guide/data/) et [Guide d'utilisation des données](/fr/docs/user-guide/data-use/).
-- **Créer une version vs Copier les données** :
-  - **Créer une version** depuis **Toutes les versions** **conserve le même UUID**, génère automatiquement le numéro de version suivant et relie la version précédente (`common:referenceToPrecedingDataSetVersion`).
-  - **Copier les données** attribue un **nouvel UUID** indépendant pour dériver un jeu distinct.
-- **Liaison à la version exacte** : les références de modèle, les instantanés du solveur et les pages du catalogue public se lient à la paire exacte `(UUID, version)` ; deux noms identiques ou deux versions d'un même UUID ne sont jamais considérés comme silencieusement équivalents.
+## 1. Identité des jeux de données et versionnement en trois segments (`XX.XX.XXX`)
 
-## URI permanent de jeu de données et liens publics
+Dans TianGong LCA et TIDAS, chaque fiche est identifiée de façon unique par son **`UUID`** et sa **`version`** à trois segments, notés ensemble **`UUID@version`**.
 
-Chaque jeu TIDAS porte `common:permanentDataSetURI` dans ses métadonnées administratives :
+### 1. Structure des versions et progression habituelle
 
-- **Format d'URI généré par la plateforme** : identifiant persistant de style LCDN selon le type d'objet — par exemple `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>` pour un processus (avec des chemins analogues pour flux, modèles de cycle de vie, sources, contacts et propriétés de flux).
-- **Liens de version exacte dans le catalogue public** : chaque révision publiée dans le [catalogue public de données TianGong LCA](https://www.tiangong.earth/fr/lca-database) possède sa propre URL canonique. Les versions retirées ou restreintes sont retirées du catalogue.
-- **Statut DOI** : l'identité native repose sur `(UUID, version)` et `common:permanentDataSetURI`. La plateforme **n'attribue pas automatiquement de DOI distinct par jeu de données** ; si une publication ou un rapport source possède un DOI, il est consigné dans l'objet **Source** associé.
+La numérotation suit la convention ILCD/TIDAS `XX.XX.XXX`. Tout nouveau jeu créé sur la plateforme démarre par défaut à **`01.01.000`** :
 
-## Cycle de vie : états de revue et de publication
+| Exemple de version | Segment incrémenté | Cas d'usage typique |
+| --- | --- | --- |
+| `01.01.000` | Version initiale | Numéro par défaut lors de la création ou du premier import |
+| `01.01.001` | Troisième segment (révision interne) | Itération de brouillon, ajustement de mise en forme ou correction mineure en cours d'élaboration |
+| `01.02.000` | Segment intermédiaire (révision mineure) | Ajout de références bibliographiques, correction de quantités d'échanges ou enrichissement des métadonnées |
+| `02.00.000` | Premier segment (mise à jour majeure) | Changement de frontière du système, renouvellement complet de l'année de référence, changement de filière ou révision méthodologique majeure |
 
-La plateforme applique les transitions et règles de visibilité au moyen du champ structuré `state_code` :
+### 2. « Créer une version » vs « Copier les données »
 
-| État (`state_code`) | Emplacement et sens habituels | Modification | Catalogue public et éligibilité au calcul numérique |
-| --- | --- | --- | --- |
-| `0` (Brouillon) | Brouillons de travail dans **Mes données** | Modifiable par le propriétaire | Absent du catalogue public ; éligible au calcul uniquement pour son propriétaire dans le périmètre versionné `public_plus_owner_draft` |
-| `20` (En revue) | Soumis à la [Revue de données](/fr/docs/user-guide/data-review/) | Verrouillé en écriture directe | En attente d'attribution par `review-admin` et d'examen par `review-member` ; renvoyé en révision en cas de rejet |
-| `100` (Données ouvertes publiées) | **Données ouvertes** et catalogue public | Immuable sur place ; toute révision crée une nouvelle version | **Seul état public exact éligible au calcul numérique des processus** ; recherchable, référençable, copiable et exportable |
-| `120` (Processus de résultat dérivé publié) | Résultat dérivé persisté par la gouvernance de publication | Immuable | Strictement isolé des lectures produit génériques, exports et pools numériques de fournisseurs/racines ; relecture réservée aux reçus de publication autorisés |
-| `200` (Données commerciales) | Espace **Données commerciales** | Métadonnées en lecture seule | Le catalogue et la plateforme n'affichent que les métadonnées et coordonnées du fournisseur ; non citables directement dans les modèles |
-| `-1` (Exemples curés) | Jeux illustratifs visibles des utilisateurs connectés | Lecture seule pour les utilisateurs ordinaires | Destinés uniquement à la prise en main ; exclus des comptages de Données ouvertes |
+Pour faire évoluer un jeu existant ou créer une variante, choisissez l'action appropriée :
 
-> Distinguez deux niveaux : `common:workflowAndPublicationStatus` dans le JSON TIDAS (`Working draft`, `Data set finalised; entirely published`, `Withdrawn`, etc.) décrit le statut bibliographique ILCD/TIDAS, tandis que le contrôle d'accès et l'admission dans le solveur appliquent le `state_code` en base.
+| Critère | Créer une version (Create Version) | Copier les données (Copy Data) |
+| --- | --- | --- |
+| **Accès** | Menu de ligne → **Toutes les versions** → **Créer une version** | Menu de ligne → **Copier les données** |
+| **Effet sur l'UUID** | **Conserve exactement le même UUID** et incrémente automatiquement la version | **Génère un tout nouvel UUID**, réinitialisé à `01.01.000` |
+| **Filiation** | Relie automatiquement à la version précédente via `common:referenceToPrecedingDataSetVersion` | Crée une fiche indépendante hors de l'historique d'origine |
+| **Quand l'utiliser ?** | Corriger, actualiser l'année ou enrichir le même processus/jeu de données | Partir d'un jeu existant comme modèle pour un autre pays, procédé ou projet |
 
-## Licences et limites de redistribution
+### 3. Comportement des listes et verrouillage aval par version
 
-**La visibilité publique n'accorde pas automatiquement un droit illimité de redistribution ou de réutilisation commerciale.** Avant de réutiliser ou diffuser un jeu de données, vérifiez les champs `publicationAndOwnership` de la version exacte :
+- **Les listes affichent par défaut la dernière version visible** : pour consulter ou citer une version antérieure, passez par **Toutes les versions** sur la ligne du jeu (voir [Vue d'ensemble de la plateforme de données](/fr/docs/user-guide/data/) et [Utilisation des données](/fr/docs/user-guide/data-use/)).
+- **Les modèles aval restent figés sur la version exacte** : nœuds de modèle de cycle de vie, instantanés de solveur et pages du catalogue public pointent sur un couple `(UUID, version)` précis. Publier `01.02.000` ne modifie **jamais silencieusement** un modèle existant basé sur `01.01.000`.
 
-- `common:referenceToOwnershipOfDataSet` : propriétaire des données (pas nécessairement identique à l'éditeur de la plateforme).
-- `common:copyright` : existence d'un droit d'auteur (`true` / `false`).
-- `common:licenseType` : énumération contrôlée :
-  - `Free of charge for all users and uses`
-  - `Free of charge for some user types or use types`
-  - `Free of charge for members only`
-  - `License fee`
-  - `Other`
-- `common:accessRestrictions` : conditions d'utilisation, limites de redistribution ou référence au texte de licence.
+## 2. URI permanents, liens publics et politique DOI
 
-### Données ouvertes vs Données commerciales
+### 1. URI permanents (`common:permanentDataSetURI`)
 
-- **Données ouvertes** : auditées et librement consultables/référençables sur la plateforme, mais la redistribution, les travaux dérivés et les usages commerciaux demeurent régis par **la licence et les conditions de source déclarées sur chaque version**. Voir aussi [À propos des données](https://www.tiangong.earth/fr/methodology) sur le portail.
-- **Données commerciales** : exposent uniquement des métadonnées descriptives, sans inventaire de modélisation complet, et ne peuvent pas être citées dans un modèle. Pour les licences ou l'accès aux bases commerciales telles que HiQLCD, contactez le fournisseur indiqué dans [Accès aux bases commerciales](/fr/docs/faq/commercial-database/).
-- **Distribution LCDN** : les jeux obtenus au format ILCD via le [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) restent soumis aux versions et licences indiquées sur le nœud.
+Chaque jeu TIDAS enregistre dans ses informations administratives un `common:permanentDataSetURI` aligné sur le schéma d'adresses LCDN :
 
-## Formats de citation recommandés
+| Type d'objet | Modèle d'URI permanent par défaut |
+| --- | --- |
+| **Processus (Process)** | `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>` |
+| **Flux (Flow)** | `https://lcdn.tiangong.earth/datasetdetail/productFlow.xhtml?uuid=<uuid>&version=<version>` |
+| **Modèle de cycle de vie (Lifecycle Model)** | `https://lcdn.tiangong.earth/datasetdetail/lifecyclemodel.xhtml?uuid=<uuid>&version=<version>` |
+| **Source** | `https://lcdn.tiangong.earth/datasetdetail/source.xhtml?uuid=<uuid>&version=<version>` |
+| **Contact** | `https://lcdn.tiangong.earth/datasetdetail/contact.xhtml?uuid=<uuid>&version=<version>` |
+| **Propriété de flux (Flow Property)** | `https://lcdn.tiangong.earth/datasetdetail/flowproperty.xhtml?uuid=<uuid>&version=<version>` |
 
-Pour garantir la vérifiabilité d'un article, rapport ou bilan carbone, mentionnez au minimum le **fournisseur de données (le cas échéant), le nom du jeu de données, la version exacte, l'identifiant `UUID@version`, l'URL canonique et la date de consultation**.
+### 2. URL canoniques du catalogue et retraits
 
-### Citer un jeu de données unique (aligné sur le catalogue public)
+- Dans le [catalogue public de données TianGong LCA](https://www.tiangong.earth/fr/lca-database), chaque version publique dispose d'une page canonique partageable sans connexion.
+- Si une version publiée est retirée ou restreinte ultérieurement (correction, droit d'auteur, conformité), elle est retirée du catalogue public. Conservez toujours `UUID@version`, le fournisseur et la **date de consultation** avec l'URL.
 
-> Fournisseur de données : *Nom du fournisseur* (le cas échéant). Plateforme TianGong LCA, jeu de données : *Nom du jeu de données*, version *01.01.000*, identifiant *`<uuid>@01.01.000`*, consulté le *AAAA-MM-JJ*, disponible sur [https://www.tiangong.earth/fr/lca-database](https://www.tiangong.earth/fr/lca-database) (ou l'URL canonique / URI permanent de cette version).
+### 3. Politique relative aux DOI
 
-### Citer un calcul de modèle ou des résultats LCIA
+- TianGong LCA **ne génère pas automatiquement un DOI distinct par jeu de données**.
+- Pour citer sans ambiguïté un jeu TianGong, utilisez **`UUID@version`**, l'URL canonique du catalogue et **`common:permanentDataSetURI`**.
+- Lorsqu'un jeu s'appuie sur un article, un rapport ou un jeu externe muni d'un DOI, ce DOI est consigné dans l'objet **Source** lié et doit être cité en complément.
 
-Lorsque vous publiez des valeurs d'ICV ou d'ÉICV calculées sur la plateforme, précisez également :
+## 3. Cycle de vie des données et états (`state_code`)
 
-1. Le nom et la version de la méthode LCIA ainsi que toute lacune de couverture des facteurs de caractérisation (voir [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/)).
-2. La version de release et le hachage du manifeste si vous citez une release Model/Result ou un Calculation Bundle publié.
-3. **Vérification machine vs attestation scientifique** : les reçus de publication, contrôles SHA-256 et vérifications de relecture prouvent l'intégrité binaire et le lien à la source ; ils ne remplacent ni l'examen scientifique propre à une étude ni une certification de conformité par tierce partie.
+La plateforme encadre tout le cycle de vie d'un enregistrement — brouillon, revue, publication ouverte et archivage isolé — par le champ base de données `state_code` :
 
-Pour les conseils pratiques d'enregistrement des objets Source, consultez la [FAQ Sources et citation](/fr/docs/faq/sources-and-citation/) et la [Vue d'ensemble de la base de données](/fr/docs/database/overview/).
+```text
+  Mes données : Brouillon (state_code = 0)
+        │  Soumettre à la revue de données
+        ▼
+  En revue (state_code = 20, édition verrouillée) ── Refusé ──▶ Retour au brouillon (0)
+        │  Approuvé et publié
+        ▼
+  Données ouvertes publiées (state_code = 100, lecture seule) ── Révision via « Créer une version » ──▶ Nouveau brouillon (0)
+
+  Voies isolées :
+  • Processus de résultat de Release archivés ──▶ state_code = 120 (archive en lecture seule ; hors modélisation et routage courants)
+  • Fiches du catalogue commercial tiers      ──▶ state_code = 200 (métadonnées seules ; non citables dans un modèle)
+  • Jeux d'exemple curés de la plateforme     ──▶ state_code = -1  (apprentissage uniquement ; hors comptages ouverts)
+```
+
+| État (`state_code`) | Signification et emplacement | Modifiable ? | Visible au catalogue ? | Éligibilité calcul et modélisation |
+| --- | --- | --- | --- | --- |
+| **`0`** | **Brouillon** (Mes données) | Oui, par l'auteur | Non | Exclu des calculs publics ; utilisable uniquement en mode brouillon personnel de l'auteur |
+| **`20`** | **En revue** (file [Revue de données](/fr/docs/user-guide/data-review/)) | **Verrouillé** | Non | Exclu des calculs publics ; en attente d'affectation (`review-admin`) et d'examen (`review-member`) |
+| **`100`** | **Données ouvertes publiées** (Données ouvertes & catalogue) | Lecture seule (créer une nouvelle version pour réviser) | Oui | **Seul vivier public admis** pour les calculs standards ; recherchable, citable, copiable et exportable |
+| **`120`** | **Processus de résultat dérivé publié** (archive Release) | Lecture seule | Hors listes publiques ordinaires | Strictement isolé des lectures de modélisation courantes, exports standards et du routage automatique ; accès uniquement via les voies autorisées de reçu/relecture de Release |
+| **`200`** | **Données commerciales** (espace Données commerciales) | Métadonnées en lecture seule | Oui (métadonnées seules) | **Impossible à relier ou calculer sur la plateforme** ; contactez le fournisseur pour une licence |
+| **`-1`** | **Exemples curés** (espace d'exemples) | Lecture seule pour les utilisateurs ordinaires | Hors effectifs Données ouvertes | Réservé à la prise en main et aux exercices |
+
+> **Distinguer état d'exécution et métadonnées éditoriales TIDAS** : dans le JSON, `common:workflowAndPublicationStatus` (`Working draft`, `Data set finalised; entirely published`, `Withdrawn`, etc.) décrit le statut bibliographique ILCD/TIDAS. Les droits effectifs, la visibilité et l'admission dans le solveur dépendent toujours de `state_code`.
+
+## 4. Licences, propriété et matrice de redistribution
+
+Avant toute réutilisation, adaptation ou redistribution d'un jeu TianGong LCA, vérifiez quatre champs dans **`publicationAndOwnership`** pour la version exacte :
+
+1. **`common:referenceToOwnershipOfDataSet`** : identifie le propriétaire juridique du jeu de données (pas nécessairement l'opérateur de la plateforme).
+2. **`common:copyright`** : booléen (`true` / `false`) indiquant l'existence d'une mention de droit d'auteur.
+3. **`common:licenseType`** : vocabulaire contrôlé TIDAS à cinq valeurs (voir tableau ci-dessous).
+4. **`common:accessRestrictions`** : précisions textuelles sur les conditions d'usage, l'attribution, les limites de redistribution ou le lien vers le texte complet de la licence.
+
+### Matrice de vérification des cinq valeurs `common:licenseType`
+
+| Valeur `common:licenseType` | Signification pratique | Points à vérifier avant usage commercial ou redistribution |
+| --- | --- | --- |
+| `Free of charge for all users and uses` | Gratuit pour tous les utilisateurs et tous les usages | Vérifier `copyright`, `accessRestrictions` et la mention d'attribution ; conserver version et sources |
+| `Free of charge for some user types or use types` | Gratuit uniquement pour certaines catégories d'utilisateurs ou d'usages (ex. recherche, usage non commercial) | Vérifier si le conseil commercial, l'intégration dans un logiciel payant ou la diffusion externe est couvert |
+| `Free of charge for members only` | Gratuit uniquement pour les membres d'une organisation ou d'un consortium donné | Les non-membres ne doivent pas réutiliser ni redistribuer sans vérifier leur statut ou contacter le titulaire |
+| `License fee` | Soumis à redevance de licence | Obtenir une licence formelle auprès du titulaire avant d'utiliser ou de diffuser l'inventaire complet |
+| `Other` | Conditions particulières | Lire intégralement `common:accessRestrictions` et lever toute ambiguïté auprès du titulaire |
+
+### Précisions par canal de diffusion
+
+- **Données ouvertes (Open Data)** : revues et librement accessibles en consultation, modélisation et export, mais **chaque jeu ouvert peut porter un `licenseType` et un droit d'auteur propres**. Vérifiez fiche par fiche et consultez [À propos des données](https://www.tiangong.earth/fr/methodology).
+- **Données commerciales (Commercial Data)** : seules les métadonnées descriptives et les coordonnées fournisseurs sont affichées, sans inventaire complet. Pour acquérir une licence tierce (comme HiQLCD), consultez [Accès aux bases commerciales](/fr/docs/faq/commercial-database/).
+- **Distribution via LCDN (nœud ILCD)** : les paquets ILCD importés depuis le [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) dans openLCA ou un autre logiciel restent soumis aux clauses de licence de la version correspondante.
+
+## 5. Quatre modèles de citation prêts à l'emploi
+
+Copiez le modèle correspondant à votre livrable et remplacez les champs entre chevrons par vos informations exactes.
+
+### Modèle A : Article scientifique ou rapport technique (jeu unique)
+
+Aligné sur le format de citation du catalogue public :
+
+```text
+Fournisseur de données : <Nom du fournisseur> (le cas échéant). Plateforme TianGong LCA, jeu de données : <Nom du jeu>, version <01.01.000>, identifiant <uuid>@<01.01.000>, consulté le <AAAA-MM-JJ>, disponible sur <URL canonique du catalogue public ou permanentDataSetURI>.
+```
+
+Exemple :
+
+> Fournisseur de données : Tsinghua TianGong Team. Plateforme TianGong LCA, jeu de données : Coal-to-methanol production, version 01.01.000, identifiant `8f3c2b10-0000-4000-8000-000000000001@01.01.000`, consulté le 2026-10-15, disponible sur `https://www.tiangong.earth/fr/lca-database` (remplacez par l'URL exacte de la version ou son URI permanent dans votre rapport).
+
+### Modèle B : Tableau d'annexe pour FDES / EPD ou empreinte carbone produit
+
+Pour un dossier vérifiable, regroupez les jeux d'arrière-plan majeurs dans un tableau structuré :
+
+| Nom du jeu de données | Identifiant exact (`UUID@version`) | Géographie et année | Espace et type de licence | URI permanent / URL canonique | Date de consultation |
+| --- | --- | --- | --- | --- | --- |
+| `<Nom du jeu>` | `<uuid>@01.01.000` | `CN` / `2024` | Données ouvertes / `Free of charge for all users and uses` | `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=01.01.000` | `2026-10-15` |
+
+### Modèle C : Résultats de modèle, indicateurs LCIA et Release / Calculation Bundles
+
+Lorsque vous citez des indicateurs ICV ou ÉICV calculés plutôt qu'un inventaire brut, ajoutez quatre éléments (voir [Calcul LCIA et résultats](/fr/docs/user-guide/lcia/)) :
+
+```text
+Modèle / processus source : <Nom> (<uuid>@<version>)
+Méthode LCIA : <Nom et version, p. ex. paquet statique de 25 méthodes EF TianGong, profil par défaut non régionalisé>
+Couverture et frontière : <Indiquer si tous les flux élémentaires sont couverts ; lister les lacunes éventuelles ; préciser liaison explicite ou mix implicite>
+Traçabilité de Release (si applicable) : Release <release-id>, hachage du manifeste Calculation Bundle <sha256-...>, calculé/consulté le <AAAA-MM-JJ>
+```
+
+> **Distinction essentielle** : les hachages de manifeste, sommes SHA-256 et contrôles de relecture prouvent **l'intégrité binaire vis-à-vis des données sources**. Ils n'attestent **pas** l'adéquation scientifique à votre objectif d'étude et ne remplacent pas une revue critique ISO 14040/14044 ou une vérification EPD.
+
+### Modèle D : Téléchargements LCDN et fiches du catalogue commercial
+
+- **Jeux ILCD issus de LCDN** : complétez le modèle A en précisant le canal « TianGong Life Cycle Data Network (LCDN, [https://lcdn.tiangong.earth/](https://lcdn.tiangong.earth/)) » ainsi que la date d'export ou de synchronisation.
+- **Entrées des Données commerciales** : citez ces fiches uniquement comme référence de métadonnées — ne laissez **jamais** entendre que l'inventaire complet a été calculé sur TianGong. Si vous avez souscrit une licence distincte auprès du fournisseur, citez directement sa version officielle et ses propres conditions de licence.
+
+Pour des conseils pratiques sur les pièces jointes lors de la saisie, consultez également la [FAQ Sources et citation](/fr/docs/faq/sources-and-citation/) et la [Vue d'ensemble de la base de données](/fr/docs/database/overview/).

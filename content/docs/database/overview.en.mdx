@@ -1,78 +1,129 @@
 ---
 title: "Database Overview"
-description: "Explains TianGong LCA dataset types, data spaces, authoritative live catalog coverage, open vs. commercial boundaries, LCDN distribution, and ecosystem responsibilities."
+description: "A one-stop guide to TianGong LCA dataset types, data spaces, the 25 built-in LCIA methods, data quality and uncertainty metadata, live coverage lookup, and open-access boundaries."
 ---
 
-This page describes the TianGong LCA database itself—its dataset types, data spaces, authoritative coverage sources, and distribution channels—so you can verify what the database contains and what boundaries apply before modeling or citing records.
+Before you search, cite, or build models with TianGong LCA, this page answers the five foundational questions practitioners ask first: **what datasets are in the database, how they relate to one another, which impact assessment methods are built in, where to check live coverage, and what boundaries apply when reusing data.**
 
-## Documentation boundaries: what belongs here
+> **TianGong LCA Database at a Glance**
+>
+> - **Open, standardized schema**: Every dataset follows the open [TIDAS](https://tidas.tiangong.earth/en/) JSON specification, closely aligned with ILCD/eILCD and exchangeable across the web platform, CLI, OpenAPI, and [LCDN](https://lcdn.tiangong.earth/).
+> - **No standalone ecoinvent-style market datasets**: Unlinked upstream product inputs are resolved at calculation time through an **implicit regional supply mix** rather than pointing to pre-authored `market` processes (see [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/)).
+> - **Strict separation between Open Data and Commercial Data**: Open Data passes multi-role review and can be searched, cited, and computed directly; Commercial Data exposes metadata and provider contacts only and requires separate licensing from the data provider.
+> - **Live coverage comes from the public catalog**: Because the database grows continuously, this documentation never hardcodes static dataset counts. Check real-time counts, geography, and source coverage in the [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database).
 
-The TianGong ecosystem separates platform database facts from general LCA theory, schema definitions, and sector rules so each surface stays accurate without duplication:
+## 1. How the TianGong Documentation Ecosystem Fits Together
 
-| Subject | Authoritative source | Role |
+Rather than duplicating content across sites, TianGong keeps platform database facts, general LCA theory, schema specifications, and sector rules in separate authoritative homes:
+
+| What you need | Authoritative source | What it covers |
 | --- | --- | --- |
-| **TianGong database facts, modeling conventions, and platform boundaries** | This section (**Database & Methodology**) | Dataset types, data spaces, supply routing, versioning/licensing/citation, and cross-database differences |
-| **Live public catalog counts, browsing by region/source, and data-use summary** | [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database) and [About the Data](https://www.tiangong.earth/en/methodology) | Anonymous live dataset counts, exact versions, and per-version public visibility |
-| **Data structure and field semantics** | [TIDAS Data System](https://tidas.tiangong.earth/en/) | JSON schemas, core module relationships, and controlled vocabularies |
-| **General LCA methodology and background-database theory** | [TianGong LCA Knowledge Base](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) | Goal and scope, allocation, market response, uncertainty, and cross-framework theory |
-| **Product Category Rules (PCR)** | [TianGong PCR Documentation](https://pcr.tiangong.earth/en/) | Sector-specific boundaries and data-production rules |
-| **ILCD-format network distribution** | [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) | ILCD node publication and distribution for LCA software and data networks |
+| TianGong database composition, supply linking, versioning, licensing, citation, and cross-database differences | This section (**Database & Methodology**) | Platform-specific database facts, modeling conventions, and usage boundaries |
+| Live public process/flow counts and per-version inventory or LCIA visibility | [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database) and [About the Data](https://www.tiangong.earth/en/methodology) | Anonymous browsing, real-time UUID-deduplicated counts, exact version details, and public availability flags |
+| Exact field definitions, JSON Schemas, and controlled vocabularies | [TIDAS Data System](https://tidas.tiangong.earth/en/) | Schema specification, object relationship diagrams, and validation rules |
+| General LCA theory (attributional vs. consequential, allocation, market response, uncertainty) | [TianGong LCA Knowledge Base](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) | Peer-source monograph covering LCA methodology and cross-framework comparisons |
+| Sector-specific system boundaries and data-production rules | [TianGong PCR Documentation](https://pcr.tiangong.earth/en/) | Product Category Rules (PCR) for specific industries |
+| Connecting external ILCD-compatible LCA software | [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) | Public ILCD-format data node for software and network distribution |
 
-## Dataset types in TianGong LCA
+## 2. Six Core Object Types in the Database
 
-TianGong LCA stores and manages lifecycle datasets using the [TIDAS](https://tidas.tiangong.earth/en/docs/core-modules/data-relationships/) structure:
+TianGong LCA organizes lifecycle data around the [TIDAS object model](https://tidas.tiangong.earth/en/docs/core-modules/data-relationships/). To make these objects concrete, imagine evaluating the footprint of producing **1 tonne of methanol**:
 
-| Dataset type | Purpose | Role on the platform and in calculation |
+- **Process** is the "recipe and emissions ledger": it records how much natural gas, electricity, and steam enter the process and how much CO₂, NOₓ, or wastewater leaves it per reference quantity, together with geography, reference year, technology description, sources, and review metadata. Processes take two main forms:
+  - **Unit Process (`U(P)`)**: Records only the direct inputs and direct emissions of that single activity.
+  - **Result Process (`R(P)`)**: Stores the aggregated life cycle inventory (and optionally LCIA results) obtained after solving the upstream supply chain for a defined boundary.
+- **Flow** is the shared "dictionary of materials, products, and emissions": it assigns a persistent UUID, version, and measurement property to each exchanged item so that "carbon dioxide to air" or "industrial electricity" refers to the exact same object across processes. Flows fall into four categories:
+  - **Product flows** and **Waste flows** circulate inside the human production system (the technosphere) and connect upstream and downstream processes.
+  - **Elementary flows** cross the boundary between the technosphere and nature (resources extracted from or emissions released to the biosphere) and drive environmental impacts.
+  - **Other flows** serve as descriptive or reporting records and do not enter matrix calculation or impact assessment.
+- **Lifecycle Model (`M(P)`)** is the "supply-chain assembly blueprint": it places unit or result processes on a canvas, connects their exchanges, and sets the functional unit. Clicking **Save** calculates and persists both the model structure and its resulting processes (see [Save and Reuse Model Results on the Platform](/en/docs/overview/data-relationships/)).
+- **Flow Property & Unit Group** act as the "measurement and conversion rulers"—for example linking Mass to `kg`, `t`, and `g` with consistent conversion factors. Ordinary users reuse the platform's standard definitions rather than rebuilding them.
+- **Source & Contact** form the "bibliographic and responsibility archive," linking datasets to papers, measurement reports, questionnaires, data generators, reviewers, and copyright owners.
+- **LCIA Methods** provide the characterization factors that translate elementary flows (such as methane, sulfur dioxide, or freshwater consumption) into impact indicators such as climate change, acidification, or water scarcity.
+
+| Object type | Core question it answers | Typical role on the platform |
 | --- | --- | --- |
-| **Process** | Input/output inventory, spatial/temporal scope, technology description, and administrative metadata at a reference scale | Represents either a unit process or a saved model result process. **TianGong has no standalone ecoinvent-style `market` process type**; see [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/) |
-| **Flow** | Identifies an exchanged product, material, energy carrier, waste, or elementary intervention and its reference flow property | Classified as Product, Waste, Elementary, or Other. Product and Waste flows enter the technosphere; Elementary flows enter the biosphere |
-| **Lifecycle Model** | Connects process instances with explicit links, a reference process, and a target quantity to describe a product system | Saving runs calculation and persists both the model and its result processes; see [Save and Reuse Model Results on the Platform](/en/docs/overview/data-relationships/) |
-| **Result Process** | Holds an aggregated inventory produced by model calculation or release materialization | Model-saved result processes support inspection and reuse; published derived Result Processes (`state_code = 120`) from release governance are isolated from ordinary numeric calculation inputs |
-| **Supporting datasets** | **Flow Property**, **Unit Group**, **Source**, and **Contact** | Maintain unit conversion consistency, bibliographic traceability, and ownership/review records |
-| **LCIA Methods** | Characterization factor sets that translate elementary-flow inventories into impact category indicators | Platform calculation uses the reviewed 25-method static cache bundle matched by exact flow version and direction; missing factors are reported as incomplete coverage rather than zero; see [LCIA Calculation & Results](/en/docs/user-guide/lcia/) |
+| **Unit Process `U(P)`** | What does this single activity consume and emit directly? | Core building block for product systems and the standard unit-level form in Open Data |
+| **Lifecycle Model `M(P)`** | How are processes wired together to deliver the functional unit? | Captures supply-chain structure and generates primary and additional product results when saved |
+| **Result Process `R(P)`** | What are the cumulative LCI and LCIA totals once upstream background processes are solved? | Inspected in Model Results or reused as an aggregated upstream process (note: formally released read-only Result Processes at `state_code = 120` are kept strictly separate from ordinary modeling inputs; see [Versions, Licensing & Citation](/en/docs/database/versions-citation/)) |
+| **Flow / Flow Property / Unit Group** | What exact substance or product is exchanged, and in what units? | Enables exact process linking and unambiguous LCIA factor matching |
+| **Source / Contact** | Where did the numbers come from, who compiled them, and who owns the rights? | Supports auditability, peer review, and compliant citation |
 
-For UI workflows covering viewing, creating, and managing these objects, see [Data Platform Overview](/en/docs/user-guide/data/) and [Data Usage Guide](/en/docs/user-guide/data-use/).
+## 3. Built-In LCIA Methods (25-Indicator Bundle)
 
-## Data spaces and visibility
+Platform and solver calculations use a reviewed **25-method static LCIA bundle** aligned with the EU Environmental Footprint (EF) indicator suite and widely used scientific models (IPCC, USEtox, AWARE, LOTOS-EUROS, and others) across 12 environmental domains:
 
-Inside the platform, datasets are separated into four main data spaces. See [Permissions & Data Spaces](/en/docs/user-guide/permissions-and-data-scopes/) for the complete role matrix:
-
-| Data space | Primary audience | Typical content and state | Platform usage boundary |
+| Impact domain | Included indicators | Reference unit | Underlying model / source |
 | --- | --- | --- | --- |
-| **Open Data** | All platform users | Reviewed, published public datasets (`state_code = 100`) | Read-only; searchable, referenceable, copyable to My Data, exportable, and eligible for public numerical calculations |
-| **Commercial Data** | Users needing commercial databases | Descriptive metadata for third-party commercial datasets (`state_code = 200`) | Metadata and provider contact information only; **cannot be cited directly in models**; contact the provider for full data and licensing—see [Commercial Database Access](/en/docs/faq/commercial-database/) |
-| **My Data** | Authors and maintainers | Personal workspace drafts (`state_code = 0`), in-review items (`state_code = 20`), and authored versions | Read/write (foundational unit groups and flow properties are maintained by system administrators); starting point for review submission and team contribution |
-| **Team Data** | Team members | Datasets shared across a team | Read-only for team members; copy to My Data before editing and contributing back |
+| **Climate change (4)** | Total; Biogenic; Fossil; Land use and land use change (LULUC) | `kg CO2 eq` | IPCC 100-year baseline model (GWP100) |
+| **Human toxicity — cancer (3)** | Total; Inorganics; Organics | `CTUh` | USEtox |
+| **Human toxicity — non-cancer (3)** | Total; Inorganics; Organics | `CTUh` | USEtox 2.1 |
+| **Ecotoxicity — freshwater (3)** | Total; Inorganics; Organics | `CTUe` | USEtox |
+| **Eutrophication (3)** | Freshwater; Marine; Terrestrial | `kg P eq`; `kg N eq`; `mol N eq` | CARMEN / EUTREND; Accumulated Exceedance |
+| **Resource use (2)** | Fossils; Minerals and metals | `MJ`; `kg Sb eq` | Abiotic resource depletion (ADP fossil / ultimate reserve) |
+| **Water use (1)** | Water use | `m3-world eq` | AWARE 100 |
+| **Land use (1)** | Land use | dimensionless (`pt`) | Soil quality index |
+| **Acidification (1)** | Acidification | `mol H+ eq` | Accumulated Exceedance |
+| **Ozone depletion (1)** | Ozone depletion | `kg CFC11 eq` | WMO ozone depletion assessment |
+| **Ionising radiation (1)** | Ionising radiation — human health | `kBq U235 eq` | EF ionising radiation indicator |
+| **Photochemical ozone formation (1)** | Photochemical ozone formation — human health | `kg NMVOC eq` | LOTOS-EUROS |
+| **Particulate matter (1)** | Particulate matter (EF-particulate Matter) | `disease incidence` | EF particulate matter health model |
 
-> The platform also provides read-only curated example datasets (`state_code = -1`) for signed-in exploration; they are separate from the Open Data publication catalog.
+Keep three calculation rules in mind when reading LCIA results (see [LCIA Calculation & Results](/en/docs/user-guide/lcia/) for walkthroughs and troubleshooting):
 
-## Sources, live coverage, and why static counts are not hardcoded
+1. **Non-regional default profile**: Calculations apply each method's global or location-unspecified default characterization factors. Process geography does **not** automatically switch factors to country- or watershed-specific values; note this limitation if your study requires regionalized water or acidification modeling.
+2. **Exact flow-version and direction matching**: Factors match by exact elementary flow UUID, version, and input/output direction—never by fuzzy flow-name matching.
+3. **Missing factors are never treated as zero**: When an elementary flow has no matching factor in the selected method, TianGong explicitly flags **incomplete coverage** and exposes the missing flow details instead of silently recording zero impact.
 
-TianGong Open Data grows continuously through contributions from research institutions, industry groups, and community authors published through [Data Review](/en/docs/user-guide/data-review/). To prevent stale numbers, this documentation **does not hardcode static dataset counts or sector percentages**.
+## 4. Four Data Spaces and the Open vs. Commercial Boundary
 
-To check current authoritative coverage:
+Inside the platform, datasets are organized into four spaces by visibility and editing rights (see [Data Platform Overview](/en/docs/user-guide/data/) and [Permissions & Data Spaces](/en/docs/user-guide/permissions-and-data-scopes/) for the complete role matrix):
 
-1. Open the [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database) (no sign-in required) for live public process and flow counts. Catalog counts are grouped by dataset UUID so multiple versions of the same dataset are counted once.
-2. Browse by geography or source and open an exact version page to check scope, temporal representativeness, original sources, and whether exchanges and LCIA results are publicly exposed for that version.
-3. Read [About the Data](https://www.tiangong.earth/en/methodology) on the portal for catalog visibility, comparability, provenance, and withdrawal rules.
+| Data space | Primary users | Typical content | What you can and cannot do |
+| --- | --- | --- | --- |
+| **Open Data** | All signed-in users | Reviewed, published public datasets | Read-only; search, inspect, cite in models, export JSON, or copy into My Data for modification; sole public pool for standard background calculations |
+| **Commercial Data** | Users requiring licensed third-party databases | Descriptive metadata for commercial libraries (such as HiQLCD) | Shows scope, summary, and provider contact details only, without full inventory tables; **cannot be linked directly in models**—contact the provider for licensing and access (see [Commercial Database Access](/en/docs/faq/commercial-database/)) |
+| **My Data** | Authors and maintainers | Personal drafts, records under review, and authored versions | Read/write workspace (standard unit groups and flow properties are maintained by system administrators); starting point for Data Check, team sharing, and review submission |
+| **Team Data** | Team members | Shared collaborative project data and reviewed outputs | Read-only for members to prevent concurrent overwrites; copy to My Data before editing and contributing back |
 
-## Data quality and uncertainty: what is provided today
+> Signed-in users also have read-only access to **curated example datasets** designed for onboarding and practice. Example records are excluded from Open Data publication counts.
 
-When assessing whether a TianGong dataset fits your study, separate the structured evidence the platform already provides from methodological judgments that remain the researcher's responsibility:
+## 5. End-to-End Practitioner Workflow: Find, Check, Use, and Verify
 
-- **Provided today**: structured TIDAS metadata (geography, time coverage, technology, representativeness, data quality fields, and attached source documents), role-separated [Data Review](/en/docs/user-guide/data-review/), LCIA characterization-factor coverage diagnostics (missing factors are explicitly flagged as incomplete coverage, never treated as zero), and solver snapshot provider-linking and fallback diagnostics.
-- **Current boundaries**: public catalog visibility or a successful automatic solve **does not automatically certify** temporal, technological, or geographic representativeness for a specific study, nor does every record carry harmonized quantitative probability distributions or automated Monte Carlo propagation.
+Whether you are conducting academic research, preparing a carbon footprint, or building corporate LCI models, follow this four-step workflow:
 
-For general methodology on dataset fitness, data quality ratings (DQR / pedigree), and uncertainty, see the TianGong LCA Knowledge Base chapters [Data Applicability](https://prism.tiangong.earth/en/docs/book/data-applicability/) and [Data Quality Scores and Probability](https://prism.tiangong.earth/en/docs/book/data-quality-and-probability/).
+1. **Check live coverage and discover candidates (no account needed)**
+   Open the [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database) to inspect current public process and flow counts (counted once per dataset UUID across all its versions) and filter records by keyword, region, or data source.
+2. **Audit suitability on the exact version page**
+   Inspect five essentials before selecting any record: reference product and functional unit, geography and reference year, technology and system boundary, primary sources and review history, and whether **exchanges** and **LCIA results** are publicly exposed for that specific version.
+3. **Verify licensing and choose your access path**
+   Confirm that the record's copyright, license type, and access restrictions match your intended use (see [Versions, Licensing & Citation](/en/docs/database/versions-citation/)), then proceed via your preferred channel:
+   - **Interactive modeling**: Sign in to the [TianGong LCA platform](https://lca.tiangong.earth/) to reference Open Data directly or copy records into My Data (see [Data Usage Guide](/en/docs/user-guide/data-use/)).
+   - **Batch exchange & automation**: Use [TIDAS ZIP Workflows](/en/docs/user-guide/tidas-zip-workflows/) in the web interface or the [CLI user guide](/en/docs/integration/cli/) for scripted queries and packages.
+   - **External ILCD tools**: Visit the [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) to browse and obtain ILCD-format datasets.
+4. **Review provider linking and factor coverage after calculating**
+   After running a calculation, always inspect the selected suppliers and LCIA characterization coverage to verify that no unexpected global fallback or uncharacterized elementary flow skewed your results.
 
-## ILCD distribution (LCDN) and open-access boundaries
+## 6. Data Quality, Review, and Uncertainty: What Exists Today
 
-Alongside the web platform and public catalog, the [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) publishes and distributes datasets in ILCD format for compatible LCA software and external data networks.
+Practitioners frequently ask how TianGong tracks data quality and whether Monte Carlo uncertainty analysis runs automatically. Here is the exact current picture:
 
-Important: **listing a dataset in the public catalog, Open Data, or LCDN does not automatically grant unrestricted redistribution or commercial reuse rights.** Always verify the exact version's licence type, access restrictions, and source attribution rules in [Versions, Licensing & Citation](/en/docs/database/versions-citation/).
+### Structured evidence available today
 
-## Where to go next
+- **Seven TIDAS Data Quality Indicators (DQIs)**: Process review records support the seven standard ILCD/TIDAS dimensions—**Technological representativeness, Time representativeness, Geographical representativeness, Completeness, Precision, Methodological appropriateness and consistency, and Overall quality**—rated on a five-level scale (`Very good`, `Good`, `Fair`, `Poor`, `Very poor`, plus `Not evaluated / unknown` and `Not applicable`).
+- **Review independence and verification methods**: Datasets record review independence (internal, independent external, accredited third-party, or independent review panel), concrete checks performed (mass balance, energy balance, element balance, cross-checks, ISO 14040/14044 compliance), and the platform's role-separated [Data Review](/en/docs/user-guide/data-review/) workflow.
+- **Exchange-level uncertainty metadata**: The TIDAS schema supports distribution types (`log-normal`, `normal`, `triangular`, `uniform`, `undefined`) and 95% relative standard deviation (`relativeStandardDeviation95In`) on exchanges and LCIA results.
+- **Calculation transparency diagnostics**: Calculation views surface missing characterization factors, annual-volume fallback counts, and geographic matching tiers.
 
-- Understand why TianGong has no ecoinvent-style `market` datasets and how the solver resolves unlinked inputs: [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/)
-- Review version numbering, permanent URIs, lifecycle states, licensing, and citation formats: [Versions, Licensing & Citation](/en/docs/database/versions-citation/)
-- Compare TianGong with ecoinvent, ILCD/EF, USLCI, BAFU, and inspect format interoperability boundaries: [Cross-Database Comparison & Interoperability](/en/docs/database/comparison/)
+### Clear current boundaries
+
+- **Visibility or a successful solve does not guarantee study fitness**: Appearing in Open Data—or solving cleanly in a model—does **not** automatically certify that a dataset matches your study's target year, technology route, or region.
+- **No database-wide automated Monte Carlo propagation yet**: While TIDAS can store uncertainty parameters, population completeness varies by contributor, and the platform does not automatically generate Monte Carlo probability intervals across all calculations today.
+
+For a deeper methodological treatment of dataset fitness, pedigree matrices, data quality ratings (DQR), and probabilistic uncertainty, see [Data Applicability](https://prism.tiangong.earth/en/docs/book/data-applicability/) and [Data Quality Scores and Probability](https://prism.tiangong.earth/en/docs/book/data-quality-and-probability/) in the TianGong LCA Knowledge Base.
+
+## Where to Go Next
+
+- Learn why TianGong has no standalone `market` datasets, how the implicit regional supply mix calculates shares, and walk through three concrete worked examples: [Supply Linking & Market Mechanism](/en/docs/database/supply-markets/)
+- Review version numbering, permanent URIs, lifecycle states, licensing rules, and ready-to-copy citation templates: [Versions, Licensing & Citation](/en/docs/database/versions-citation/)
+- Compare TianGong with ecoinvent v3's four system models, desktop LCA tools, public databases, and format conversion boundaries: [Cross-Database Comparison & Interoperability](/en/docs/database/comparison/)

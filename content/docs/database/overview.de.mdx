@@ -1,78 +1,129 @@
 ---
 title: "Datenbanküberblick"
-description: "Erläutert Datensatztypen, Datenräume, maßgebliche Live-Katalogabdeckung, Grenzen zwischen offenen und kommerziellen Daten, LCDN-Verteilung und Zuständigkeiten im TianGong-Ökosystem."
+description: "Kompakter Gesamtleitfaden zur TianGong-LCA-Datenbank: Datensatztypen, Datenräume, die 25 integrierten LCIA-Methoden, Datenqualität und Unsicherheit, Live-Abdeckung sowie Nutzungsbedingungen."
 ---
 
-Diese Seite beschreibt die TianGong-LCA-Datenbank selbst — Datensatztypen, Datenräume, maßgebliche Quellen zur aktuellen Abdeckung und Verteilungswege — damit Sie vor Modellierung oder Zitierung prüfen können, welche Inhalte vorliegen und welche Grenzen gelten.
+Bevor Sie Datensätze in TianGong LCA suchen, zitieren oder in eigene Modelle einbinden, beantwortet diese Seite die fünf wichtigsten Einstiegsfragen aus der Praxis: **Welche Daten enthält die Datenbank, wie hängen die Objekte zusammen, welche Wirkungsabschätzungsmethoden sind integriert, wo finden sich aktuelle Bestandszahlen und welche Nutzungsgrenzen gelten?**
 
-## Dokumentationsgrenzen: Was in diesen Abschnitt gehört
+> **TianGong-LCA-Datenbank auf einen Blick**
+>
+> - **Offenes, standardisiertes Datenmodell**: Alle Datensätze folgen der offenen [TIDAS](https://tidas.tiangong.earth/de/)-JSON-Spezifikation, sind eng an ILCD/eILCD angelehnt und lassen sich über Webplattform, CLI, OpenAPI und [LCDN](https://lcdn.tiangong.earth/) austauschen.
+> - **Keine eigenständigen Marktdatensätze wie in ecoinvent**: Nicht explizit verknüpfte vorgelagerte Produkteingaben werden erst zur Rechenzeit über einen **impliziten regionalen Versorgungsmix** aufgelöst, statt auf vorab erstellte `market`-Prozesse zu verweisen (siehe [Versorgungsverknüpfung & Marktmechanismus](/de/docs/database/supply-markets/)).
+> - **Klare Trennung zwischen Offenen und Kommerziellen Daten**: Offene Daten durchlaufen eine mehrstufige Prüfung und sind direkt nutz- und berechenbar; Kommerzielle Daten zeigen auf der Plattform nur Metadaten und Anbieterkontakte und erfordern eine separate Lizenzierung beim Anbieter.
+> - **Aktuelle Bestandszahlen im Live-Katalog**: Da der Datenbestand laufend wächst, nennt diese Dokumentation keine fest eingetragenen Datensatzzahlen. Aktuelle Anzahlen, Regionen und Quellen zeigt der [öffentliche TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database).
 
-Das TianGong-Ökosystem trennt datenbankspezifische Plattformfakten von allgemeiner Ökobilanztheorie, Schemadefinitionen und Produktkategorieregeln, damit jede Quelle aktuell und widerspruchsfrei bleibt:
+## 1. Rollenverteilung im TianGong-Dokumentationsökosystem
 
-| Thema | Maßgebliche Quelle | Aufgabe |
+Um Doppelpflege und veraltete Inhalte zu vermeiden, trennt TianGong datenbankspezifische Plattformfakten klar von allgemeiner Ökobilanztheorie, Schemadefinitionen und Produktkategorieregeln:
+
+| Ihre Frage | Maßgebliche Quelle | Inhaltlicher Schwerpunkt |
 | --- | --- | --- |
-| **TianGong-Datenbankfakten, Modellierungskonventionen und Plattformgrenzen** | Dieser Abschnitt (**Datenbank & Methodik**) | Datensatztypen, Datenräume, Versorgungs-Routing, Versionierung/Lizenzen/Zitierung sowie Datenbankvergleiche |
-| **Aktuelle öffentliche Katalogzahlen, Suche nach Region/Quelle und Kurzüberblick** | [Öffentlicher TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database) und [Über die Daten](https://www.tiangong.earth/de/methodology) | Live-Anzahlen ohne Anmeldung, genaue Versionen und Sichtbarkeit je Version |
-| **Datenstruktur und Feldsemantik** | [TIDAS-Datensystem](https://tidas.tiangong.earth/de/) | JSON-Schemas, Kernmodul-Beziehungen und kontrollierte Vokabulare |
-| **Allgemeine LCA-Methodik und Hintergrunddatenbank-Theorie** | [TianGong-LCA-Wissensbasis (Englisch)](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) | Ziel und Untersuchungsrahmen, Allokation, Marktreaktion, Unsicherheit und Rahmenvergleiche |
-| **Produktkategorieregeln (PCR)** | [TianGong-PCR-Dokumentation (Englisch)](https://pcr.tiangong.earth/en/) | Branchenspezifische Systemgrenzen und Datenerstellungsregeln |
-| **ILCD-Netzwerkverteilung** | [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) | ILCD-Datenknoten für LCA-Software und externe Datennetzwerke |
+| Aufbau der TianGong-Datenbank, Versorgungslogik, Versionen, Lizenzen, Zitierung und Datenbankvergleiche | Dieser Abschnitt (**Datenbank & Methodik**) | Plattformspezifische Datenbankfakten, Modellierungskonventionen und Anwendungsgrenzen |
+| Aktuelle Anzahl öffentlicher Prozesse und Flüsse sowie Sichtbarkeit von Austauschen und LCIA je Version | [Öffentlicher TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database) und [Über die Daten](https://www.tiangong.earth/de/methodology) | Live-Suche ohne Anmeldung, nach UUID deduplizierte Bestandszahlen, genaue Versionsseiten und Verfügbarkeitshinweise |
+| Exakte Felddefinitionen, JSON-Schemas und kontrollierte Vokabulare | [TIDAS-Datensystem](https://tidas.tiangong.earth/de/) | Datenstrukturspezifikation, Objektbeziehungen und Prüfregeln |
+| Allgemeine Ökobilanzmethodik (attributional vs. konsequentiell, Allokation, Marktreaktion, Unsicherheit) | [TianGong-LCA-Wissensbasis (Englisch)](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) | Vertiefende Fachmonografie und Rahmenvergleiche |
+| Branchenspezifische Systemgrenzen und Datenerstellungsregeln | [TianGong-PCR-Dokumentation (Englisch)](https://pcr.tiangong.earth/en/) | Produktkategorieregeln (PCR) für konkrete Produktgruppen |
+| Anbindung externer ILCD-fähiger Ökobilanzsoftware | [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) | Öffentlicher ILCD-Datenknoten für Software und Datennetzwerke |
 
-## Datensatztypen in TianGong LCA
+## 2. Die sechs zentralen Objekttypen der Datenbank
 
-TianGong LCA verwaltet Lebenszyklusdaten auf Basis der [TIDAS-Datenstruktur](https://tidas.tiangong.earth/de/docs/core-modules/data-relationships/):
+TianGong LCA strukturiert Lebenszyklusdaten nach dem [TIDAS-Objektmodell](https://tidas.tiangong.earth/de/docs/core-modules/data-relationships/). Am Beispiel der Herstellung von **1 Tonne Methanol** wird das Zusammenspiel unmittelbar greifbar:
 
-| Datensatztyp | Zweck | Rolle auf der Plattform und in der Berechnung |
+- **Prozess (Process)** ist das „Rezept- und Emissionsblatt“: Er dokumentiert, wie viel Erdgas, Strom und Dampf für 1 Tonne Methanol eingesetzt werden und welche Emissionen in Luft, Wasser oder Boden entstehen — ergänzt um Region, Bezugsjahr, Technologie, Quellen und Prüfinformationen. Dabei unterscheidet die Plattform zwei Formen:
+  - **Unit-Prozess (`U(P)`)**: Enthält ausschließlich die direkten Inputs und Emissionen dieser einzelnen Prozessstufe.
+  - **Ergebnisprozess (`R(P)`)**: Enthält die aggregierte Sachbilanz (und gegebenenfalls LCIA-Ergebnisse), nachdem die vorgelagerte Lieferkette für eine definierte Systemgrenze berechnet wurde.
+- **Fluss (Flow)** bildet das gemeinsame „Stoff- und Produktverzeichnis“: Jedes Produkt, jeder Energieträger, jeder Abfall und jede Umweltemission erhält eine dauerhafte UUID, Version und Referenz-Flusseigenschaft, sodass „Kohlendioxid in Luft“ oder „Industriestrom“ überall eindeutig zugeordnet werden. Flüsse gehören zu vier Kategorien:
+  - **Produktflüsse (Product)** und **Abfallflüsse (Waste)** zirkulieren innerhalb des technischen Produktionssystems (Technosphäre) und verbinden Prozesse miteinander.
+  - **Elementarflüsse (Elementary)** überschreiten die Grenze zur Umwelt (Ressourcenentnahmen und Emissionen in die Biosphäre) und bestimmen die Umweltwirkungen.
+  - **Sonstige Flüsse (Other)** dienen rein informativen Angaben und fließen weder in die Matrixberechnung noch in die Wirkungsabschätzung ein.
+- **Lebenszyklusmodell (Lifecycle Model, `M(P)`)** ist der „Bauplan des Produktsystems“: Es ordnet Unit- oder Ergebnisprozesse auf der Arbeitsfläche an, verbindet ihre Austausche und legt die funktionelle Einheit fest. Beim **Speichern** berechnet und sichert die Plattform sowohl das Modell als auch die daraus entstehenden Ergebnisprozesse (siehe [Modellergebnisse auf der Plattform speichern und wiederverwenden](/de/docs/overview/data-relationships/)).
+- **Flusseigenschaft (Flow Property) & Einheitengruppe (Unit Group)** stellen die „Maß- und Umrechnungsregeln“ bereit — etwa die Verknüpfung von Masse mit `kg`, `t` und `g`. Normale Nutzer verwenden einfach die Standardkonfiguration der Plattform weiter.
+- **Quelle (Source) & Kontakt (Contact)** bilden das „Literatur- und Verantwortungsarchiv“ für Publikationen, Messberichte, Fragebögen, Ersteller, Prüfer und Rechteinhaber.
+- **LCIA-Methoden** liefern die Charakterisierungsfaktoren, mit denen Elementarflüsse (z. B. Methan, Schwefeldioxid oder Wasserverbrauch) in Wirkungsindikatoren wie Klimawandel, Versauerung oder Wasserknappheit umgerechnet werden.
+
+| Objekttyp | Zentrale Frage | Typische Rolle auf der Plattform |
 | --- | --- | --- |
-| **Prozess (Process)** | Input-/Output-Bilanz, räumlicher und zeitlicher Geltungsbereich, Technologiebeschreibung und Verwaltungsmetadaten für eine Referenzskala | Bildet einen Unit-Prozess oder einen gespeicherten Modellergebnisprozess ab. **TianGong besitzt keinen eigenständigen ecoinvent-artigen `market`-Prozesstyp**; siehe [Versorgungsverknüpfung & Marktmechanismus](/de/docs/database/supply-markets/) |
-| **Fluss (Flow)** | Kennzeichnet ausgetauschte Produkte, Materialien, Energieträger, Abfälle oder Elementarflüsse samt Referenz-Flusseigenschaft | Unterscheidet Produkt-, Abfall-, Elementar- und sonstige Flüsse; Produkt- und Abfallflüsse gehören zur Technosphäre, Elementarflüsse zur Biosphäre |
-| **Lebenszyklusmodell (Lifecycle Model)** | Verknüpft Prozessinstanzen über explizite Verbindungen, Referenzprozess und Zielmenge zu einem Produktsystem | Beim Speichern werden Berechnung, Modell und Ergebnisprozesse persistiert; siehe [Modellergebnisse auf der Plattform speichern und wiederverwenden](/de/docs/overview/data-relationships/) |
-| **Ergebnisprozess (Result Process)** | Enthält eine aggregierte Bilanz aus Modellberechnung oder Release-Materialisierung | Aus Modellen gespeicherte Ergebnisprozesse dienen der Prüfung und Wiederverwendung; veröffentlichte abgeleitete Ergebnisprozesse (`state_code = 120`) aus der Release-Governance sind von regulären numerischen Berechnungseingaben isoliert |
-| **Unterstützende Datensätze** | **Flusseigenschaft (Flow Property)**, **Einheitengruppe (Unit Group)**, **Quelle (Source)**, **Kontakt (Contact)** | Sichern Umrechnungskonsistenz, Literatur-Rückverfolgbarkeit sowie Eigentums- und Prüfnachweise |
-| **LCIA-Methoden** | Charakterisierungsfaktoren zur Umrechnung von Elementarflussbilanzen in Wirkungskategorien | Die Plattformberechnung nutzt das geprüfte statische Cache-Paket mit 25 Methoden und exaktem Flussversions-/Richtungsabgleich; fehlende Faktoren werden als unvollständige Abdeckung statt als 0 gemeldet; siehe [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/) |
+| **Unit-Prozess `U(P)`** | Was verbraucht und emittiert diese einzelne Aktivität direkt? | Grundbaustein für Produktsysteme und Standardform in Offenen Daten |
+| **Lebenszyklusmodell `M(P)`** | Wie sind die Prozesse zur Erfüllung der funktionellen Einheit verbunden? | Dokumentiert Lieferkettenstruktur und erzeugt beim Speichern Haupt- und weitere Produktergebnisse |
+| **Ergebnisprozess `R(P)`** | Wie hoch sind kumulierte Sachbilanz und Wirkungen inklusive Vorkette? | Einsicht in Modellergebnissen oder Wiederverwendung als aggregierter Vorkettenprozess (Hinweis: formal veröffentlichte schreibgeschützte Ergebnisprozesse mit `state_code = 120` bleiben strikt von regulären Modellierungseingaben getrennt; siehe [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/)) |
+| **Fluss / Flusseigenschaft / Einheitengruppe** | Welcher Stoff oder welches Produkt wird in welcher Einheit ausgetauscht? | Ermöglicht eindeutige Prozessverknüpfung und exakte LCIA-Faktorzuordnung |
+| **Quelle / Kontakt** | Woher stammen die Werte, wer hat sie erstellt und wer hält die Rechte? | Grundlage für Nachvollziehbarkeit, Datenprüfung und korrekte Zitierung |
 
-Für die Bedienung dieser Objekte in der Oberfläche siehe [Überblick Datenplattform](/de/docs/user-guide/data/) und [Anleitung zur Datennutzung](/de/docs/user-guide/data-use/).
+## 3. Integrierte LCIA-Methoden (25 Wirkungskategorien)
 
-## Datenräume und Sichtbarkeit
+Plattform und Rechenkern arbeiten mit einem geprüften **statischen Paket aus 25 LCIA-Methoden**, das sich am europäischen Environmental-Footprint-Rahmen (EF) sowie etablierten Fachmodellen (IPCC, USEtox, AWARE, LOTOS-EUROS u. a.) über 12 Wirkungsbereiche orientiert:
 
-Auf der Plattform werden Datensätze in vier Hauptdatenräume gegliedert. Die vollständige Rollenmatrix finden Sie unter [Berechtigungen und Datenräume](/de/docs/user-guide/permissions-and-data-scopes/):
-
-| Datenraum | Primäre Zielgruppe | Typischer Inhalt und Status | Nutzungsgrenze auf der Plattform |
+| Wirkungsbereich | Enthaltene Indikatoren | Referenzeinheit | Zugrunde liegendes Modell / Quelle |
 | --- | --- | --- | --- |
-| **Offene Daten (Open Data)** | Alle Plattformnutzer | Geprüfte, veröffentlichte öffentliche Datensätze (`state_code = 100`) | Nur Lesen; suchbar, referenzierbar, nach „Meine Daten“ kopierbar, exportierbar und für öffentliche numerische Berechnungen zugelassen |
-| **Kommerzielle Daten (Commercial Data)** | Nutzer mit Bedarf an kommerziellen Datenbanken | Beschreibende Metadaten kommerzieller Drittanbieter-Datensätze (`state_code = 200`) | Nur Metadaten und Anbieterkontakte; **nicht direkt in Modellen zitierbar**; Vollzugang und Lizenzierung laufen über den Anbieter, siehe [Zugriff auf kommerzielle Datenbanken](/de/docs/faq/commercial-database/) |
-| **Meine Daten (My Data)** | Autoren und Pflegeverantwortliche | Persönliche Entwürfe (`state_code = 0`), Datensätze in Prüfung (`state_code = 20`) und eigene Versionen | Lesen/Schreiben (Basis-Einheitengruppen und Flusseigenschaften werden von Systemadministratoren gepflegt); Ausgangspunkt für Prüfungseinreichung und Teambeiträge |
-| **Teamdaten (Team Data)** | Teammitglieder | Innerhalb eines Teams geteilte Datensätze | Für Teammitglieder schreibgeschützt; zum Bearbeiten zuerst nach „Meine Daten“ kopieren und danach erneut teilen |
+| **Klimawandel (4)** | Gesamt; Biogen; Fossil; Landnutzung und Landnutzungsänderung (LULUC) | `kg CO2 eq` | IPCC 100-Jahres-Basismodell (GWP100) |
+| **Humantoxizität — kanzerogen (3)** | Gesamt; Anorganisch; Organisch | `CTUh` | USEtox |
+| **Humantoxizität — nicht kanzerogen (3)** | Gesamt; Anorganisch; Organisch | `CTUh` | USEtox 2.1 |
+| **Ökotoxizität — Süßwasser (3)** | Gesamt; Anorganisch; Organisch | `CTUe` | USEtox |
+| **Eutrophierung (3)** | Süßwasser; Meerwasser; Terrestrisch | `kg P eq`; `kg N eq`; `mol N eq` | CARMEN / EUTREND; Accumulated Exceedance |
+| **Ressourcenverbrauch (2)** | Fossile Energieträger; Minerale und Metalle | `MJ`; `kg Sb eq` | Abiotischer Ressourcenverbrauch (ADP fossil / ultimate reserve) |
+| **Wassernutzung (1)** | Wassernutzung | `m3-world eq` | AWARE 100 |
+| **Landnutzung (1)** | Landnutzung | dimensionslos (`pt`) | Bodenqualitätsindex (Soil quality index) |
+| **Versauerung (1)** | Versauerung | `mol H+ eq` | Accumulated Exceedance |
+| **Ozonabbau (1)** | Ozonabbau | `kg CFC11 eq` | WMO-Ozonabbaubewertung |
+| **Ionisierende Strahlung (1)** | Ionisierende Strahlung — menschliche Gesundheit | `kBq U235 eq` | EF-Indikator für ionisierende Strahlung |
+| **Photochemische Ozonbildung (1)** | Photochemische Ozonbildung — menschliche Gesundheit | `kg NMVOC eq` | LOTOS-EUROS |
+| **Feinstaub (1)** | Feinstaub (EF-particulate Matter) | `disease incidence` | EF-Gesundheitsmodell für Feinstaub |
 
-> Zusätzlich stehen angemeldeten Nutzern schreibgeschützte kuratierte Beispieldatensätze (`state_code = -1`) zur Verfügung; sie gehören nicht zum öffentlichen Katalog der Offenen Daten.
+Beachten Sie bei der Auswertung drei feste Rechenregeln (Details und Fehlerbehebung unter [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/)):
 
-## Quellen, Live-Abdeckung und warum keine festen Zahlen hinterlegt werden
+1. **Nicht-regionalisiertes Standardprofil**: Die Berechnung nutzt jeweils den globalen bzw. ortsunabhängigen Standardfaktor jeder Methode. Die Geografie eines Prozesses schaltet Faktoren **nicht** automatisch auf länder- oder einzugsgebietsspezifische Werte um.
+2. **Exakter Abgleich von Flussversion und Richtung**: Faktoren werden nur bei exakter Übereinstimmung von Elementarfluss-UUID, Version und Austauschrichtung zugeordnet — niemals per unscharfem Namensvergleich.
+3. **Fehlende Faktoren gelten niemals als Nullwirkung**: Fehlt für einen Elementarfluss ein Charakterisierungsfaktor, meldet die Oberfläche ausdrücklich eine **unvollständige Abdeckung** samt Detailangaben statt stillschweigend `0` auszuweisen.
 
-TianGong Offene Daten wachsen fortlaufend durch Beiträge von Forschungseinrichtungen, Branchenteams und Community-Autoren, die über die [Datenprüfung](/de/docs/user-guide/data-review/) veröffentlicht werden. Um veraltete Angaben zu vermeiden, **enthält diese Dokumentation keine fest eingetragenen Datensatzzahlen oder Branchenanteile**.
+## 4. Vier Datenräume und Abgrenzung zu kommerziellen Daten
 
-Für die aktuell maßgebliche Abdeckung nutzen Sie die Live-Einstiege:
+Auf der Plattform sind Datensätze nach Sichtbarkeit und Bearbeitungsrechten in vier Datenräume unterteilt (siehe [Überblick Datenplattform](/de/docs/user-guide/data/) und [Berechtigungen und Datenräume](/de/docs/user-guide/permissions-and-data-scopes/)):
 
-1. Öffnen Sie den [öffentlichen TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database) (ohne Anmeldung) für aktuelle öffentliche Prozess- und Flusszahlen. Gezählt wird je Datensatz-UUID; mehrere Versionen derselben UUID zählen einmal.
-2. Filtern Sie nach Region oder Quelle und prüfen Sie auf der jeweiligen Versionsseite Geltungsbereich, Zeitbezug, Originalquellen sowie die öffentliche Verfügbarkeit von Austauschen und LCIA-Ergebnissen.
-3. Lesen Sie [Über die Daten](https://www.tiangong.earth/de/methodology) im Portal zu Sichtbarkeit, Vergleichbarkeit, Herkunft und Rücknahmen.
+| Datenraum | Zielgruppe | Typischer Inhalt | Was möglich ist und was nicht |
+| --- | --- | --- | --- |
+| **Offene Daten (Open Data)** | Alle angemeldeten Nutzer | Über die [Datenprüfung](/de/docs/user-guide/data-review/) freigegebene öffentliche Datensätze | Schreibgeschützt; durchsuchen, prüfen, in Modellen referenzieren, als JSON exportieren oder nach „Meine Daten“ kopieren; einzige öffentliche Datenbasis für Standardberechnungen |
+| **Kommerzielle Daten (Commercial Data)** | Nutzer mit Bedarf an lizenzierten Drittdatenbanken | Beschreibende Metadaten kommerzieller Datenbanken (z. B. HiQLCD) | Zeigt ausschließlich Umfang, Beschreibung und Anbieterkontakte ohne vollständige Sachbilanz; **nicht direkt in Modellen zitierbar** — für Vollzugang und Lizenz den Anbieter kontaktieren (siehe [Zugriff auf kommerzielle Datenbanken](/de/docs/faq/commercial-database/)) |
+| **Meine Daten (My Data)** | Autoren und Pflegeverantwortliche | Eigene Entwürfe, Datensätze in Prüfung und eigene Versionen | Lese-/Schreibbereich (Standard-Einheitengruppen und Flusseigenschaften pflegen Systemadministratoren); Ausgangspunkt für Datenprüfung, Teamfreigabe und Einreichung |
+| **Teamdaten (Team Data)** | Teammitglieder | Im Team geteilte Projekt- und Prüfergebnisse | Für Mitglieder schreibgeschützt, damit parallele Bearbeitungen sich nicht überschreiben; zum Ändern nach „Meine Daten“ kopieren und anschließend erneut teilen |
 
-## Datenqualität und Unsicherheit: aktueller Stand
+> Angemeldete Nutzer erhalten zudem schreibgeschützten Zugriff auf **kuratierte Beispieldatensätze** für Einstieg und Übungen; sie werden bei den Bestandszahlen der Offenen Daten nicht mitgezählt.
 
-Bei der Prüfung, ob ein TianGong-Datensatz zu Ihrer Studie passt, sollten bereits bereitgestellte strukturierte Nachweise klar von methodischen Bewertungen getrennt werden, die beim Anwender liegen:
+## 5. Vier-Schritte-Workflow: Daten finden, prüfen, nutzen und absichern
 
-- **Derzeit bereitgestellt**: strukturierte TIDAS-Metadaten (Geografie, Zeitbezug, Technologie, Repräsentativität, Datenqualitätsfelder und Quellenanhänge), rollengetrennte [Datenprüfung](/de/docs/user-guide/data-review/), LCIA-Faktorabdeckungsdiagnosen (fehlende Faktoren erscheinen ausdrücklich als unvollständige Abdeckung, niemals als Nullwirkung) sowie Solver-Snapshot-Diagnosen zu Anbieter-Verknüpfung und Fallbacks.
-- **Aktuelle Grenzen**: Sichtbarkeit im öffentlichen Katalog oder ein erfolgreicher automatischer Rechenlauf **garantieren nicht**, dass ein Datensatz Zeit-, Technologie- oder Geografie-Repräsentativität einer konkreten Studie erfüllt; ebenso trägt nicht jeder Datensatz harmonisierte Wahrscheinlichkeitsverteilungen oder automatische Monte-Carlo-Fortpflanzung.
+Für Forschung, Produkt-CO₂-Fußabdrücke oder Unternehmensmodelle empfiehlt sich dieser durchgängige Ablauf:
 
-Vertiefende Grundlagen zu Datenignung, Qualitätsbewertung (DQR / Pedigree) und Unsicherheit bieten die Kapitel [Data Applicability (Englisch)](https://prism.tiangong.earth/en/docs/book/data-applicability/) und [Data Quality Scores and Probability (Englisch)](https://prism.tiangong.earth/en/docs/book/data-quality-and-probability/) der TianGong-LCA-Wissensbasis.
+1. **Aktuelle Abdeckung prüfen und Kandidaten suchen (ohne Konto)**
+   Öffnen Sie den [öffentlichen TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database), um die aktuellen Anzahlen öffentlicher Prozess- und Flussdatensätze zu prüfen (gezählt wird einmal je UUID über alle Versionen) und gezielt nach Stichwort, Region oder Quelle zu filtern.
+2. **Eignung auf der genauen Versionsseite prüfen**
+   Kontrollieren Sie vor jeder Auswahl fünf Kernpunkte: Referenzprodukt und funktionelle Einheit, Geografie und Bezugsjahr, Technologie und Systemgrenze, Originalquellen und Prüfstatus sowie die getrennten Verfügbarkeitsangaben für **Austausche** und **LCIA-Ergebnisse**.
+3. **Lizenz klären und passenden Zugangsweg wählen**
+   Prüfen Sie Urheberrecht, Lizenztyp und Nutzungsbeschränkungen der konkreten Version (siehe [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/)) und nutzen Sie den passenden Weg:
+   - **Interaktive Modellierung**: Auf der [TianGong-LCA-Plattform](https://lca.tiangong.earth/) anmelden, Offene Daten direkt referenzieren oder in „Meine Daten“ kopieren (siehe [Anleitung zur Datennutzung](/de/docs/user-guide/data-use/)).
+   - **Paket-Austausch und Automatisierung**: Web-[TIDAS-ZIP-Workflows](/de/docs/user-guide/tidas-zip-workflows/) oder das [CLI-Benutzerhandbuch](/de/docs/integration/cli/) für wiederholbare Abfragen und Datenpakete verwenden.
+   - **Externe ILCD-Software**: Über das [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) ILCD-Pakete prüfen und abrufen.
+4. **Nach der Berechnung Anbieterverknüpfung und Faktorabdeckung kontrollieren**
+   Prüfen Sie nach jedem Rechenlauf, welche Lieferanten tatsächlich gewählt wurden und ob alle relevanten Elementarflüsse durch Charakterisierungsfaktoren abgedeckt sind.
 
-## ILCD-Verteilung (LCDN) und Grenzen der freien Nutzung
+## 6. Datenqualität, Prüfung und Unsicherheit: aktueller Stand
 
-Ergänzend zu Webplattform und öffentlichem Katalog veröffentlicht und verteilt das [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) Datensätze im ILCD-Format für kompatible LCA-Software und externe Datenknoten.
+Häufig fragen Anwender, wie Datenqualität in TianGong dokumentiert wird und ob Monte-Carlo-Simulationen automatisch laufen. Der aktuelle Stand im Überblick:
 
-Wichtig: **Die Aufführung eines Datensatzes im öffentlichen Katalog, in Offenen Daten oder auf dem LCDN-Knoten erlaubt nicht automatisch eine uneingeschränkte Weiterverbreitung oder kommerzielle Nachnutzung.** Prüfen Sie Lizenztyp, Nutzungsbeschränkungen und Quellenangaben immer je genauer Version unter [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/).
+### Heute verfügbare strukturierte Nachweise
+
+- **Sieben TIDAS-Datenqualitätsindikatoren (DQI)**: Prüfdatensätze erfassen die sieben ILCD/TIDAS-Standarddimensionen — **Technologische Repräsentativität, Zeitliche Repräsentativität, Geografische Repräsentativität, Vollständigkeit, Genauigkeit, Methodische Eignung und Konsistenz sowie Gesamtqualität** — auf einer fünfstufigen Skala (`Very good`, `Good`, `Fair`, `Poor`, `Very poor`, ergänzt um `Not evaluated / unknown` und `Not applicable`).
+- **Prüfunabhängigkeit und Prüfmethoden**: Datensätze dokumentieren Unabhängigkeitsstufe (intern, extern unabhängig, akkreditierte Drittprüfung, unabhängiges Prüfgremium), durchgeführte Prüfungen (Massen-, Energie- und Elementbilanz, Quellenabgleich, ISO-14040/14044-Prüfung) sowie die rollengetrennte [Datenprüfung](/de/docs/user-guide/data-review/).
+- **Unsicherheitsfelder je Austausch**: Das TIDAS-Schema sieht Verteilungsformen (`log-normal`, `normal`, `triangular`, `uniform`, `undefined`) und die relative 95-%-Standardabweichung (`relativeStandardDeviation95In`) für Austausche und LCIA-Ergebnisse vor.
+- **Diagnosen für Rechentransparenz**: Ergebnisansichten weisen fehlende Charakterisierungsfaktoren, Fallbacks bei fehlendem Jahresvolumen und geografische Trefferebenen offen aus.
+
+### Klare heutige Grenzen
+
+- **Verfügbarkeit oder erfolgreiche Berechnung ersetzen keine Eignungsprüfung**: Dass ein Datensatz in Offenen Daten steht oder ein Modell fehlerfrei rechnet, belegt **nicht automatisch**, dass Bezugsjahr, Technologie und Region zu Ihrer Studie passen.
+- **Keine datenbankweite automatische Monte-Carlo-Fortpflanzung**: Obwohl TIDAS Unsicherheitsparameter speichern kann, ist deren Befüllungsgrad je nach Datenquelle unterschiedlich, und die Plattform berechnet derzeit nicht standardmäßig Monte-Carlo-Konfidenzintervalle.
+
+Vertiefende Methodik zu Dateneignung, Pedigree-Matrizen, Qualitätsbewertung (DQR) und Unsicherheitsanalyse bieten [Data Applicability (Englisch)](https://prism.tiangong.earth/en/docs/book/data-applicability/) und [Data Quality Scores and Probability (Englisch)](https://prism.tiangong.earth/en/docs/book/data-quality-and-probability/) in der TianGong-LCA-Wissensbasis.
 
 ## Weiterführende Seiten
 
-- Warum TianGong keine ecoinvent-artigen `market`-Datensätze führt und wie der Solver nicht verknüpfte Eingaben auflöst: [Versorgungsverknüpfung & Marktmechanismus](/de/docs/database/supply-markets/)
-- Versionsnummern, permanente URIs, Lebenszyklusstatus, Lizenzen und Zitierformate: [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/)
-- Vergleich mit ecoinvent, ILCD/EF, USLCI, BAFU sowie Grenzen der Format-Interoperabilität: [Datenbankvergleich & Interoperabilität](/de/docs/database/comparison/)
+- Warum TianGong keine eigenständigen `market`-Datensätze führt, wie der implizite regionale Versorgungsmix Anteile berechnet und drei vollständige Rechenbeispiele: [Versorgungsverknüpfung & Marktmechanismus](/de/docs/database/supply-markets/)
+- Versionsnummerierung, permanente URIs, Lebenszyklusstatus, Lizenzmatrix und direkt nutzbare Zitiervorlagen: [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/)
+- Detaillierter Vergleich mit den vier Systemmodellen von ecoinvent v3, Desktop-LCA-Tools, öffentlichen Datenbanken und Formatkonvertierungsgrenzen: [Datenbankvergleich & Interoperabilität](/de/docs/database/comparison/)

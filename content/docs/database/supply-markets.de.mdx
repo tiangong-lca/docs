@@ -1,131 +1,210 @@
 ---
 title: "Versorgungsverknüpfung & Marktmechanismus"
-description: "Erklärt, warum TianGong LCA keine ecoinvent-artigen Markt-Datensätze führt, wie Solver-Snapshots einen impliziten regionalen Versorgungsmix bilden, wo Editor und Solver sich trennen und wann explizit modelliert werden muss."
+description: "Ausführlicher Leitfaden dazu, warum TianGong LCA keine eigenständigen ecoinvent-Marktdatensätze führt, wie der implizite regionale Versorgungsmix rechnet, mit drei Rechenbeispielen, Abgrenzung zu dynamischer Datensynthese, Diagnosen und Praxisleitlinien."
 ---
 
-Beim Umstieg von ecoinvent oder Desktop-Ökobilanzprogrammen auf TianGong LCA treten häufig zwei Missverständnisse auf: die Annahme, es gebe eigenständige `market activity`-Datensätze, oder die Vorstellung, automatisches Routing und Ergebnis-Persistierung bedeuteten eine „dynamische Synthese von Marktdatensätzen auf Abruf“. Diese Seite dokumentiert das tatsächliche Laufzeitverhalten und seine Grenzen.
+Wer von ecoinvent, openLCA oder SimaPro zu TianGong LCA wechselt, stellt fast immer zuerst zwei Fragen: **„Wo sind die `market for electricity`-Datensätze?“** und **„Wenn die Plattform Anbieter automatisch auswählt und Ergebnisprozesse speichert, erzeugt sie dann Marktdatensätze dynamisch auf Abruf?“**
 
-## Kernaussagen: keine Marktdatensätze und keine dynamische Datensatzsynthese
+Diese Seite erklärt die genaue Verknüpfungslogik, rechnet drei konkrete Beispiele durch, grenzt echte Materialisierungen klar von einer „dynamischen Datenbank“ ab und zeigt, wann Sie Lieferketten explizit modellieren sollten.
 
-1. **TianGong bietet keine ecoinvent-artigen `market activity`-Datensätze.** Nicht explizit verknüpfte Technosphären-Eingaben werden beim Aufbau eines Berechnungssnapshots über einen **impliziten regionalen Versorgungsmix (implicit regional supply mix)** geroutet. Dieser Mix ist eine Rechenzeit-Strategie — **kein persistierter Marktdatensatz, keine Beschaffungsbeziehung und keine statistische Lieferkette**.
-2. **Materialisierte Rechenergebnisse sind keine „dynamische Datenbank“.** Beim Speichern eines Modells oder bei einer Veröffentlichung entstehen Rechenartefakte (allokierte Submodell-Prozesse, Ergebnisprozesse, Calculation Bundles). Das sind **weder parametrisierte/virtuelle Datensätze noch ad hoc synthetisierte Marktdaten**.
-3. **Automatische Verknüpfung garantiert keine Studien-Repräsentativität.** TianGong deklariert keine benannten attributionalen oder konsequentiellen Systemmodelle; Forschende müssen die gewählten Anbieter und Anteile gegen Studienjahr, Technologie und Geografie prüfen und bei Bedarf explizit modellieren.
+> **Auf einen Blick**
+>
+> - **Kein eigener Datensatztyp `market`**: Anders als ecoinvent pflegt TianGong keine gesonderten `market activity`-Datensätze neben Transformationsprozessen. Nicht manuell verknüpfte Eingaben werden erst zur Rechenzeit über einen **impliziten regionalen Versorgungsmix** aufgelöst.
+> - **Keine dynamische Marktsynthese auf Abruf**: Beim Speichern eines Modells, bei formellen Releases oder bei der Datenaggregation entstehen **materialisierte Rechenartefakte** auf Basis fester Eingangsversionen — keine virtuellen oder parametrisierten Marktdatensätze pro Abfrage.
+> - **Automatische Verknüpfung ersetzt keine Repräsentativitätsprüfung**: TianGong beansprucht kein benanntes attributionales oder konsequentielles Systemmodell und garantiert bei automatischer Zuordnung weder Bezugsjahr noch Technologie oder reale Beschaffungsanteile. Prüfen Sie stets die Diagnosen und modellieren Sie wesentliche Vorketten explizit.
 
-## Explizite Verbindungen im Editor vs. impliziter Mix im Solver-Snapshot
+## 1. Anschauliches Beispiel: 1 kWh Industriestrom
 
-Modelleditor und Solver-Snapshot gelten auf unterschiedlichen Ebenen:
+Stellen Sie sich vor, Sie modellieren einen Fertigungsprozess mit einem Verbrauch von **1 kWh Industriestrom**, kennen aber kein einzelnes Lieferkraftwerk:
 
-- **Modelleditor (explizite Verbindungen)**: Auf der Arbeitsfläche prüft der Editor explizite Verknüpfungen. Verbinden Sie denselben Eingabefluss eines Prozesses mit mehreren unterschiedlichen vorgelagerten Prozessen, meldet die lokale Berechnung einen Mehrfachanbieter-Fehler (`MULTIPLE_PROVIDERS`) und bricht ab. Siehe [Modellergebnisse auf der Plattform speichern und wiederverwenden](/de/docs/overview/data-relationships/) und [FAQ Systemmodellierung](/de/docs/faq/system-models/).
-- **Solver-Snapshot (impliziter regionaler Versorgungsmix)**: Über das zugelassene Prozessuniversum löst der Snapshot-Builder nicht geschlossene Technosphären-Residuen in die dünnbesetzte Matrix `A` auf, indem er zulässige Referenzports auswählt und Routing-Gewichte vergibt. Der Mix existiert nur im Berechnungssnapshot und erzeugt keinen neuen `market`-Prozess.
+- **In ecoinvent v3**: Sie verknüpfen in der Regel einen vorab erstellten Datensatz wie `market for electricity, medium voltage`. Der Datenbankanbieter hat darin bereits den regionalen Strommix, Importe, Netzverluste und Netzinfrastruktur unter eigener UUID und Version hinterlegt.
+- **In TianGong LCA**: Einen solchen eigenständigen `market`-Datensatztyp gibt es nicht. Wenn Sie die Eingabe im Modelleditor **explizit** mit einem bestimmten Strom- oder Kraftwerksprozess verbinden, folgt die Berechnung genau dieser Verbindung. Bleibt der Technosphären-Input **unverknüpft**, sucht der Solver-Snapshot aus allen zulässigen veröffentlichten Prozessen passende Anbieter auf der nächstgelegenen geografischen Ebene und teilt die 1 kWh nach Jahresliefer- oder Jahresproduktionsmenge auf.
 
-## Vollständige Routing-Reihenfolge des impliziten regionalen Versorgungsmixes
+Aus diesem Grundprinzip ergeben sich alle nachfolgenden Regeln, Rechenbeispiele und Diagnosemeldungen.
 
-Die aktuelle Standardregel für mehrere Anbieter lautet `split_by_process_volume`. Jedes nicht verknüpfte Technosphären-Residuum durchläuft genau diese Abfolge:
+## 2. Modelleditor (explizit) vs. Solver-Snapshot (implizit)
 
-```text
-Numerische Zulassung (öffentlich state_code = 100; oder eigener Entwurf 0 im versionierten Owner-Scope)
-  -> Vorzeichenbehafteter Koeffizient & quantitativer Referenz-Pivot (signed-flow balance)
-  -> Exakt gleicher Fluss (Flow-UUID + aufgelöste Version), entgegengesetztes Vorzeichen, quantitativer Referenzport
-  -> Versionsgenaues Lifecycle-Model-Lineage-Gate (version-exact-lineage-gate-v1)
-  -> Harter Filter auf gleiches model_id (falls zulässige Kandidaten im selben Modell vorliegen)
-  -> Versorgungsregionsanker (exchange.location -> Standort des Verbraucherprozesses -> unspecified)
-  -> Erste nicht-leere Geografie-Ebene (local/subnational -> same country -> same region -> global -> other)
-  -> Gewichtung nach Jahresvolumen innerhalb der Ebene (fehlend/nicht positiv -> festes Fallback-Gewicht 1.0)
-  -> Eintrag in die Matrix A[balancing_process, dependent_process]
-```
+Trennen Sie im Arbeitsalltag strikt zwischen **expliziten Verbindungen auf der Modellarbeitsfläche** und dem **impliziten Versorgungsmix im Solver-Snapshot**:
 
-### 1. Numerische Zulassung und Signed-Flow-Grundlage
-
-Nicht jeder sichtbare Datensatz gelangt in die Anbieterauswahl:
-
-- **Exakte numerische Zulassung**: Öffentliche Snapshots lassen ausschließlich `state_code = 100` zu (im versionierten `public_plus_owner_draft`-Scope zusätzlich eigene `state_code = 0`-Entwürfe des authentifizierten Nutzers). Veröffentlichte abgeleitete Ergebnisprozesse (`state_code = 120`) und andere reservierte Zustände (`101..199`) treten **niemals** als Anbieter im impliziten Mix auf.
-- **Flussraum-Zuordnung**: Produkt- und Abfallflüsse gehören zur Technosphäre; Elementarflüsse gehen direkt in die Biosphärenmatrix `B`; sonstige Flüsse dienen nur der Berichterstattung.
-- **Vorzeichenbehaftete Koeffizienten**: Jeder Austausch wird als `c = direction_sign * calculation_amount` (`Input = -1`, `Output = +1`) kompiliert; der quantitative Referenzfluss normiert den Pivot auf `+1` oder `-1`.
-- **Nur quantitative Referenzports**: Ein Kandidat muss exakt `(Flow UUID, resolved version)` erfüllen, aus einem zugelassenen Prozess stammen, dessen quantitativer Referenzaustausch sein und das entgegengesetzte Vorzeichen `sign(c_i) = -sign(c_r)` besitzen. Ein **Nicht-Referenzausgang** mit gleichem `flow_id` wird niemals automatisch Anbieter, nur weil er eine Menge oder einen Allokationsanteil trägt.
-
-### 2. Versionsgenaues Lifecycle-Model-Lineage-Gate
-
-Vor Geografie- und Volumen-Routing verhindert `version-exact-lineage-gate-v1`, dass ein Ergebnisprozess eines Lebenszyklusmodells zusammen mit seinen Komponentenprozessen oder älteren Modellrevisionen doppelt gemischt wird:
-
-- Wählt der exakte Request-Root unter konkurrierenden Kandidaten den zugehörigen Ergebnisprozess, versorgt dieser die Kante exklusiv.
-- Besteht ein Abstammungskonflikt ohne solche Auswahlevidenz, bleibt die Kante fail-closed als `lineage_overlap_requires_binding` ungelöst; Jahresvolumen oder Gleichverteilung raten die Systemgrenze nicht.
-
-### 3. Harter Filter auf gleiches `model_id`
-
-Besitzt der Verbraucherprozess eine `model_id` und mindestens ein zulässiger Kandidat dieselbe `model_id`, verengt das Routing **strikt** auf diese Teilmenge:
-
-- Es handelt sich um einen **harten Filter**, nicht um einen Punktebonus, und er greift vor Geografie und Jahresvolumen.
-- Solange ein zulässiger Anbieter desselben Modells existiert, gelangen Anbieter anderer Modelle nicht allein wegen geringerer Entfernung oder höheren Jahresvolumens in den Mix.
-- Erst wenn kein Kandidat desselben Modells existiert, fällt das Routing auf das breitere zugelassene Universum zurück.
-- Die Bündelung von Prozessen in einem Modell drückt einen Anbieter-Kandidatenrahmen aus, keinen austauschbezogenen Einzelverweis und keine freien Mischgewichte.
-
-### 4. Versorgungsregionsanker und Geografie-Ebenen
-
-Anschließend bestimmt der Solver den geografischen Anker in fester Reihenfolge:
-
-1. `exchange.location` am Eingabeaustausch
-2. `location` des Verbraucherprozesses
-3. `unspecified`
-
-Aus der gefilterten Kandidatenmenge wird die **erste nicht-leere** Geografie-Ebene gewählt:
-
-1. `local / subnational`
-2. `same country`
-3. `same region`
-4. `global`
-5. `other`
-
-Das Jahresvolumen wird **niemals über Ebenen hinweg verglichen**: Zuerst wird die Ebene bestimmt, dann werden Anteile nur innerhalb dieser Ebene berechnet.
-
-### 5. Jahresvolumen-Gewichtung und `1.0`-Fallback
-
-Innerhalb der gewählten Ebene werden die Routing-Gewichte wie folgt berechnet:
-
-```text
-raw_weight_i = annualSupplyOrProductionVolume_i   (falls endlich und > 0)
-raw_weight_i = 1.0                                (sonst: fehlend, ungültig, nicht endlich oder <= 0)
-share_i      = raw_weight_i / sum(raw_weight)
-```
-
-Zwei Eigenschaften sind wesentlich:
-
-- **Mengenerhaltung**: Die Gewichte einer Kante summieren sich immer zu `1` (`sum(w_i) = 1`). Das Routing verteilt eine bestehende Nachfrage auf zulässige Anbieter, ohne die Gesamtmenge zu vergrößern oder zu verkleinern.
-- **`1.0`-Fallback ist keine Produktionsangabe**: Das Gewicht `1.0` hält den Kandidaten lediglich im Mix; es behauptet nicht, dass die reale Jahresproduktion gleich 1 wäre, und jeder Fallback wird in den Snapshot-Diagnosen gezählt.
-
-## Allokation, Routing und Systemgrenzen-Strategien
-
-- **Allokation vor Routing**: Prozessallokation bestimmt zunächst die dem quantitativen Referenzprodukt zugerechnete Residualmenge; Routing-Gewichte verteilen danach nur diese feste Menge auf Referenzports. Beide Mechanismen sind strikt getrennt.
-- **Explizite Boundary Policies**: Generische Produktions-Snapshots unterstützen `closed` (Standard — jedes ungelöste Technosphären-Residuum blockiert Readiness), `open` (ungelöste Bilanzen verbleiben außerhalb der Grenze) und `cutoff` (explizite Abschneidegrenze). Zertifikatsfähige Scope-Closure-Prüfungen frieren `cutoff` fest, sodass fehlende Anbieter transparent pro Kante dokumentiert statt still verborgen werden. Sowohl `open` als auch `cutoff` fließen in Konfigurations-Fingerprints, Warnungen und kantenbezogene Diagnosen ein.
-
-## Vergleich: ecoinvent `market activity` vs. TianGong
-
-| Merkmal | ecoinvent v3 | TianGong LCA |
+| Aspekt | Modelleditor (explizite Verbindung) | Solver-Snapshot (impliziter regionaler Versorgungsmix) |
 | --- | --- | --- |
-| **Datensatzform** | Explizite `market activity`-Datensätze (getrennt von `transforming`-Aktivitäten) | Kein eigenständiger `market`-Datensatztyp |
-| **Aufbauregeln** | Regionaler Verbrauchsmix nach Produktion, inklusive Importen, Transportwegen/-mitteln, Verlusten und `market groups` | Lineage-Gate → harter `model_id`-Filter → Versorgungsanker → Geografie-Ebene → Jahresvolumen-Gewichte (`1.0`-Fallback) |
-| **Systemmodelle** | Benannte Systemmodelle (Cut-off, Cut-off EN15804, APOS, Consequential), die Anbieterauswahl und Abfalllasten steuern; bei Consequential marginaler Mix | Kein benanntes Systemmodell; Standardregel `split_by_process_volume`; Boundary Policy `closed` / `open` / `cutoff`; kein Attributional-/Consequential-Anspruch |
-| **Editor-Verhalten** | Ein `market` wird wie ein normaler Prozess verbunden | Modelleditor lehnt mehrere explizite Anbieter an einer Eingabe ab (`MULTIPLE_PROVIDERS`); impliziter Mix gilt nur im Solver-Snapshot |
-| **Repräsentativität** | Dokumentierte Modellannahmen; Anwender wählen das passende Systemmodell | Expliziter Hinweis: automatische Verknüpfung garantiert keine Jahres-, Technologie- oder Geografie-Repräsentativität; Anbieter und Anteile prüfen |
-| **Zitierbare Identität** | Jeder Marktdatensatz besitzt eigene UUID und Version | Impliziter Mix wird nicht als Datensatz gespeichert; für wiederverwendbare Marktidentität expliziten Prozess modellieren |
+| **Anwendungsfall** | Manuelles Platzieren und Verbinden von Prozessen auf der Arbeitsfläche | Automatisches Schließen unverknüpfter Technosphären-Inputs in der Hintergrundberechnung |
+| **Mehrere Anbieter für eine Eingabe** | **Auf der Arbeitsfläche nicht zulässig**: Zwei oder mehr vorgelagerte Prozesse an demselben Eingabefluss lösen `MULTIPLE_PROVIDERS` aus und stoppen die lokale Berechnung | Zulässig nach Standardregel `split_by_process_volume`; verteilt den Bedarf gewichtet auf alle geeigneten Anbieter der gewählten Geografie-Ebene |
+| **Wird als neuer Datensatz gespeichert?** | Die manuell verdrahtete Lieferkette wird als Lebenszyklusmodell gespeichert (siehe [Modellergebnisse auf der Plattform speichern und wiederverwenden](/de/docs/overview/data-relationships/)) | **Wird niemals als neuer `market`-Prozess zurückgeschrieben**; existiert nur als Matrixgewicht und Diagnose des jeweiligen Snapshots |
+| **Fehlerbehebung** | Verbindungsprüfung im Editor und [FAQ Systemmodellierung](/de/docs/faq/system-models/) | Abdeckungs- und Verknüpfungsdiagnosen unter [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/) |
 
-Weitere Datenbankvergleiche finden Sie unter [Datenbankvergleich & Interoperabilität](/de/docs/database/comparison/). Zur allgemeinen LCA-Theorie zwischen durchschnittlichem Versorgungsmix und marginaler Marktreaktion siehe [Market Response (Englisch)](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/) in der TianGong-LCA-Wissensbasis.
+> Bezieht ein Werk einen Rohstoff real zu 60 % von Lieferant A und zu 40 % von Lieferant B, verbinden Sie nicht beide Lieferanten direkt mit demselben Eingabeport (das löst `MULTIPLE_PROVIDERS` aus) und löschen Sie keinen realen Lieferanten nur zur Fehlerbehebung. Legen Sie stattdessen einen eigenen Beschaffungsmix-Prozess an, der `0,6` von Lieferant A und `0,4` von Lieferant B bezieht und `1,0` an Ihren Prozess weiterliefert.
 
-## Wichtige Verknüpfungsdiagnosen lesen
+## 3. Vollständige Routing-Reihenfolge des impliziten Versorgungsmixes
 
-Achten Sie in [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/) und Solver-Diagnosen insbesondere auf folgende Hinweise:
+Nach der Standardregel `split_by_process_volume` durchläuft jeder nicht explizit geschlossene Produkt- oder Abfallbedarf beim Aufbau der Technologiematrix `A` fünf feste Schritte:
+
+```text
+Schritt 1: Zulassung & vorzeichenbehafteter Flussabgleich
+           Nur Offene Daten (state_code = 100) sowie eigene Entwürfe (0) im Owner-Draft-Modus;
+           nur exakte (Fluss-UUID + aufgelöste Version), gegensätzliches Vorzeichen, quantitativer Referenzport
+   ↓
+Schritt 2: Doppelzählungsschutz für Lebenszyklusmodelle (version-exact-lineage-gate-v1)
+           Verhindert die Vermischung von Ergebnisprozess, Teilprozessen oder älteren Versionen desselben Modells
+   ↓
+Schritt 3: Harter Filter auf dasselbe Modell (model_id)
+           Gehört der Verbraucher zu einem Modell mit mindestens einem zulässigen Anbieter im selben Modell,
+           wird strikt auf dieses Modell eingeschränkt (Vorrang vor Geografie und Jahresvolumen)
+   ↓
+Schritt 4: Versorgungsregion & 5-stufige Geografie-Hierarchie
+           Regionsanker: exchange.location -> Prozessstandort -> unspecified
+           Ebenen: lokal/subnational -> gleiches Land -> gleiche Region -> global -> sonstig (Stopp bei erster besetzter Ebene)
+   ↓
+Schritt 5: Gewichtung nach Jahresvolumen innerhalb der gewählten Ebene
+           Endliches positives annualSupplyOrProductionVolume; bei Fehlen/<= 0 festes Fallback-Gewicht 1,0;
+           Normierung auf exakte Gewichtssumme 1
+```
+
+### Schritt 1: Welche Prozesse als Anbieter zugelassen sind
+
+Nicht jeder sichtbare Datensatz nimmt an der automatischen Anbieterauswahl teil:
+
+- **Zulassung nach Veröffentlichungsstatus**: Öffentliche Berechnungen nutzen ausschließlich veröffentlichte Offene Daten (`state_code = 100`). Nur wenn angemeldete Nutzer ausdrücklich den eigenen Entwurfsbereich (`public_plus_owner_draft`) aktivieren, kommen zusätzlich die eigenen Entwürfe (`state_code = 0`) hinzu. Formal archivierte, schreibgeschützte Ergebnisprozesse (`state_code = 120`) sowie reservierte Release-Zustände (`101..199`) treten **niemals** in den impliziten Anbieterpool ein, sodass aggregierte Ergebnisse nicht unbemerkt in reguläre Hintergrundrechnungen einfließen.
+- **Drei Flussräume**: Produkt- und Abfallflüsse gehen in die Technosphärenmatrix `A` ein; Elementarflüsse gehen direkt in die Biosphärenmatrix `B` ein; Sonstige Flüsse bleiben rein deskriptiv.
+- **Vorzeichenlogik & Pflicht zum quantitativen Referenzport**: Eingaben erhalten das Vorzeichen `-1`, Ausgaben `+1`; der quantitative Referenzfluss normiert den Prozess auf `+1` oder `-1`. Ein Kandidat ist **nur** zulässig, wenn alle drei Bedingungen erfüllt sind: (1) exakte Übereinstimmung von `(Fluss-UUID, aufgelöster Version)`, (2) entgegengesetztes Vorzeichen zum Bedarf und (3) Status als **quantitativer Referenzaustausch** des liefernden Prozesses.
+- **Nebenprodukte ohne Referenzstatus werden nie automatisch gewählt**: Ein nicht-referenzieller Koppelproduktausgang gelangt auch mit eingetragener Menge oder Allokationszahl nicht automatisch in den Pool. Sind alle Kandidaten desselben Flusses Nicht-Referenzausgänge, meldet die Diagnose `rejected_non_reference_only`.
+
+### Schritt 2: Doppelzählungsschutz für Lebenszyklusmodelle
+
+Ein Lebenszyklusmodell enthält Einzelprozesse und kann zugleich einen Ergebnisprozess erzeugen. Tragen beide denselben Produktfluss als quantitativen Referenzfluss, würde eine gemeinsame Gewichtung zu Doppelzählungen oder Systemgrenzenfehlern führen.
+
+Deshalb prüft der Solver vor Geografie und Volumen die versionsgenaue Modellherkunft (`version-exact-lineage-gate-v1`):
+
+- Wählt die Rechenanfrage ausdrücklich den exakten Ergebnisprozess dieses Modells als Ziel, übernimmt dieser die Verbindung exklusiv ohne Vermischung mit Teilprozessen oder älteren Versionen.
+- Besteht ein Herkunftskonflikt ohne eindeutigen Bindungsnachweis, lässt der Solver die Kante bewusst **unverknüpft** und meldet `lineage_overlap_requires_binding`, statt Anteile zu raten.
+
+### Schritt 3: Harter Filter auf dasselbe `model_id`
+
+Gehört der verbrauchende Prozess zu einem Lebenszyklusmodell (`model_id`) und umfasst die nach Schritt 1–2 gültige Kandidatenmenge mindestens einen Anbieter mit demselben `model_id`, wird die Auswahl **strikt auf diese interne Teilmenge begrenzt**:
+
+- Es handelt sich um einen **harten Ausschlussfilter**, nicht um einen Bonusfaktor — er hat Vorrang vor geografischer Nähe und Jahresvolumen.
+- Externe Prozesse werden erst dann herangezogen, wenn innerhalb desselben Modells kein einziger zulässiger Anbieter existiert.
+
+Diese Gruppierung bildet den vom Datenanbieter definierten internen Versorgungsrahmen ab, ersetzt aber keine austauschspezifischen Lieferantenverträge oder freien Mischungsverhältnisse.
+
+### Schritt 4: Versorgungsregion und 5-stufige Geografie-Hierarchie
+
+Zur Bestimmung der gewünschten Lieferregion (Regionsanker) prüft der Solver der Reihe nach:
+
+1. die austauschspezifische Angabe `exchange.location` (z. B. ein Werk in Jiangsu, das einen Rohstoff gezielt aus Shandong `CN-SD` bezieht);
+2. andernfalls den Standort (`location`) des verbrauchenden Prozesses;
+3. andernfalls `unspecified`.
+
+Anschließend prüft die Engine fünf Geografie-Ebenen in strenger Reihenfolge und **stoppt auf der allerersten nicht-leeren Ebene**. Jahresvolumina werden **niemals** über Ebenen hinweg verglichen:
+
+1. `local / subnational` (lokal / subnational)
+2. `same country` (gleiches Land)
+3. `same region` (gleiche Region)
+4. `global` (global)
+5. `other` (sonstig)
+
+### Schritt 5: Gewichtung nach Jahresvolumen und `1.0`-Fallback
+
+Innerhalb der gewählten Geografie-Ebene gilt:
+
+```text
+Ist annualSupplyOrProductionVolume endlich und > 0:
+    Rohgewicht w_i = annualSupplyOrProductionVolume_i
+Sonst (fehlend, nicht numerisch, nicht endlich oder <= 0):
+    Rohgewicht w_i = 1.0
+
+Anteil share_i = w_i / sum(w)
+```
+
+Dabei gelten zwei feste mathematische Zusicherungen:
+
+- **Erhaltung der Gesamtmenge**: Alle Anteile eines Bedarfs summieren sich immer exakt auf `1` (`sum(share_i) = 1`). Die Verteilung bestimmt nur, *wer* liefert, und verändert niemals den Gesamtverbrauch.
+- **`1.0` ist ein Auffanggewicht, keine Mengenaussage**: Es verhindert lediglich, dass zulässige Prozesse ohne Volumenangabe still wegfallen; jeder Fallback wird in den Diagnosen gesondert gezählt.
+
+## 4. Drei durchgerechnete Praxisbeispiele
+
+### Beispiel 1: Geografie-Ebene, Volumengewichtung und die `1.0`-Fallback-Falle
+
+Ein Werk in Jiangsu (`CN-JS`) benötigt **100 kWh** Industriestrom ohne explizite Verknüpfung. In den Offenen Daten stehen drei zulässige Stromprozesse:
+
+- Prozess A (`CN-JS`): Jahresvolumen `300.000`
+- Prozess B (`CN-JS`): Jahresvolumen `100.000`
+- Prozess C (`CN`): Jahresvolumen `5.000.000`
+
+1. **Normalfall (Geografie schlägt Volumen)**: Auf Ebene 1 (`local / subnational`, `CN-JS`) werden Prozess A und Prozess B gefunden; die Suche **stoppt sofort**. Prozess C bleibt trotz des deutlich größeren nationalen Volumens auf Ebene 2 (`same country`) außen vor. Ergebnis: Prozess A liefert `300.000 / 400.000 = 75 %` (75 kWh), Prozess B `25 %` (25 kWh).
+2. **Einseitige Lücke (Warnung vor extremer Verzerrung)**: Fehlt bei Prozess B die Volumenangabe, fällt sein Rohgewicht auf `1,0` zurück, während Prozess A bei `300.000` bleibt. Daraus entstehen `300.000 / 300.001 ≈ 99,9997 %` für A und `0,0003 %` für B — Prozess B verschwindet faktisch.
+3. **Beide ohne Volumen (Gleichverteilung)**: Fehlt die Angabe bei beiden lokalen Prozessen, erhalten beide das Fallback `1,0` und liefern genau `50 %` / `50 %`.
+
+> Deshalb lohnt sich der Blick auf den **`1.0`-Fallback-Zähler** immer: Ein einziges fehlendes Volumenfeld kann lokale Anteile zwischen `50 % / 50 %` und `99,9997 % / 0,0003 %` kippen.
+
+### Beispiel 2: Vorrang desselben Modells und Doppelzählungsschutz
+
+- **Vorrang desselben Modells**: In Modell A (eigenes Heizkraftwerk plus Chemiesynthese) benötigt die Synthese Prozessdampf. Selbst wenn ein externer offener Dampfprozess in derselben Provinz ein weit höheres Jahresvolumen besitzt, wählt der harte `model_id`-Filter ausschließlich den modellinternen Dampflieferanten.
+- **Schutz vor Modellüberschneidung**: Liefert Modell B 1 Tonne Zwischenprodukt und tragen sowohl der Ergebnisprozess `R(B)` als auch ein Teilprozess `U(B1)` diesen Fluss als quantitativen Referenzfluss, mischt der Solver beide nicht nach Volumen, sondern meldet ohne klare Bindung `lineage_overlap_requires_binding`.
+
+### Beispiel 3: Vorzeichensymmetrie bei Abfallflüssen
+
+Unterschiedliche Ökobilanzdatenbanken notieren zu behandelnde Abfälle mit verschiedenen Vorzeichenkonventionen. TianGong vereinheitlicht sie über vorzeichenbehaftete Flüsse (`Input = -1`, `Output = +1`):
+
+- Ein Produktionsprozess meldet **Abfall-Output `+1000 kg`** (vorzeichenbehaftet `+1000`), also einen positiven Entsorgungsbedarf.
+- Eine Behandlungsanlage mit Referenzfluss **Abfall-Input `+1000 kg`** (`-1000`, normiert `-1`) oder **Abfall-Output `-1000 kg`** (`-1000`, normiert `-1`) ist mathematisch völlig gleichwertig — beide erfüllen den positiven Abfallbedarf korrekt.
+- Ein Prozess mit **Abfall-Output `+1000 kg`** (normiert `+1`) gleicht hingegen nur einen negativen Abfallbedarf aus und wird niemals fälschlich als Entsorger gewählt.
+
+## 5. Was TianGong tatsächlich erzeugt — und was nicht
+
+Da beim Speichern und Veröffentlichen von Modellen abgeleitete Ergebnisprozesse entstehen, wird die Plattform gelegentlich für eine „dynamische Datenbank“ gehalten, die pro Abfrage neue Marktdatensätze erzeugt. Die Übersicht schafft Klarheit:
+
+| Mechanismus / Artefakt | Auslöser | Was entsteht | Als Datensatz persistiert? | Stabile zitierbare Kennung? |
+| --- | --- | --- | --- | --- |
+| **Solver-Snapshot** | Hintergrundberechnung von Prozessen oder Modellen | Dünnbesetzte Matrizen `A` und `B`, Routing-Gewichte und Diagnosen | **Nein** (Rechenzustand; niemals als neuer `market`-Datensatz gespeichert) | Zeichnet Eingangsversionen und Konfigurations-Fingerprints auf |
+| **Modellspeicher-Ergebnisse** | **Speichern** eines Lebenszyklusmodells | Allokierte Haupt-/Nebenprodukt-Teilmodelle und Ergebnisprozesse | **Ja** (gemeinsam mit dem Modell im Arbeitsbereich) | An exakte `(UUID, version)` von Modell und Ergebnisprozessen gebunden |
+| **Release-Materialisierung** | Formelle Release-Veröffentlichung | Eingefrorenes Dreigespann: Unit-Prozess `U(P)`, abgeleiteter Ergebnisprozess `R(P)` (`state_code = 120`), Modell `M(P)` (`resolved-one-hop-aggregated-background.v1`) sowie Calculation Bundle mit Manifest-Hash | **Ja** (strikt isolierte schreibgeschützte Release-Archive, kein Rückfluss in den normalen Anbieterpool) | Deterministische `UUIDv5`-Kennung, exakte Version, SHA-256-Prüfsummen und Rückleseprüfung |
+| **Datensatzaggregation** | Explizite Zusammenfassung mehrerer Prozesse nach Gewicht oder Volumen | Aggregierter Ergebnisprozess (`R(P)`) | **Ja** (eigenständiger Ergebnisdatensatz) | Klare Version und Herkunftskette |
+| **Dynamische Marktsynthese / parametrisierte virtuelle Prozesse** | **Existiert nicht** | **Keine** (TianGong synthetisiert keine virtuellen Markt- oder Parameterprozesse auf Abruf) | Nicht anwendbar | Erstellen und veröffentlichen Sie bei Bedarf einen expliziten Mix-Prozess |
+
+## 6. Allokation vs. Routing und Systemgrenzen-Strategien
+
+Zwei getrennte Mechanismen steuern unterschiedliche Rechenstufen:
+
+- **Allokation vor Routing**: Prozessinterne Allokationsfaktoren legen zuerst fest, welcher Anteil eines nicht-referenziellen Austauschs dem Referenzprodukt zugerechnet wird. Erst danach verteilen die Routing-Gewichte diesen bereits feststehenden Bedarf auf vorgelagerte Anbieter. Beide Ebenen werden strikt getrennt.
+- **Drei explizite Grenzstrategien**: Findet ein Technosphären-Bedarf keinen zulässigen Anbieter, wird die Lücke niemals stillschweigend verborgen. Drei explizite Strategien stehen zur Verfügung und werden samt Kanten-Nachweisen im Konfigurations-Fingerprint festgehalten:
+  - **`closed` (Produktionsstandard)**: Jeder Technosphären-Bedarf ungleich Null muss geschlossen sein; jede offene Kante verhindert den Rechenstatus „bereit“.
+  - **`open`**: Belässt offene Bedarfe außerhalb der Systemgrenze, rechnet weiter und listet alle ungeschlossenen Kanten vollständig auf.
+  - **`cutoff`**: Schneidet offene Bedarfe an einer expliziten Abschneidegrenze mit Kanten-Nachweis ab. Zertifikatsfähige Vollständigkeitsprüfungen (Scope Closure) frieren diese Strategie fest auf `cutoff` ein, damit jeder fehlende Anbieter vollständig nachprüfbar bleibt.
+
+## 7. Häufige Diagnosesignale richtig deuten
+
+Diese Übersicht hilft bei der Auswertung unter [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/):
 
 | Diagnosesignal | Bedeutung | Empfohlene Maßnahme |
 | --- | --- | --- |
-| `rejected_non_reference_only` | Ausgänge gleichen Flusses existieren, aber keiner ist ein quantitativer Referenzausgang | Referenzausgang im Anbieterprozess korrigieren, gültigen Anbieterprozess ergänzen oder Markt-/Koproduktprozess explizit modellieren |
-| `lineage_overlap_requires_binding` | Konflikt zwischen Ergebnisprozess, Komponenten oder älteren Revisionen eines Lebenszyklusmodells ohne eindeutige Root-Evidenz | Eindeutigen Ergebnisprozess als Request-Root wählen oder Grenzen des Lebenszyklusmodells korrigieren |
-| **`1.0`-Fallback-Zähler für Jahresvolumen** | Ein oder mehrere Kandidaten der gewählten Ebene haben kein gültiges positives `annualSupplyOrProductionVolume` | Prüfen, ob das Standardgewicht den Mix verzerrt; geprüfte Jahresvolumina ergänzen oder explizit modellieren |
-| **Quelle des Versorgungsankers & Ebenenverteilung** | Zeigt, ob `exchange.location` oder der Prozessstandort genutzt wurde und welche Geografie-Ebene traf | Auf unerwartete Rückfälle nach `global` oder `other` prüfen, wenn lokale Repräsentativität erforderlich ist |
+| `MULTIPLE_PROVIDERS` | Ein Eingabefluss auf der Modellarbeitsfläche ist manuell mit zwei oder mehr vorgelagerten Prozessen verbunden | Doppelte Verbindungen bereinigen; bei realem Multi-Sourcing einen expliziten Mix-Prozess mit klaren Anteilen anlegen |
+| `rejected_non_reference_only` | Es gibt Prozesse mit demselben Ausgabefluss, aber alle sind nicht-referenzielle Koppelprodukte | Quantitativen Referenzfluss des Lieferprozesses korrigieren, einen eigenen Hauptprozess ergänzen oder Koppelprodukte explizit modellieren |
+| `lineage_overlap_requires_binding` | Ergebnisprozess und Teilprozesse (oder ältere Versionen) desselben Lebenszyklusmodells überschneiden sich ohne eindeutige Auswahl | Gewünschten Ergebnisprozess explizit binden oder die Modellgrenzen bereinigen |
+| **`1.0`-Fallback-Zähler > 0** | Mindestens einem Kandidaten der gewählten Geografie-Ebene fehlt ein positives `annualSupplyOrProductionVolume` | Gewählte Anbieter und Anteile prüfen; belastbare Jahresvolumina nachtragen oder Mix explizit anlegen |
+| **Rückfall auf `global` / `other`** | Auf lokaler, nationaler und regionaler Ebene gab es keinen zulässigen Anbieter | Relevanz des Inputs für das Gesamtergebnis prüfen; bei wesentlichen Beiträgen lokale Daten ergänzen oder Stellvertreterregion explizit festlegen |
+| **Offene Kanten (`closed`-Stopp oder `open`/`cutoff`-Liste)** | Kein zulässiger Anbieter für den Produkt- oder Abfallfluss im aktuellen Datenraum | Fluss-UUID, Version und Richtung prüfen; sicherstellen, dass der Vorkettenprozess in Offenen Daten (`100`) veröffentlicht ist oder im eigenen Entwurfslauf vorliegt |
 
-## Wann Sie explizit modellieren sollten
+## 8. Wann automatische Verknüpfung reicht — und wann explizit modelliert werden muss
 
-Verlassen Sie sich **nicht** auf den impliziten regionalen Versorgungsmix, wenn einer der folgenden Punkte für Ihre Studie entscheidend ist — erstellen Sie stattdessen einen expliziten Prozess oder ein Lebenszyklusmodell (siehe [Fallstudie Teilweise abgeschlossene Systemmodellierung](/de/docs/data-collection/case-introduction/model-building/) und [Datenbanküberblick](/de/docs/database/overview/)):
+| Anwendungsfall | Reicht der implizite Mix? | Empfohlenes Vorgehen |
+| --- | --- | --- |
+| Frühe Hotspot-Analyse, Lehre oder nachrangige Hilfsstoffe mit geringem Beitrag | **Meist ausreichend** | Automatische Verknüpfung nutzen, aber Geografie-Ebenen und `1.0`-Fallbacks stichprobenartig prüfen |
+| Wiederverwendbarer, zitierbarer regionaler Markt mit eigener UUID und Version | **Nein** | Eigenständigen Mix-Prozess mit klaren Lieferanten und Anteilen erstellen |
+| Gütertransport, Netzübertragungs- oder Umschlagverluste | **Nein** | Der implizite Mix fügt **niemals automatisch Transport oder Verluste** hinzu; diese Austausche explizit modellieren |
+| Festes Bezugsjahr, bestimmte Prozessroute oder vertragliche Beschaffungsanteile | **Nein** | Zielprozesse und exakte Versionen explizit verknüpfen (siehe [Fallstudie zur teilterminierten Systemmodellierung](/de/docs/data-collection/case-introduction/model-building/)) |
+| Multifunktionale Koppelprodukte oder geschlossenes Recycling | **Nein** | Klare Allokation festlegen oder explizites Lebenszyklusmodell aufbauen |
+| Verifizierte EPD, Produkt-CO₂-Fußabdruck oder vergleichende ISO-14044-Aussage | **Allein nicht empfohlen** | Alle maßgeblichen Vorketten explizit modellieren, exakte Versionen fixieren sowie Diagnosen und Abdeckungsnachweise archivieren (siehe [Versionen, Lizenzen & Zitierung](/de/docs/database/versions-citation/)) |
 
-- **Wiederverwendbare, zitierbare Marktidentität**: Legen Sie einen expliziten Prozess (mit eigener UUID und Version) an, der regionale Lieferanteile direkt abbildet.
-- **Transport, Verteilungsverluste oder reale Lieferantenanteile**: Implizites Routing ergänzt weder Transportstrecken noch Umschlag- oder Netzverluste; modellieren Sie diese explizit im Prozessinventar.
-- **Strenge zeitliche oder technologische Repräsentativität**: Wenn Ihre Studie gezielt ein Bezugsjahr (z. B. 2019) oder eine bestimmte Technologie abbildet, prüfen Sie die automatisch gewählten Anbieter und fixieren Sie gewünschte Versionen über Modellstruktur oder explizite Verbindungen.
-- **Multifunktionale Koprodukte**: Nicht-Referenz-Koprodukte gelangen nicht automatisch in den Anbieterpool; allokieren und veröffentlichen Sie eigenständige Referenzprodukt-Prozesse oder modellieren Sie sie explizit.
+## 9. Direktvergleich: ecoinvent v3 vs. TianGong LCA
+
+| Dimension | ecoinvent v3 | TianGong LCA |
+| --- | --- | --- |
+| **Datensatzform** | Eigenständige `market activity`-Datensätze getrennt von `transforming`-Aktivitäten | Kein eigener `market`-Datensatztyp |
+| **Mix-Aufbau** | Vorab erstellter regionaler Verbrauchsmix mit Produktion, Importen, Transportwegen/-mitteln, Verlusten und `market groups` | Routing zur Rechenzeit: Doppelzählungsschutz → harter `model_id`-Filter → Regionsanker → 5-stufige Geografie-Hierarchie → Volumengewichtung (`1.0`-Fallback); ohne automatische Transporte oder Verluste |
+| **Systemmodelle** | Vier benannte Systemmodelle (Cut-off, Cut-off EN15804, APOS, Consequential); unter Consequential marginaler Mix | Kein benanntes Systemmodell; Standardregel `split_by_process_volume`; Grenzstrategien `closed` / `open` / `cutoff`; weder attributional noch konsequentiell beansprucht |
+| **Arbeit im Editor** | `market`-Prozesse werden wie gewöhnliche Knoten verknüpft | Editor lehnt mehrere explizite Anbieter an einem Input ab (`MULTIPLE_PROVIDERS`); impliziter Mix wirkt nur im Solver-Snapshot |
+| **Zitierbare Kennung** | Jeder `market`-Datensatz besitzt eine eigene UUID und Version | Implizite Mixe werden nicht als Datensatz gespeichert; für stabile Kennungen expliziten Mix-Prozess anlegen |
+| **Verantwortung für Repräsentativität** | Systemmodellannahmen sind dokumentiert; Auswahl liegt beim Anwender | Automatische Verknüpfung garantiert ausdrücklich keine zeitliche, technologische oder geografische Repräsentativität; Anwender prüfen Diagnosen oder modellieren explizit |
+
+Weitere Vergleiche mit externen Datenbanken und Formatgrenzen finden Sie unter [Datenbankvergleich & Interoperabilität](/de/docs/database/comparison/) und [Datenbanküberblick](/de/docs/database/overview/). Die theoretischen Unterschiede zwischen attributionalen Durchschnitts- und konsequentiellen Marginalmärkten vertieft die TianGong-LCA-Wissensbasis unter [Market Boundaries and Response (Englisch)](https://prism.tiangong.earth/en/docs/book/market-boundaries-and-response/).

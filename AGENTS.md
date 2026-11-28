@@ -37,7 +37,7 @@ checkPaths:
   - .github/workflows/**
   - .githooks/**
 lastReviewedAt: 2026-11-28
-lastReviewedCommit: 15ae8274744d87e9790407dcea5a05518d654d58
+lastReviewedCommit: cc32f3ff3728f37ef282fe9d785bd45663f44a92
 lastReviewedNote: "Docs #240: reviewed Next 16.4.6 framework/env/SWC patch qualification with the existing Fumadocs, React, TypeScript 7, Node 24 and pnpm contracts. Full static export, 86 consumer/contract tests, 26 output checks and 16832 local links passed. Public locale, route, publication and ownership contracts retain their existing requirements."
 related:
   - .docpact/config.yaml

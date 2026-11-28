@@ -1,66 +1,108 @@
 ---
 title: "Comparaison des bases et interopérabilité"
-description: "Compare TianGong LCA avec ecoinvent, ILCD/EF, USLCI, BAFU, AGRIBALYSE, worldsteel et les logiciels d'ACV de bureau, et précise les limites de conversion de format et de comparabilité."
+description: "Guide pratique comparant TianGong LCA aux logiciels majeurs d'ACV (openLCA, SimaPro, GaBi, Brightway), aux quatre modèles de système d'ecoinvent v3, à sept bases d'arrière-plan, avec les limites de conversion de formats, la vérification post-import et l'audit de comparabilité en six dimensions."
 ---
 
-Comparer côte à côte des résultats d'ICV ou d'ÉICV issus de bases d'arrière-plan ou de logiciels différents est l'une des principales sources d'erreur en pratique d'ACV. Cette page situe TianGong LCA face aux bases et outils externes, expose les pertes possibles lors des conversions de format et rappelle les prérequis de comparabilité.
+Mettre côte à côte des résultats d'inventaire (ICV) ou d'évaluation des impacts (ÉICV) issus de logiciels ou de bases de données différents compte parmi les sources d'erreur les plus fréquentes en ACV.
 
-## Première distinction : documentation de base de données vs manuel logiciel
+Cette page vous donne une grille claire en six volets : **répartition entre logiciels, bases et réseaux de formats ; comparaison approfondie avec ecoinvent v3 ; panorama de sept bases d'ACV ; interopérabilité et pertes de conversion ; protocole de vérification en quatre étapes après import ; et audit de comparabilité en six dimensions.**
 
-Distinguez les **logiciels d'ACV** des **bases d'arrière-plan** avant toute comparaison :
+> **En un coup d'œil**
+>
+> - **Distinguer trois couches avant de comparer** : les **logiciels** (openLCA, SimaPro, Brightway) expliquent comment coder un modèle ; les **bases d'arrière-plan** (ecoinvent, BAFU, AGRIBALYSE, USLCI) définissent la production de données et les modèles de système ; les **normes de formats et réseaux** (ILCD/LCDN, TIDAS, FEDEFL) encadrent l'échange. Parce que TianGong LCA est à la fois plateforme cloud et hébergeur de données ouvertes et commerciales, guides d'utilisation et rubrique base de données se complètent.
+> - **« Import/export pris en charge » n'équivaut jamais à une conversion sans perte** : noms de flux, compartiments, règles d'allocation et structures de marché divergent fortement selon les formats. Vérifiez systématiquement le rapport d'import, le fichier de mapping et la couverture LCIA.
+> - **Des chiffres différents entre deux bases signalent rarement un bogue** : un écart de 20 % ou plus pour un même produit tient presque toujours aux frontières du système, à l'allocation, aux hypothèses de marché, à l'année de référence ou à la version des facteurs LCIA.
 
-- **Outils logiciels (openLCA, SimaPro, Brightway, etc.)** : leurs manuels expliquent comment coder des choix de modélisation dans l'outil (paramètres, options d'allocation, liaison de systèmes de produits, validation, agrégation). Les règles de modèles de système des bases d'arrière-plan relèvent généralement des fournisseurs de bases.
-- **Fournisseurs de bases d'arrière-plan (ecoinvent, Sphera/GaBi, BAFU, AGRIBALYSE, USLCI, etc.)** : publient la production des jeux, les hypothèses de modèles de système et de marchés, les scores de qualité et les journaux de version.
-- **Cadres de format et réseaux (ILCD/EPLCA, FLCAC, etc.)** : définissent schémas d'échange, mappage de flux et gouvernance des nœuds plutôt qu'une base unique.
+## 1. Séparer trois couches : logiciels, bases d'arrière-plan et réseaux de formats
 
-TianGong LCA associe une plateforme cloud open source de modélisation et un écosystème de curation et distribution de données, d'où l'articulation entre guides opératoires et cette rubrique **Base de données et méthodologie** (voir [Vue d'ensemble de la base de données](/fr/docs/database/overview/) et la [FAQ Modélisation du système](/fr/docs/faq/system-models/)).
+En comparant la documentation TianGong aux manuels d'openLCA ou de SimaPro, on suppose parfois que les manuels de logiciels desktop couvrent la méthodologie complète des bases. En réalité, chaque acteur joue un rôle précis :
 
-## Comparaison de paradigmes entre grandes bases d'ACV
-
-Le tableau ci-dessous résume les différences structurelles entre bases d'arrière-plan courantes et TianGong LCA. Pour une analyse historique et méthodologique approfondie, consultez [Background Database Evolution and Methodological Divergences (anglais)](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) dans la base de connaissances TianGong LCA :
-
-| Base / cadre | Format principal | Approche marché et modèle de système | Profil typique de gouvernance et de distribution |
+| Plateforme / Logiciel | Rôle | Contenu principal de la documentation | Qui porte la méthodologie des bases et modèles de système |
 | --- | --- | --- | --- |
-| **TianGong LCA** | JSON [TIDAS](https://tidas.tiangong.earth/fr/) (aligné ILCD/eILCD, distribuable via LCDN) | Aucun type autonome `market` ; l'instantané du solveur applique un **mix régional implicite** (`split_by_process_volume`) avec politiques explicites `closed`/`open`/`cutoff` ; aucune revendication attributionnelle ou conséquentielle nommée — voir [Liaison d'approvisionnement et mécanisme de marché](/fr/docs/database/supply-markets/) | Données ouvertes auditées par rôles et Données commerciales en métadonnées seules ; comptages publics en direct dans le [catalogue public](https://www.tiangong.earth/fr/lca-database) |
-| **ecoinvent v3** | ecoSpold2 | Jeux explicites `market activity` et `market groups` (importations, transports, pertes) ; quatre modèles de système nommés (Cut-off, Cut-off EN15804, APOS, Consequential — avec mix marginal en Consequential) | Base généraliste commerciale ; versions annuelles avec Report of Changes, Correspondence File, Database Overview et LCIA Implementation Report |
-| **ILCD / EU EF & LCDN** | XML ILCD / eILCD | Méthodologie définie par l'ILCD Handbook, les règles EF et chaque base publiée sur un nœud ; le réseau porte la gouvernance de format et de distribution | Colonne vertébrale d'interopérabilité internationale/UE ; TianGong s'y relie via [LCDN](https://lcdn.tiangong.earth/) |
-| **USLCI / FLCAC** | JSON-LD / ILCD (avec liste de flux élémentaires FEDEFL) | Dépôt public ouvert centré sur les métadonnées de soumission et le mappage de flux plutôt que sur un modèle de système unique | Dépôt public fédéral américain avec notes de version trimestrielles |
-| **BAFU (Suisse)** | Distribution compatible ecoSpold / ILCD | Inventaires publics pour politiques environnementales avec rapports DQRv2.1 et revue externe ISO 14040 | Base publique de l'Office fédéral suisse de l'environnement avec journaux annuels |
-| **AGRIBALYSE** | Distribution compatible openLCA / SimaPro | Frontières sectorielles agroalimentaires, cadre DQR et conditions d'utilisation explicites | Base publique française agroalimentaire avec calendrier de versions et DOI Dataverse |
-| **worldsteel** | Formats sectoriels ICV (Excel / paquets logiciels) | Inventaires moyens sectoriels berceau-à-porte de l'acier avec méthodologie documentée de recyclage en boucle fermée | Base sectorielle de la World Steel Association |
+| **openLCA** | Logiciel desktop open source | Prise en main et mécanismes de modélisation dans l'outil (allocation, paramètres, systèmes imbriqués, modélisation des déchets, agrégation, Monte Carlo, contrôles ISO) | Déléguée aux éditeurs de bases (ecoinvent, AGRIBALYSE, etc.) et fiches Nexus ; le manuel ne comporte ni chapitre `market` ni modèles de système |
+| **SimaPro** | Logiciel desktop commercial | Articles d'aide, tutoriels, manuel de méthodes LCIA et guides pratiques (bibliothèques unit vs system, market vs transformation) | Production de données et modèles de système documentés par chaque éditeur de base |
+| **Sphera / GaBi** | Logiciel commercial + base propriétaire | Aide logicielle couplée au rapport approfondi *GaBi Databases & Modeling Principles* (partiellement soumis à inscription/connexion) | L'équipe base de données Sphera publie règles de modélisation, DQI et rapports annuels |
+| **Brightway** | Framework Python open source | API de bibliothèque, calcul matriciel et tutoriels de code | Aucune documentation méthodologique ou de contenu de base intégrée ; dépend entièrement des bases importées |
+| **TianGong LCA** | Plateforme cloud open source + hébergement ouvert/commercial | Associe les guides opérationnels (voir [FAQ Modélisation du système](/fr/docs/faq/system-models/)) à cette section dédiée aux faits de la base, au mix implicite, aux versions et à l'interopérabilité (voir [Vue d'ensemble de la base de données](/fr/docs/database/overview/)) | Les faits de la plateforme sont ici ; la théorie générale d'ACV vit dans la base de connaissances, les schémas dans [TIDAS](https://tidas.tiangong.earth/fr/) et les règles sectorielles dans PCR |
 
-## Interopérabilité des formats et pertes de conversion
+## 2. Zoom comparatif : TianGong LCA face à ecoinvent v3
 
-La prise en charge de l'import ou de l'export **ne garantit pas une équivalence sémantique sans perte**. Lors d'échanges entre TianGong LCA et openLCA, SimaPro, GaBi ou ecoinvent, vérifiez à la fois l'outil supporté et les limites connues :
+ecoinvent v3 étant la base commerciale la plus largement documentée — et la référence la plus familière aux praticiens —, comparer directement son architecture à celle de TianGong LCA lève la plupart des malentendus.
 
-| Format / canal externe | Voie supportée | Correspondances clés et limites de conversion |
+### 1. Les quatre modèles de système nommés d'ecoinvent v3
+
+ecoinvent v3 compile un même socle de processus unitaires non reliés en quatre éditions distinctes, dont le choix relève du praticien :
+
+- **Cut-off by Classification** : les producteurs primaires portent la charge des déchets recyclables ; les matières recyclées entrent dans le cycle suivant sans charge primaire (hors traitement de recyclage). C'est le point d'entrée le plus courant en entreprise et en enseignement.
+- **Cut-off, EN15804** : variante Cut-off étendue pour les FDES/EPD européennes de la construction (EN 15804+A2) avec classifications et indicateurs complémentaires.
+- **APOS (Allocation at the Point of Substitution)** : répartit les charges de traitement et de coproduits entre producteurs et utilisateurs au point de substitution, traduisant une responsabilité partagée.
+- **Consequential** : repose sur l'extension de système et les fournisseurs marginaux ; les jeux `market activity` représentent alors des **mix de consommation marginaux** réagissant à une variation de demande plutôt que des moyennes historiques.
+
+Chaque version annuelle d'ecoinvent s'accompagne d'un **Report of Changes**, d'un **Correspondence File**, d'un **Database Overview** et d'un **LCIA Implementation Report**, tout en encodant importations, distances/modes de transport, pertes et `market groups` dans des jeux `market activity` explicites.
+
+### 2. Positionnement de TianGong LCA
+
+- **Aucun modèle de système nommé ni jeu `market` autonome** : TianGong ne propose pas ces quatre éditions et ne revendique ni statut attributionnel ni statut conséquentiel. Les intrants amont non reliés sont résolus via le **mix régional d'approvisionnement implicite** (`split_by_process_volume`) et des politiques explicites `closed` / `open` / `cutoff` (voir [Liaison d'approvisionnement et mécanisme de marché](/fr/docs/database/supply-markets/)).
+- **Aucun ajout automatique de transport ou de pertes** : le routage implicite pondère uniquement par niveau géographique et volume annuel, sans jamais injecter de transport ni de pertes réseau. Modélisez-les explicitement dès qu'ils comptent.
+- **Transparence en temps réel du catalogue** : la couverture publique actuelle se consulte sur le [catalogue public de données](https://www.tiangong.earth/fr/lca-database), chaque fiche étant verrouillée par `(UUID, version)` et sa licence propre (voir [Versions, licences et citation](/fr/docs/database/versions-citation/)).
+
+## 3. Panorama de sept grandes bases de données d'ACV
+
+Le tableau ci-dessous situe TianGong LCA face à six écosystèmes majeurs ; pour l'évolution historique et les divergences méthodologiques de fond, consultez [LCA Database Landscape and History (anglais)](https://prism.tiangong.earth/en/docs/book/lca-database-landscape-and-history/) dans la base de connaissances TianGong LCA :
+
+| Base / Écosystème | Format principal | Approche marché et modèle de système | Couverture, documentation et gouvernance |
+| --- | --- | --- | --- |
+| **TianGong LCA** | JSON [TIDAS](https://tidas.tiangong.earth/fr/) (aligné ILCD/eILCD, compatible LCDN) | Pas de jeux `market` autonomes ; mix régional implicite au calcul (`split_by_process_volume`) et frontières `closed`/`open`/`cutoff` | Données ouvertes revues multi-rôles ; Données commerciales limitées aux métadonnées ; effectifs en direct sur le [catalogue public](https://www.tiangong.earth/fr/lca-database) |
+| **ecoinvent v3** | ecoSpold2 | `market activity` et `market groups` explicites (importations, transports, pertes) ; quatre modèles nommés (Cut-off, Cut-off EN15804, APOS, Consequential) | Grande base commerciale généraliste avec Report of Changes, Correspondence File, Overview et rapport LCIA annuels |
+| **ILCD / EU EF & LCDN** | XML ILCD / eILCD | Défini par l'ILCD Handbook, les règles EF européennes et chaque nœud ; priorité à la gouvernance de format et de diffusion | Socle d'interopérabilité international et européen ; TianGong s'y relie via [LCDN](https://lcdn.tiangong.earth/) |
+| **USLCI / FLCAC** | JSON-LD / ILCD (flux élémentaires FEDEFL) | Dépôt public américain centré sur les guides de soumission, métadonnées et mapping FEDEFL sans imposer de modèle de système unique | Données publiques nord-américaines accompagnées de notes de version trimestrielles |
+| **BAFU (Suisse)** | Exports compatibles ecoSpold / ILCD | Inventaires publics destinés à l'évaluation des politiques publiques suisses | Accompagnés de DQRv2.1, rapports méthodologiques, revue externe ISO 14040, journal annuel et guide développeur |
+| **AGRIBALYSE** | Paquets adaptés openLCA / SimaPro | Méthodologie agroalimentaire française unifiée (frontières, allocation, qualité) | Documentation publique complète couvrant méthode, conditions d'usage, DQR, calendrier de versions et DOI Dataverse |
+| **worldsteel** | Paquets sectoriels (Excel / logiciels d'ACV) | Inventaires acier moyens pondérés du berceau à la porte, avec méthode de recyclage en boucle fermée | Base sectorielle mondiale de la World Steel Association dédiée à la représentativité sidérurgique |
+
+## 4. Interopérabilité des formats et limites de conversion
+
+Avant d'échanger des données entre TianGong LCA et openLCA, SimaPro, GaBi ou ecoinvent, vérifiez à la fois l'outil adapté et les pertes sémantiques connues — **un import réussi techniquement ne garantit jamais une équivalence méthodologique sans perte** :
+
+| Format externe / canal | Point d'entrée pris en charge | Éléments conservés de façon fiable | Écarts de conversion et limites à vérifier |
+| --- | --- | --- | --- |
+| **TIDAS JSON / ZIP** | [Workflows ZIP TIDAS](/fr/docs/user-guide/tidas-zip-workflows/) web, CLI, API | Structure complète des 6 objets, références de version exactes et règles de validation | Format natif sans perte — à privilégier dans tout l'écosystème TianGong |
+| **XML ILCD / eILCD** | [CLI locale `tidas`](/fr/docs/integration/tidas/) (`tidas convert` / `tidas import`), validateur ZIP web et [LCDN](https://lcdn.tiangong.earth/) | Très proche de TIDAS ; `tidas convert` écrit les fichiers compagnons déterministes `.tidas-envelope.json` et `.tidas-recovery.json` pour un aller-retour sans perte vérifiable | Les nœuds ILCD tiers peuvent encore introduire des champs d'extension, des écarts de classification ou des clés de contrôle CAS invalides |
+| **EcoSpold 1 / EcoSpold 2** | [CLI locale `tidas`](/fr/docs/integration/tidas/) (`tidas import`) | Conserve processus sources, flux, identifiants d'échange, géographie, numéros CAS et valeurs brutes ; les champs sans cible directe restent dans le `trace` d'import | **Ne recrée pas** la mécanique native `market` d'ecoinvent dans TianGong ; les hypothèses du modèle de système d'origine (Cut-off / APOS / Consequential) doivent être consignées et revues manuellement |
+| **openLCA JSON-LD / process XLSX** | [CLI locale `tidas`](/fr/docs/integration/tidas/) (`tidas import`) | Les liens `defaultProvider` résolvables deviennent des modèles de cycle de vie candidats ; les quantités sont converties dans l'unité de base de la propriété de référence ; les flux d'usage des sols (`Occupation, ...`, `Transformation, from/to ...`) sont mappés en flux élémentaires `Land use` | **Pas d'import direct d'archives binaires `.zolca`** — exportez d'abord depuis openLCA en JSON-LD ou process XLSX ; unités non convertibles et champs non mappés restent dans `trace` et exigent un contrôle manuel |
+| **SimaPro CSV** | [CLI locale `tidas`](/fr/docs/integration/tidas/) (`tidas import`) | Lit les tables courantes de processus, flux et échanges | Les noms de flux, compartiments, unités personnalisées ainsi que la syntaxe déchets/allocation diffèrent sensiblement d'ILCD/TIDAS ; vérifiez sens, classifications et correspondance des facteurs LCIA |
+| **Accès programmatique distant** | [MCP TianGong LCA (distant)](/fr/docs/integration/mcp-lca-remote/) et OpenAPI | Recherche contrôlée, interrogation structurée et automatisation | Destiné à l'interrogation en ligne et aux workflows — ne remplace pas la validation de schéma d'un paquet complet |
+
+## 5. Protocole de vérification en quatre étapes après un import externe
+
+Après une conversion via la CLI `tidas`, **ne considérez jamais la fin de la commande comme une validation complète**. Appliquez systématiquement ces quatre étapes :
+
+```bash
+# Étape 1 : Importer le paquet externe et journaliser le mapping champ par champ (mapping.csv.gz)
+tidas import --input ./source-export.zip --output ./tidas-out --write-mapping
+
+# Étape 2 : Valider schéma et références (code retour 0 = conforme ; code 2 = anomalies de données)
+tidas validate --input ./tidas-out
+```
+
+1. **Lire `import-report.json` et `issues.jsonl`** : vérifiez que le nombre de processus, flux et sources correspond à l'export d'origine, puis examinez les alertes de schéma, références cassées, clés CAS invalides et unités non convertibles.
+2. **Contrôler `mapping.csv.gz` et le `trace` d'import** : distinguez les informations placées dans des champs TIDAS officiels de celles simplement conservées dans `trace`, afin qu'aucune hypothèse de frontière ne passe inaperçue.
+3. **Exiger le code retour `0` de `tidas validate`** : un code `2` indique des erreurs de schéma, de vocabulaire ou de référence à corriger avant tout téléversement ou calcul.
+4. **Vérifier immédiatement la couverture des facteurs LCIA** : un flux élémentaire importé ne produit d'impact que si son triplet exact `(UUID de flux, version, direction)` correspond à la méthode cible. N'interprétez jamais un flux non couvert comme une émission ou un impact nul.
+
+Pour approfondir les limites des formats, les risques de mapping et la gouvernance en trois niveaux, consultez [Exchange Formats and Interoperability Governance (anglais)](https://prism.tiangong.earth/en/docs/book/exchange-formats-and-interoperability-governance/).
+
+## 6. Pourquoi deux bases donnent des chiffres différents : audit de comparabilité en 6 points
+
+Avant de juxtaposer un résultat TianGong LCA avec ecoinvent, GaBi, USLCI ou AGRIBALYSE, auditez ces six dimensions (voir aussi [À propos des données](https://www.tiangong.earth/fr/methodology) et [Versions, licences et citation](/fr/docs/database/versions-citation/)) :
+
+| Dimension d'audit | Cause fréquente d'écart entre bases | Vérification ou mention obligatoire avant comparaison |
 | --- | --- | --- |
-| **TIDAS JSON / ZIP** | [Workflows TIDAS ZIP](/fr/docs/user-guide/tidas-zip-workflows/) web, CLI, API | Fidélité native préservant structure, références, versions exactes et règles de validation |
-| **XML ILCD / eILCD** | CLI locale [`tidas`](/fr/docs/integration/tidas/) (`tidas convert` / `tidas import`), validation ZIP web, [LCDN](https://lcdn.tiangong.earth/) | Très proche structurellement de TIDAS, mais champs d'extension, classifications et clés CAS restent à vérifier |
-| **EcoSpold 1 / EcoSpold 2** | CLI locale [`tidas`](/fr/docs/integration/tidas/) (`tidas import`) | Conserve processus source, flux, identifiants d'échange, géographie, CAS et valeurs ; les champs non mappables passent en `trace` d'import ; **ne recrée pas la sémantique native `market` d'ecoinvent** et les hypothèses de modèle de système exigent une revue manuelle |
-| **openLCA JSON-LD / process XLSX** | CLI locale [`tidas`](/fr/docs/integration/tidas/) (`tidas import`) ; **`.zolca` n'est pas supporté directement** — exportez d'abord depuis openLCA | Les `defaultProvider` résolvables deviennent des modèles de cycle de vie candidats ; les quantités sont converties dans l'unité de base de la propriété de référence ; les flux d'usage des sols sont mappés en flux élémentaires `Land use` ; contrôlez les rapports pour unités non convertibles ou métadonnées `trace` |
-| **SimaPro CSV** | CLI locale [`tidas`](/fr/docs/integration/tidas/) (`tidas import`) | Noms de flux, compartiments, unités et conventions d'allocation/déchets divergent fortement ; auditez classifications, directions et couverture des facteurs LCIA après import |
-| **API distante / MCP** | [TianGong LCA MCP – distant](/fr/docs/integration/mcp-lca-remote/) et OpenAPI | Accès programmatique contrôlé ; ne remplace pas la validation complète de paquet |
+| **1. Unité fonctionnelle et flux de référence** | Taux d'humidité, pureté, pouvoir calorifique (PCI vs PCS), emballage ou base sèche vs humide | Convertir d'abord les deux jeux sur exactement la même spécification physique et la même base |
+| **2. Frontière du système et biens d'équipement** | Berceau à la porte vs berceau à la tombe, inclusion ou exclusion des infrastructures/machines et seuils de coupure | Indiquer explicitement les étapes incluses/exclues ; ne jamais soustraire des empreintes à frontières différentes |
+| **3. Multifonctionnalité et allocation** | Allocation massique, économique, énergétique ou causale vs extension de système (substitution) | Confirmer une logique compatible pour coproduits et déchets, ou exposer clairement l'écart côte à côte |
+| **4. Hypothèses de marché et d'approvisionnement** | `market` ecoinvent incluant fret et pertes, mix marginal conséquentiel vs mix régional implicite TianGong ou fournisseurs explicites | Vérifier si transport et pertes réseau figurent d'un seul côté et aligner avant comparaison |
+| **5. Représentativité temporelle, géographique et technique** | Année du mix électrique (ex. 2018 vs 2024), maille spatiale (province vs pays vs monde) ou filière (charbon vs gaz) | Contrôler années de référence, codes géographiques et technologies ; ne classer deux produits qu'à représentativité comparable |
+| **6. Méthode LCIA et couverture des facteurs** | IPCC AR5 vs AR6, EF 3.0 vs EF 3.1, facteurs régionalisés vs globaux par défaut et flux élémentaires non couverts | Aligner les versions exactes de méthodes et déclarer toute lacune de couverture avant de comparer un indicateur unique |
 
-### Liste minimale de contrôle après conversion
-
-Après `tidas import`, ne vous fiez jamais au seul code de sortie `0` — examinez systématiquement :
-
-1. **`import-report.json` et `issues.jsonl`** : comptages de documents, erreurs de schéma ou de référence, clés CAS invalides et unités d'échange non convertibles.
-2. **`--write-mapping` (`mapping.csv.gz`)** : champs mappés formellement, champs conservés uniquement en `trace`, valeurs de remplacement et champs générés.
-3. **Couverture flux élémentaires et LCIA** : vérifiez que les UUID, versions et directions des flux élémentaires importés correspondent aux facteurs de votre méthode LCIA cible ; n'interprétez jamais un flux non apparié comme un impact nul.
-
-Pour une analyse complète des limites de formats, risques de mappage et principes de divulgation en trois niveaux, voir [Data Formats, Mapping, and Conversion Disclosure (anglais)](https://prism.tiangong.earth/en/docs/book/exchange-formats-and-interoperability-governance/) dans la base de connaissances TianGong LCA.
-
-## Prérequis stricts de comparabilité entre bases
-
-Des résultats issus de bases ou versions différentes ne doivent être comparés côte à côte qu'après vérification de la compatibilité sur ces six dimensions (voir aussi [À propos des données](https://www.tiangong.earth/fr/methodology) et [Versions, licences et citation](/fr/docs/database/versions-citation/)) :
-
-1. **Unité fonctionnelle et flux de référence** : base de mesure, spécification produit et échelle de référence cohérentes.
-2. **Frontière du système** : périmètre berceau-à-porte vs berceau-à-tombe, coupures sur biens d'équipement et traitement des déchets comparables.
-3. **Multifonctionnalité** : règles d'allocation (masse, économique, causalité physique) ou d'extension de système cohérentes.
-4. **Hypothèses de marché et d'approvisionnement** : distinction claire entre mix régional moyen, fournisseurs spécifiques et approvisionnement marginal.
-5. **Représentativité temporelle, géographique et technologique** : période de référence, région et filière technique comparables.
-6. **Méthode LCIA et couverture des facteurs** : même version de méthode avec divulgation explicite des facteurs manquants.
-
-Dès qu'un prérequis diffère, déclarez explicitement l'écart plutôt que de soustraire ou classer des empreintes uniques entre bases. Pour un cadre complet d'évaluation d'adéquation, voir [Data Applicability (anglais)](https://prism.tiangong.earth/en/docs/book/data-applicability/) dans la base de connaissances TianGong LCA.
+Dès qu'un seul de ces six prérequis diverge, **exposez l'écart de façon transparente** plutôt que de soustraire deux empreintes carbone brutes pour conclure. Pour une grille complète d'adéquation des données, consultez [Data Applicability (anglais)](https://prism.tiangong.earth/en/docs/book/data-applicability/) dans la base de connaissances TianGong LCA.
