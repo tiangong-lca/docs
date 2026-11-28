@@ -1,0 +1,79 @@
+---
+title: "Versions, Licensing & Citation"
+description: "Documents TianGong LCA dataset version semantics, permanent URIs, review and publication states, open vs. commercial licensing, DOI status, citation templates, and LCDN distribution."
+---
+
+This page brings together TianGong LCA dataset identity, version numbering, publication states, licensing and redistribution boundaries, and recommended citation formats so research and engineering teams can keep analyses reproducible and compliant.
+
+## Dataset identity and version semantics
+
+Across TianGong LCA and TIDAS, an exact dataset revision is uniquely identified by the pair **`(UUID, version)`**, written `UUID@version`:
+
+- **Three-segment version `XX.XX.XXX`**: Follows ILCD/TIDAS conventions—the first two digits denote major updates, the middle two denote minor revisions and corrections, and the last three track internal/incremental revisions during development.
+- **Default initial version**: Newly created datasets on the platform default to `01.01.000`.
+- **Default list view vs. history**: Lists and search results display the **latest visible version** per UUID by default. Use **All Versions** on a row to view or cite a historical revision; see [Data Platform Overview](/en/docs/user-guide/data/) and [Data Usage Guide](/en/docs/user-guide/data-use/).
+- **Create Version vs. Copy Data**:
+  - **Create Version** from **All Versions** **preserves the same UUID**, auto-generates the next version number, and links the preceding revision (`common:referenceToPrecedingDataSetVersion`).
+  - **Copy Data** mints a **new UUID** for an independent record suitable for branching or separate authoring.
+- **Exact-version binding**: Model references, solver snapshots, and public catalog pages bind to exact `(UUID, version)` pairs; matching names or different versions of the same UUID are never treated as silently interchangeable.
+
+## Permanent dataset URIs and public links
+
+Every TIDAS dataset carries `common:permanentDataSetURI` in its administrative metadata:
+
+- **Platform-generated URI pattern**: Points to an LCDN-style persistent identifier by dataset type—for example, `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>` for processes (with analogous paths for flows, lifecycle models, sources, contacts, and flow properties).
+- **Public catalog exact-version links**: Each published revision in the [TianGong LCA Public Data Catalog](https://www.tiangong.earth/en/lca-database) has its own canonical URL. Withdrawn or restricted versions are removed from the public catalog.
+- **DOI status**: Native dataset identity uses `(UUID, version)` and `common:permanentDataSetURI`. The platform **does not automatically mint a separate DOI per dataset**; when an upstream paper, report, or external publication carries a DOI, record it in the linked **Source** dataset.
+
+## Review and publication state machine
+
+The platform enforces lifecycle transitions and visibility using structured `state_code` values:
+
+| State (`state_code`) | Typical location and meaning | Editability | Public catalog and numeric calculation eligibility |
+| --- | --- | --- | --- |
+| `0` (Draft) | Working drafts in **My Data** | Editable by owner | Not in public catalog; eligible in calculation only for the owning actor under versioned `public_plus_owner_draft` scope |
+| `20` (Under review) | Submitted to [Data Review](/en/docs/user-guide/data-review/) | Locked from direct edits | Awaits `review-admin` assignment and `review-member` review; returns for revision if rejected |
+| `100` (Published Open Data) | **Open Data** and public catalog | Immutable in place; revisions require a new version | **Sole exact public numerical eligibility state for processes**; searchable, referenceable, copyable, and exportable |
+| `120` (Published derived Result Process) | Persisted derived result from release governance | Immutable | Strictly isolated from generic product reads, exports, and numerical supplier/root pools; read back only through authorized publication receipt paths |
+| `200` (Commercial Data) | **Commercial Data** space | Read-only metadata | Catalog and platform display metadata and provider contact details only; cannot be cited directly in models |
+| `-1` (Curated examples) | Illustrative records for signed-in users | Read-only for ordinary users | For learning and exploration only; excluded from Open Data publication counts |
+
+> Keep two layers distinct: `common:workflowAndPublicationStatus` inside TIDAS JSON (`Working draft`, `Data set finalised; entirely published`, `Withdrawn`, etc.) records ILCD/TIDAS bibliographic workflow metadata, whereas platform access control and solver admission enforce database `state_code`.
+
+## Licensing and redistribution boundaries
+
+**Public visibility does not automatically grant unrestricted redistribution or commercial reuse rights.** Before reusing or redistributing any dataset, inspect the exact version's `publicationAndOwnership` fields:
+
+- `common:referenceToOwnershipOfDataSet`: Data owner (not necessarily the same entity as the platform publisher).
+- `common:copyright`: Whether copyright applies (`true` / `false`).
+- `common:licenseType`: Controlled vocabulary enum:
+  - `Free of charge for all users and uses`
+  - `Free of charge for some user types or use types`
+  - `Free of charge for members only`
+  - `License fee`
+  - `Other`
+- `common:accessRestrictions`: Specific usage conditions, redistribution limits, or license text references.
+
+### Open Data vs. Commercial Data
+
+- **Open Data**: Reviewed and openly browseable/referenceable on the platform, yet redistribution, derivative works, and commercial use remain governed by **each version's declared licence and source conditions**. See also [About the Data](https://www.tiangong.earth/en/methodology) on the public portal.
+- **Commercial Data**: Exposes descriptive metadata only, omits full modeling inventories, and cannot be cited in models. For licensing or access to commercial databases such as HiQLCD, contact the corresponding provider listed under [Commercial Database Access](/en/docs/faq/commercial-database/).
+- **LCDN distribution**: Datasets obtained in ILCD format through the [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) remain subject to the versions and licensing terms declared on the node.
+
+## Recommended citation formats
+
+To keep papers, reports, and carbon-footprint disclosures verifiable, include at least the **data provider (when present), dataset name, exact version, `UUID@version` identifier, canonical URL, and retrieval date**.
+
+### Citing a single dataset (aligned with the public catalog)
+
+> Data provider: *Provider Name* (when applicable). TianGong LCA Platform, dataset: *Dataset Name*, version *01.01.000*, identifier *`<uuid>@01.01.000`*, accessed *YYYY-MM-DD*, available at [https://www.tiangong.earth/en/lca-database](https://www.tiangong.earth/en/lca-database) (or the exact version canonical URL / permanent URI).
+
+### Citing model calculations or LCIA results
+
+When reporting LCI or LCIA numbers computed on the platform, also record:
+
+1. The LCIA method name and version, together with any characterization-factor coverage gaps (see [LCIA Calculation & Results](/en/docs/user-guide/lcia/)).
+2. The release version and manifest hash when referencing a published Model/Result Release or Calculation Bundle.
+3. **Machine verification vs. scientific attestation**: Publication receipts, SHA-256 checks, and readback validation verify artifact byte integrity and source binding; they do not substitute for study-specific scientific review or third-party conformity certification.
+
+For quick tips on attaching Source records during data authoring, see [Sources & Citation FAQ](/en/docs/faq/sources-and-citation/) and [Database Overview](/en/docs/database/overview/).

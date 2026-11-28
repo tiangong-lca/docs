@@ -1,0 +1,79 @@
+---
+title: "Versionen, Lizenzen & Zitierung"
+description: "Dokumentiert Versionssemantik, permanente URIs, Prüf- und Veröffentlichungsstatus, Lizenzgrenzen zwischen offenen und kommerziellen Daten, DOI-Status, Zitiervorlagen und LCDN-Verteilung in TianGong LCA."
+---
+
+Diese Seite bündelt Datensatzidentität, Versionsnummerierung, Veröffentlichungsstatus, Lizenz- und Weiterverbreitungsgrenzen sowie empfohlene Zitierformate in TianGong LCA, damit Analysen reproduzierbar und rechtssicher bleiben.
+
+## Datensatzidentität und Versionssemantik
+
+In TianGong LCA und TIDAS wird eine exakte Datensatzrevision eindeutig durch das Paar **`(UUID, version)`** identifiziert, geschrieben als `UUID@version`:
+
+- **Dreiteilige Versionsnummer `XX.XX.XXX`**: Entspricht ILCD/TIDAS — die ersten beiden Ziffern stehen für größere Aktualisierungen (Major), die mittleren beiden für kleinere Überarbeitungen und Korrekturen (Minor), die letzten drei für interne/inkrementelle Zählung während der Entwicklung.
+- **Standard-Startversion**: Neu erstellte Datensätze auf der Plattform beginnen standardmäßig mit `01.01.000`.
+- **Standard-Listenansicht vs. Historie**: Listen und Suchergebnisse zeigen je UUID standardmäßig die **zuletzt sichtbare Version**. Nutzen Sie **Alle Versionen**, um ältere Revisionen einzusehen oder zu zitieren; siehe [Überblick Datenplattform](/de/docs/user-guide/data/) und [Anleitung zur Datennutzung](/de/docs/user-guide/data-use/).
+- **Version erstellen vs. Daten kopieren**:
+  - **Version erstellen** aus **Alle Versionen** **behält dieselbe UUID bei**, erzeugt automatisch die nächste Versionsnummer und verknüpft die Vorgängerversion (`common:referenceToPrecedingDataSetVersion`).
+  - **Daten kopieren** erzeugt eine **neue UUID** für einen eigenständigen Datensatz zum freien Weiterentwickeln.
+- **Exakte Versionsbindung**: Modellreferenzen, Solver-Snapshots und öffentliche Katalogseiten binden an genaue `(UUID, version)`-Paare; ähnliche Namen oder andere Versionen derselben UUID sind nicht stillschweigend austauschbar.
+
+## Permanente Datensatz-URIs und öffentliche Links
+
+Jeder TIDAS-Datensatz führt `common:permanentDataSetURI` in den Verwaltungsmetadaten:
+
+- **Von der Plattform erzeugtes URI-Muster**: Verweist je Datensatztyp auf eine dauerhafte LCDN-artige Kennung, z. B. `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>` für Prozesse (analog für Flüsse, Lebenszyklusmodelle, Quellen, Kontakte und Flusseigenschaften).
+- **Exakte Versionslinks im öffentlichen Katalog**: Jede veröffentlichte Revision im [öffentlichen TianGong-LCA-Datenkatalog](https://www.tiangong.earth/de/lca-database) besitzt eine eigene kanonische URL. Zurückgezogene oder eingeschränkte Versionen werden aus dem Katalog entfernt.
+- **DOI-Status**: Die native Identität beruht auf `(UUID, version)` und `common:permanentDataSetURI`. Die Plattform **vergibt derzeit nicht automatisch eine separate DOI je Datensatz**; trägt eine zugrunde liegende Publikation oder Studie eine DOI, wird diese im verknüpften **Quellen**-Datensatz festgehalten.
+
+## Prüf- und Veröffentlichungs-Statusmaschine
+
+Die Plattform steuert Lebenszyklusübergänge und Sichtbarkeit über strukturierte `state_code`-Werte:
+
+| Status (`state_code`) | Typischer Ort und Bedeutung | Bearbeitbarkeit | Öffentlicher Katalog & numerische Berechnungszulassung |
+| --- | --- | --- | --- |
+| `0` (Entwurf) | Arbeitsentwürfe in **Meine Daten** | Durch Eigentümer bearbeitbar | Nicht im öffentlichen Katalog; numerisch nur für den Eigentümer im versionierten `public_plus_owner_draft`-Scope zulässig |
+| `20` (In Prüfung) | Zur [Datenprüfung](/de/docs/user-guide/data-review/) eingereicht | Gegen direkte Änderungen gesperrt | Wartet auf Zuweisung durch `review-admin` und Prüfung durch `review-member`; bei Ablehnung Rückgabe zur Überarbeitung |
+| `100` (Offene Daten veröffentlicht) | **Offene Daten** und öffentlicher Katalog | Vor Ort unveränderlich; Überarbeitung erfordert neue Version | **Einziger exakter öffentlicher Rechenstatus für Prozesse**; suchbar, referenzierbar, kopierbar und exportierbar |
+| `120` (Veröffentlichter abgeleiteter Ergebnisprozess) | Durch Release-Governance gespeicherter Ergebnisprozess | Unveränderlich | Strikt isoliert von regulären Produktabfragen, Exporten und numerischen Anbieter-/Root-Pools; Auslesung nur über autorisierte Release-Belegpfade |
+| `200` (Kommerzielle Daten) | Datenraum **Kommerzielle Daten** | Nur Metadaten lesbar | Katalog und Plattform zeigen ausschließlich Metadaten und Anbieterkontakte; nicht direkt in Modellen zitierbar |
+| `-1` (Kuratierte Beispiele) | Anschauliche Beispieldatensätze für angemeldete Nutzer | Für normale Nutzer schreibgeschützt | Nur zu Lern- und Testzwecken; nicht in den Zählungen der Offenen Daten enthalten |
+
+> Unterscheiden Sie zwei Ebenen: `common:workflowAndPublicationStatus` im TIDAS-JSON (z. B. `Working draft`, `Data set finalised; entirely published`, `Withdrawn`) dokumentiert ILCD/TIDAS-Publikationsmetadaten, während Zugriffskontrolle und Solver-Zulassung den Datenbank-`state_code` durchsetzen.
+
+## Lizenz- und Weiterverbreitungsgrenzen
+
+**Öffentliche Sichtbarkeit bedeutet nicht automatisch uneingeschränkte Weiterverbreitung oder freie kommerzielle Nutzung.** Prüfen Sie vor jeder Weiterverwendung die Felder unter `publicationAndOwnership` der genauen Version:
+
+- `common:referenceToOwnershipOfDataSet`: Dateneigentümer (nicht zwingend identisch mit dem Plattformbetreiber).
+- `common:copyright`: Urheberrechtsangabe (`true` / `false`).
+- `common:licenseType`: Kontrollierte Werteliste:
+  - `Free of charge for all users and uses`
+  - `Free of charge for some user types or use types`
+  - `Free of charge for members only`
+  - `License fee`
+  - `Other`
+- `common:accessRestrictions`: Konkrete Nutzungsbedingungen, Beschränkungen oder Verweise auf Lizenztexte.
+
+### Offene Daten vs. Kommerzielle Daten
+
+- **Offene Daten**: Geprüft und auf der Plattform offen durchsuch- sowie referenzierbar; Weiterverbreitung, Bearbeitung und kommerzielle Nutzung richten sich dennoch nach **Lizenz- und Quellenangaben der jeweiligen Version**. Siehe auch [Über die Daten](https://www.tiangong.earth/de/methodology) im Portal.
+- **Kommerzielle Daten**: Zeigen nur beschreibende Metadaten ohne vollständige Sachbilanz und lassen sich nicht direkt in Modellen zitieren. Für Zugang und Lizenzen kommerzieller Datenbanken (z. B. HiQLCD) wenden Sie sich an die unter [Zugriff auf kommerzielle Datenbanken](/de/docs/faq/commercial-database/) genannten Kontakte.
+- **LCDN-Verteilung**: Auch Datensätze, die im ILCD-Format über das [TianGong Life Cycle Data Network (LCDN)](https://lcdn.tiangong.earth/) bezogen werden, unterliegen den am Knoten angegebenen Versionen und Lizenzbedingungen.
+
+## Empfohlene Zitierformate
+
+Damit Publikationen, Berichte und CO₂-Fußabdrücke nachvollziehbar bleiben, geben Sie mindestens **Datenanbieter (falls vorhanden), Datensatzname, exakte Version, Kennung `UUID@version`, kanonische URL und Abrufdatum** an.
+
+### Einzelnen Datensatz zitieren (abgestimmt mit dem öffentlichen Katalog)
+
+> Datenanbieter: *Anbietername* (falls zutreffend). TianGong LCA Platform, Datensatz: *Datensatzname*, Version *01.01.000*, Kennung *`<uuid>@01.01.000`*, abgerufen am *JJJJ-MM-TT*, verfügbar unter [https://www.tiangong.earth/de/lca-database](https://www.tiangong.earth/de/lca-database) (oder der kanonischen Versions-URL / permanenten URI).
+
+### Modellberechnungen oder LCIA-Ergebnisse zitieren
+
+Wenn Sie auf der Plattform berechnete LCI- oder LCIA-Werte berichten, dokumentieren Sie zusätzlich:
+
+1. Name und Version der LCIA-Methode sowie eventuelle Lücken bei Charakterisierungsfaktoren (siehe [LCIA-Berechnung und Ergebnisse](/de/docs/user-guide/lcia/)).
+2. Release-Version und Manifest-Hash, falls Sie sich auf ein veröffentlichtes Model-/Result-Release oder Calculation Bundle beziehen.
+3. **Maschinenprüfung vs. fachliche Bestätigung**: Veröffentlichungsbelege, SHA-256-Prüfungen und Readback-Checks belegen Byte-Integrität und Quellenbindung eines Artefakts; sie ersetzen keine studienspezifische wissenschaftliche Prüfung oder Konformitätszertifizierung durch Dritte.
+
+Praktische Hinweise zum Pflegen von Quellenobjekten finden Sie unter [FAQ Quellen und Zitierung](/de/docs/faq/sources-and-citation/) sowie im [Datenbanküberblick](/de/docs/database/overview/).

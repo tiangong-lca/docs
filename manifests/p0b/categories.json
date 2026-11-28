@@ -36,6 +36,18 @@
     "descriptionEn": "Deep dive into key functions, data management, and collaboration features."
   },
   {
+    "oldSlug": "/database",
+    "newBase": "database",
+    "labelZh": "数据库与方法",
+    "titleZh": "数据库与方法",
+    "descriptionZh": "了解 TianGong LCA 数据库的组成、供应连接与市场机制、版本许可与引用规范，以及跨数据库比较与格式互通边界。",
+    "depth": 0,
+    "parent": null,
+    "labelEn": "Database & Methodology",
+    "titleEn": "Database & Methodology",
+    "descriptionEn": "Understand TianGong LCA database structure, supply linking and market mechanics, versioning, licensing and citation, and cross-database comparison and interoperability."
+  },
+  {
     "oldSlug": "/data-collection",
     "newBase": "data-collection",
     "labelZh": "数据收集",

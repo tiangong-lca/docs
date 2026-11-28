@@ -1,0 +1,79 @@
+---
+title: "版本、许可与引用"
+description: "说明 TianGong LCA 数据集的版本号规则、永久 URI、审核与发布状态机、开放与商业许可边界、DOI 说明、规范引用格式及 LCDN 分发要求。"
+---
+
+本页汇总 TianGong LCA 数据集的身份标识、版本演进、生命周期状态、许可与再分发边界以及推荐引用格式，帮助研究与工程团队做到可复现、可溯源且合规使用。
+
+## 数据集身份与版本号语义
+
+在 TianGong LCA 与 TIDAS 体系中，一条记录的精确身份由二元组 **`(UUID, version)`** 共同确定，记作 `UUID@version`：
+
+- **三段式版本号 `XX.XX.XXX`**：遵循 ILCD/TIDAS 规范——前两位表示重大更新（major），中间两位表示次级修订与纠错（minor），后三位用于数据集开发过程中的内部/递增计数。
+- **新建默认版本**：在平台中新建数据集时，初始默认版本号为 `01.01.000`。
+- **列表默认行为与历史回溯**：平台数据列表与搜索默认展示每个 UUID 的**最新可见版本**；如需查看或引用旧版本，须通过数据行的**所有版本**进入精确历史版本，详见[数据平台介绍](/zh/docs/user-guide/data/)与[数据使用](/zh/docs/user-guide/data-use/)。
+- **新增版本 vs 复制数据**：
+  - 在**所有版本**中点击**新增版本**，会**保留同一 UUID** 并自动计算生成下一版本号，用于延续同一数据集的修订脉络（并通过 `common:referenceToPrecedingDataSetVersion` 记录前序版本）。
+  - 点击**复制数据**会生成**全新 UUID** 的独立副本，适合衍生新过程或独立修改。
+- **计算与引用锁定精确版本**：模型节点引用、求解快照和公开目录详情页均绑定到精确的 `(UUID, version)`；同名过程或同 UUID 的不同版本不会自动等价。
+
+## 永久数据集 URI 与公开链接
+
+每条 TIDAS 数据集均在管理信息中维护 `common:permanentDataSetURI`：
+
+- **平台默认生成的永久 URI 格式**：按对象类型指向 LCDN 风格永久标识地址，例如过程数据集为 `https://lcdn.tiangong.earth/datasetdetail/process.xhtml?uuid=<uuid>&version=<version>`（流、模型、来源、联系人与流属性同理对应各自路径）。
+- **公开目录精确版本链接**：在[天工 LCA 公开数据目录](https://www.tiangong.earth/zh-CN/lca-database)中，每个公开版本拥有独立可分享的规范 URL；若某版本被撤回或转为受限状态，目录会将其移除。
+- **关于 DOI**：平台数据集的原生稳定标识是 `(UUID, version)` 与 `common:permanentDataSetURI`。平台目前**不会自动为每条数据集单独铸造 DOI**；若数据集来源于已发表论文、报告或外部带 DOI 的出版物，该 DOI 记录在关联的**来源（Source）**对象中。
+
+## 审核与发布状态机
+
+平台使用结构化的 `state_code` 管理数据集从草稿、审核到发布与隔离的完整生命周期：
+
+| 状态（`state_code`） | 典型位置与含义 | 可编辑性 | 公开目录与数值计算资格 |
+| --- | --- | --- | --- |
+| `0`（草稿） | **我的数据**中的在编记录 | 作者可编辑 | 不进入公开目录；仅在版本化个人草稿计算范围（`public_plus_owner_draft`）下对本人可用 |
+| `20`（审核中） | 已提交[数据审核](/zh/docs/user-guide/data-review/)的记录 | 锁定不可直接编辑 | 等待 `review-admin` 分配与 `review-member` 评审；驳回后退回修订 |
+| `100`（开放数据已发布） | **开放数据**与公开目录 | 不可直接修改；修订须新建版本 | **公开数值计算的唯一精确过程准入状态**；可被检索、引用、复制与导出 |
+| `120`（已发布派生结果过程） | 发布治理落库的派生结果过程 | 不可编辑 | 与普通产品读取、导出及数值供应池严格隔离，仅通过受授权的发布回执路径读回 |
+| `200`（商业数据） | **商业数据**空间 | 只读元信息 | 公开目录与平台仅展示元信息与提供方联系信息；不可直接引用入模 |
+| `-1`（精选示例） | 登录用户可见的示例数据 | 普通用户不可编辑 | 仅供学习演练，不计入开放数据发布目录 |
+
+> 区分两层状态：数据集 JSON 内的 `common:workflowAndPublicationStatus`（如 `Working draft`、`Data set finalised; entirely published`、`Withdrawn`）表达 TIDAS/ILCD 出版元数据；平台访问控制与求解准入以数据库 `state_code` 为准。
+
+## 许可与再分发边界
+
+**开放可见不等于无限制再分发或免授权商用。** 使用或再分发任何数据前，必须核查该精确版本在 TIDAS `publicationAndOwnership` 中的字段：
+
+- `common:referenceToOwnershipOfDataSet`：数据集权属方（注意：权属方与平台发布方未必相同）。
+- `common:copyright`：是否存在版权声明（`true` / `false`）。
+- `common:licenseType`：受控许可类型枚举，包括：
+  - `Free of charge for all users and uses`
+  - `Free of charge for some user types or use types`
+  - `Free of charge for members only`
+  - `License fee`
+  - `Other`
+- `common:accessRestrictions`：具体访问限制、使用条件或指向完整许可协议的文本说明。
+
+### 开放数据与商业数据的边界
+
+- **开放数据（Open Data）**：虽经平台审核并向所有用户开放查阅与引用，但具体再分发、二次加工或商业使用权限仍以**该版本自身记录的许可与来源条件**为准；另请参阅门户[数据说明](https://www.tiangong.earth/zh-CN/methodology)。
+- **商业数据（Commercial Data）**：平台仅展示描述性元信息，不包含完整建模清单，且不支持直接引用入模。如需获取商业数据库授权（如 HiQLCD 等），请按[商业数据库获取](/zh/docs/faq/commercial-database/)或对应提供方页面联系授权。
+- **LCDN 分发**：通过[天工生命周期数据网络（LCDN）](https://lcdn.tiangong.earth/)以 ILCD 格式获取数据时，同样须遵守节点上标明的版本与许可条款。
+
+## 规范引用格式
+
+为了使论文、报告或碳足迹披露可复核，引用 TianGong LCA 数据时应至少保留：**数据提供方（如有）、数据集名称、精确版本号、`UUID@version` 标识、访问地址及检索日期**。
+
+### 引用单条数据集（与公开目录一致）
+
+> 数据提供方：*提供方名称*（如适用）。天工 LCA 平台，数据集：*数据集名称*，版本 *01.01.000*，标识 *`<uuid>@01.01.000`*，检索日期：*YYYY-MM-DD*，访问地址：[https://www.tiangong.earth/zh-CN/lca-database](https://www.tiangong.earth/zh-CN/lca-database)（或该版本的规范详情链接 / 永久 URI）
+
+### 引用模型计算或 LCIA 结果
+
+当报告中引用了平台计算得到的 LCI 或 LCIA 数值时，除源过程/模型版本外，还应补充记录：
+
+1. 所用 LCIA 评价方法名称与版本，以及是否存在缺失表征因子（覆盖率状态，详见[LCIA 计算与结果查看](/zh/docs/user-guide/lcia/)）。
+2. 若使用了已发布的模型/结果 Release 或 Calculation Bundle，保留其 Release 版本与清单哈希。
+3. **区分机器校验与专业背书**：发布回执、SHA-256 校验和读回检查只证明制品字节与源记录的一致性，不等同于对特定研究的科学适用性或第三方符合性认证。
+
+关于数据录入时的来源附件整理与快速问答，也可参见[数据来源与引用 FAQ](/zh/docs/faq/sources-and-citation/)与[数据库总览](/zh/docs/database/overview/)。

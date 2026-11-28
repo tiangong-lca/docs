@@ -132,3 +132,34 @@ test('Knowledge Base MCP pages, public references and exclusive screenshots stay
     }
   }
 });
+
+test('Database & Methodology P0 section is complete across all four locales with index excluded from AI/search', () => {
+  const root = path.resolve(import.meta.dirname, '..');
+  const contentRoot = path.join(root, 'content', 'docs');
+  const pages = readPublicDocInventory(contentRoot);
+  const byUrl = new Map(pages.map((page) => [page.url, page]));
+  const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
+  const slugs = ['index', 'overview', 'supply-markets', 'versions-citation', 'comparison'];
+
+  for (const [locale, suffix] of [['zh', ''], ['en', '.en'], ['de', '.de'], ['fr', '.fr']]) {
+    const rootMeta = JSON.parse(read(`content/docs/meta${suffix}.json`));
+    assert.equal(rootMeta.pages.indexOf('database'), rootMeta.pages.indexOf('user-guide') + 1, `${locale}: database follows user-guide`);
+    assert.equal(rootMeta.pages.indexOf('data-collection'), rootMeta.pages.indexOf('database') + 1, `${locale}: data-collection follows database`);
+
+    const sectionMeta = JSON.parse(read(`content/docs/database/meta${suffix}.json`));
+    assert.deepEqual(sectionMeta.pages, slugs, `${locale}: database meta ordering`);
+
+    const indexUrl = `/${locale}/docs/database/`;
+    assert.equal(byUrl.get(indexUrl)?.indexable, false, `${indexUrl} stays a non-indexable CategoryDirectory root`);
+    assert.ok(read(`content/docs/database/index${suffix}.mdx`).includes(`<CategoryDirectory lang="${locale}" category="database" />`));
+
+    for (const slug of slugs) {
+      const source = read(`content/docs/database/${slug}${suffix}.mdx`);
+      assert.match(source, /^title: ".+"$/mu, `${locale}/${slug}`);
+      assert.match(source, /^description: ".+"$/mu, `${locale}/${slug}`);
+      if (slug !== 'index') {
+        assert.equal(byUrl.get(`/${locale}/docs/database/${slug}/`)?.indexable, true, `/${locale}/docs/database/${slug}/ must be indexable`);
+      }
+    }
+  }
+});

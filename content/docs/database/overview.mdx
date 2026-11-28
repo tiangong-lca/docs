@@ -1,0 +1,78 @@
+---
+title: "数据库总览"
+description: "说明 TianGong LCA 数据库的数据类型、数据空间、公开目录覆盖查询方式、开放与商业边界、LCDN 分发以及与周边知识体系的分工。"
+---
+
+本页说明 TianGong LCA 数据库自身的数据构成、数据空间边界、权威覆盖查询入口及分发渠道，帮助您在使用平台计算或引用数据前先弄清“库里有什么、哪里查最新数据、哪些边界需要自己核对”。
+
+## 文档边界：本栏目讲什么、不重复什么
+
+TianGong 生态把不同层面的知识拆分为独立维护的站点，各负其责，避免重复与失真：
+
+| 主题 | 权威归属 | 说明 |
+| --- | --- | --- |
+| **TianGong 数据库事实、建模约定与平台使用边界** | 本栏目（**数据库与方法**） | 说明数据类型、数据空间、供应路由、版本/许可/引用与跨库差异 |
+| **实时公开目录计数、按地区/来源检索与摘要说明** | [天工 LCA 公开数据目录](https://www.tiangong.earth/zh-CN/lca-database) 与 [数据说明](https://www.tiangong.earth/zh-CN/methodology) | 无需登录即可查看实时记录数、精确版本与公开可用性 |
+| **数据结构与字段语义规范** | [TIDAS 数据系统](https://tidas.tiangong.earth/) | 定义 JSON Schema、核心模块关系与受控词表 |
+| **一般 LCA 方法论与背景数据库理论** | [天工 LCA 知识库](https://prism.tiangong.earth/zh/docs/book/lca-database-landscape-and-history/) | 系统讨论目标范围、分配、市场响应、不确定性与跨框架比较 |
+| **产品品类规则（PCR）** | [天工 PCR 文档库](https://pcr.tiangong.earth/zh/) | 面向特定行业的核算边界与数据生产要求 |
+| **ILCD 格式数据节点分发** | [天工生命周期数据网络（LCDN）](https://lcdn.tiangong.earth/) | 面向 LCA 软件与外部数据网络的 ILCD 分发入口 |
+
+## 数据库中的对象与数据类型
+
+TianGong LCA 基于 [TIDAS](https://tidas.tiangong.earth/zh/docs/core-modules/data-relationships/) 数据结构管理生命周期数据，核心对象包括：
+
+| 对象类型 | 作用 | 在计算与平台中的位置 |
+| --- | --- | --- |
+| **过程（Process）** | 在给定参考规模下记录投入产出清单、时空范围、技术说明与管理信息 | 可以是单元过程（unit process），也可以是模型计算保存的结果过程；**平台不存在独立的 ecoinvent 式 `market` 过程类型**，详见[供应连接与市场机制](/zh/docs/database/supply-markets/) |
+| **流（Flow）** | 定义被交换的物质、产品、能源、废物或基本流及其参考流属性 | 分为产品流（Product）、废物流（Waste）、基本流（Elementary）与其他流（Other）；产品与废物进入技术圈，基本流进入生物圈 |
+| **生命周期模型（Lifecycle Model）** | 组织过程实例、显式连接、参考过程与目标数量，表达产品系统结构 | 保存时执行计算并持久化模型及结果过程，详见[在平台中保存与复用模型结果](/zh/docs/overview/data-relationships/) |
+| **结果过程（Result Process）** | 承载模型计算或发布物化得到的汇总清单 | 编辑保存生成的结果过程供模型结果查看与后续复用；发布治理产生的已发布结果过程（`state_code = 120`）与普通可计算输入过程隔离 |
+| **支撑对象** | **流属性（Flow Property）**、**单位组（Unit Group）**、**来源（Source）**、**联系人（Contact）** | 维持换算一致性、文献溯源与权属/审核记录 |
+| **LCIA 评价方法** | 将基本流清单转化为环境影响指标的表征因子集合 | 平台与求解器采用经过审核的 25 方法静态缓存包，按精确流版本与方向匹配因子；缺失因子显示为覆盖不完整，不按 0 处理，详见[LCIA 计算与结果查看](/zh/docs/user-guide/lcia/) |
+
+关于在平台中查看、创建和管理这些对象的界面操作，请参见[数据平台介绍](/zh/docs/user-guide/data/)与[数据使用](/zh/docs/user-guide/data-use/)。
+
+## 数据空间与可见性
+
+在平台内，数据集按可见性与编辑权限划分到不同数据空间；完整的角色与操作矩阵见[权限与数据空间矩阵](/zh/docs/user-guide/permissions-and-data-scopes/)：
+
+| 数据空间 | 面向用户 | 典型内容与状态 | 平台内使用边界 |
+| --- | --- | --- | --- |
+| **开放数据（Open Data）** | 所有平台用户 | 经审核发布的标准化公开数据集（`state_code = 100`） | 只读；支持检索、引用、复制到“我的数据”、导出与参与公开数值计算 |
+| **商业数据（Commercial Data）** | 有商业数据需求的用户 | 第三方商业数据库的元信息记录（`state_code = 200`） | 仅展示元信息与提供方联系信息；**不可直接引用入模**，完整数据获取与授权须联系对应提供方，详见[商业数据库获取](/zh/docs/faq/commercial-database/) |
+| **我的数据（My Data）** | 数据编写者与维护者 | 个人工作区中的草稿（`state_code = 0`）、待审记录（`state_code = 20`）及自有版本 | 读写（单位组与流属性的基础维护由系统管理员负责）；提交审核与贡献给团队的起点 |
+| **团队数据（Team Data）** | 团队成员 | 团队内共享的协作数据 | 对团队成员只读；如需修改须先复制到“我的数据”再编辑并重新贡献 |
+
+> 平台还包含只读的精选示例数据（`state_code = -1`），供登录用户学习与演练，不计入开放数据发布目录。
+
+## 来源、实时覆盖与为什么不在这里写死数字
+
+TianGong 开放数据持续接收科研机构、行业团队与社区贡献，并经过[数据审核](/zh/docs/user-guide/data-review/)流程发布。为避免文档与实际数据库脱节，本文档**不手写固定的静态数据集总数或行业占比**。
+
+需要核实当前实时覆盖情况时，请直接以权威公开入口为准：
+
+1. 打开[天工 LCA 公开数据目录](https://www.tiangong.earth/zh-CN/lca-database)（无需登录），查看当前公开过程与流数据集的实时计数。目录按数据集 UUID 计数，同一数据集的多个版本不重复统计。
+2. 按地区或来源浏览具体记录，并在版本详情页核对每条记录的适用范围、时间代表性、原始来源、投入产出可见性及 LCIA 结果可用性。
+3. 阅读门户[数据说明](https://www.tiangong.earth/zh-CN/methodology)，确认目录检索、数据可用性标明、可比性与版本撤回规则。
+
+## 数据质量与不确定性：当前提供与未提供的内容
+
+在评估 TianGong 数据是否适合您的研究时，应区分“当前平台已提供的结构化证据”和“需要研究者自行判断或借助外部理论的部分”：
+
+- **当前已提供**：TIDAS 结构化元数据（时空范围、技术描述、代表性说明、数据质量字段与来源附件）、角色分离的[数据审核](/zh/docs/user-guide/data-review/)流程、LCIA 表征因子覆盖率诊断（缺失因子明确标注为覆盖不完整，而非按 0 计算），以及求解快照的供应连接与 fallback 诊断。
+- **当前边界**：公开目录展示或自动求解成功，均**不自动证明**某条记录满足特定研究的时间、地理或技术代表性，也不代表所有记录都附带统一的定量概率分布或自动蒙特卡洛（Monte Carlo）不确定性传播结果。
+
+关于数据适用性审查、质量评分（DQR / pedigree）与概率不确定性的系统方法，请延伸阅读天工 LCA 知识库的[数据适用性](https://prism.tiangong.earth/zh/docs/book/data-applicability/)与[质量评分与概率](https://prism.tiangong.earth/zh/docs/book/data-quality-and-probability/)。
+
+## ILCD 分发（LCDN）与开放获取边界
+
+除网页平台与公开目录外，[天工生命周期数据网络（LCDN）](https://lcdn.tiangong.earth/)提供 ILCD 格式的数据发布与分发入口，便于兼容 ILCD/eILCD 的 LCA 软件和外部数据网络接入。
+
+请注意：**数据集出现在公开目录、开放数据或 LCDN 节点上，不自动等同于无限制再分发或商业使用授权。** 使用前务必按具体版本核对许可类型、使用限制与来源要求，详见[版本、许可与引用](/zh/docs/database/versions-citation/)。
+
+## 下一步阅读
+
+- 理解平台为什么没有 ecoinvent 式 `market` 数据集、以及求解器如何解析未连接输入：[供应连接与市场机制](/zh/docs/database/supply-markets/)
+- 查阅版本号规则、永久 URI、状态机、许可与引用格式：[版本、许可与引用](/zh/docs/database/versions-citation/)
+- 对照 ecoinvent、ILCD/EF、USLCI、BAFU 等数据库以及格式转换边界：[跨库比较与格式互通](/zh/docs/database/comparison/)

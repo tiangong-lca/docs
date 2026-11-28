@@ -35,8 +35,8 @@ checkPaths:
   - edgeone.json
   - context7.json
   - .github/workflows/**
-lastReviewedAt: 2026-11-27
-lastReviewedCommit: 0e4fa3ee502e26bf05f47d2fb55c9fcd2c2994b1
+lastReviewedAt: 2026-11-28
+lastReviewedCommit: 15ae8274744d87e9790407dcea5a05518d654d58
 lastReviewedNote: "Docs #240: reviewed Next 16.4.6 framework/env/SWC patch qualification with the existing Fumadocs, React, TypeScript 7, Node 24 and pnpm contracts. Full static export, 86 consumer/contract tests, 26 output checks and 16832 local links passed. Public locale, route, publication and ownership contracts retain their existing requirements."
 related:
   - AGENTS.md
@@ -81,7 +81,7 @@ The four `content/docs/index*.mdx` sources render `components/docs-portal.tsx` i
 
 The four `content/docs/quick-start/index*.mdx` sources render `components/quick-start-guide.tsx` as a category-level first-session route. It keeps the ordinary document shell, then sequences account access and an operation walkthrough before branching into a first data, authoring, or LCIA task. Completion cues make each stage testable, while account, FAQ, and support links remain a low-emphasis fallback. The `data-quick-start-guide="first-session-route"` and `data-quick-start-map="three-stage-onboarding"` markers distinguish this local onboarding path from the broader five-stage docs-root map.
 
-The `overview`, `user-guide`, `data-collection`, `integration`, `openapi`, `deploy-and-dev`, `faq`, and `changelog` roots, plus the nested `data-collection/case-introduction` root, render `components/category-directory.tsx`. Each MDX variant supplies only its locale and category slug. The server component locates the category folder in `source.getPageTree(lang)`, preserves current `meta*.json` order, includes direct pages and folder index pages, and normalizes emitted links to locale-absolute trailing-slash URLs. Titles and descriptions are read from the child page; when description metadata is absent, a bounded first sentence is derived from `structuredData`. Future child-page additions, removals, renames, ordering changes, and copy updates therefore require no category-index edit.
+The `overview`, `user-guide`, `database`, `data-collection`, `integration`, `openapi`, `deploy-and-dev`, `faq`, and `changelog` roots, plus the nested `data-collection/case-introduction` root, render `components/category-directory.tsx`. Each MDX variant supplies only its locale and category slug. The server component locates the category folder in `source.getPageTree(lang)`, preserves current `meta*.json` order, includes direct pages and folder index pages, and normalizes emitted links to locale-absolute trailing-slash URLs. Titles and descriptions are read from the child page; when description metadata is absent, a bounded first sentence is derived from `structuredData`. Future child-page additions, removals, renames, ordering changes, and copy updates therefore require no category-index edit.
 
 ## Content and locales
 
